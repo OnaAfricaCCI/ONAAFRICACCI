@@ -20,6 +20,15 @@ type Opportunity = {
 
 type AmountBand = 'all' | 'under-10k' | '10k-50k' | '50k-250k' | 'over-250k'
 
+type SortKey = 'az' | 'za' | 'deadline' | 'newest'
+
+const SORT_OPTIONS: { value: SortKey; label: string }[] = [
+  { value: 'az', label: 'Sort: A–Z' },
+  { value: 'za', label: 'Sort: Z–A' },
+  { value: 'deadline', label: 'Sort: Deadline' },
+  { value: 'newest', label: 'Sort: Newest' },
+]
+
 const AMOUNT_BANDS: { value: AmountBand; label: string; min: number; max: number }[] = [
   { value: 'under-10k', label: 'Under $10k', min: 0, max: 10_000 },
   { value: '10k-50k', label: '$10k – $50k', min: 10_000, max: 50_000 },
@@ -27,7 +36,23 @@ const AMOUNT_BANDS: { value: AmountBand; label: string; min: number; max: number
   { value: 'over-250k', label: 'Over $250k', min: 250_000, max: Infinity },
 ]
 
-/** Pull the largest number out of a free-text amount like "€10,000 – €50,000". */
+const SECTOR_COLORS: Record<string, string> = {
+  music: 'var(--terracotta)',
+  film: 'var(--forest)',
+  'visual arts': 'var(--ochre)',
+  'performing arts': 'var(--terracotta)',
+  design: 'var(--forest)',
+  fashion: 'var(--ochre)',
+  gaming: 'var(--forest)',
+  publishing: 'var(--terracotta)',
+  heritage: 'var(--ochre)',
+  crafts: 'var(--terracotta)',
+}
+
+function sectorColor(sector: string | null): string {
+  return SECTOR_COLORS[(sector ?? '').toLowerCase()] ?? 'var(--forest)'
+}
+
 function parseAmount(amount: string | null): number | null {
   if (!amount) return null
   const matches = amount.replace(/,/g, '').match(/\d+(?:\.\d+)?\s*[kKmM]?/g)
@@ -42,6 +67,21 @@ function parseAmount(amount: string | null): number | null {
   return Math.max(...values)
 }
 
+function formatDeadline(deadline: string | null, deadlineType: string | null): string | null {
+  if (deadlineType === 'rolling') return 'Rolling'
+  if (!deadline) return deadlineType === 'recurring' ? 'Recurring' : null
+  const d = new Date(deadline)
+  if (isNaN(d.getTime())) return deadline
+  return d.toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })
+}
+
+function daysLeft(deadline: string | null): number | null {
+  if (!deadline) return null
+  const d = new Date(deadline)
+  if (isNaN(d.getTime())) return null
+  return Math.ceil((d.getTime() - Date.now()) / 86_400_000)
+}
+
 export default function GrantsPage() {
   const [opportunities, setOpportunities] = useState<Opportunity[]>([])
   const [loading, setLoading] = useState(true)
@@ -52,6 +92,9 @@ export default function GrantsPage() {
   const [fundingType, setFundingType] = useState('all')
   const [deadlineType, setDeadlineType] = useState('all')
   const [amountBand, setAmountBand] = useState<AmountBand>('all')
+  const [showExpired, setShowExpired] = useState(false)
+  const [search, setSearch] = useState('')
+  const [sortBy, setSortBy] = useState<SortKey>('az')
 
   useEffect(() => {
     supabase
@@ -65,7 +108,6 @@ export default function GrantsPage() {
       })
   }, [])
 
-  // Filter options derived from the actual data
   const sectors = useMemo(
     () => [...new Set(opportunities.map((o) => o.cci_sector).filter(Boolean))].sort() as string[],
     [opportunities],
@@ -84,7 +126,12 @@ export default function GrantsPage() {
   )
 
   const filtered = useMemo(() => {
-    return opportunities.filter((o) => {
+    const terms = search.trim().toLowerCase().split(/\s+/).filter(Boolean)
+
+    const matches = opportunities.filter((o) => {
+      // Hide grants whose fixed deadline has already passed (unless toggled on)
+      const dl = daysLeft(o.deadline)
+      if (!showExpired && dl !== null && dl < 0) return false
       if (sector !== 'all' && o.cci_sector !== sector) return false
       if (country !== 'all' && !(o.eligible_countries ?? []).includes(country)) return false
       if (fundingType !== 'all' && o.funding_type !== fundingType) return false
@@ -94,132 +141,336 @@ export default function GrantsPage() {
         const value = parseAmount(o.amount)
         if (value === null || value < band.min || value >= band.max) return false
       }
+      if (terms.length) {
+        const haystack = [
+          o.name,
+          o.funder,
+          o.description,
+          o.cci_sector,
+          o.funding_type,
+          o.amount,
+          ...(o.eligible_countries ?? []),
+        ]
+          .filter(Boolean)
+          .join(' ')
+          .toLowerCase()
+        // every word must appear somewhere (order-independent)
+        if (!terms.every((t) => haystack.includes(t))) return false
+      }
       return true
     })
-  }, [opportunities, sector, country, fundingType, deadlineType, amountBand])
+
+    const byName = (a: Opportunity, b: Opportunity) =>
+      a.name.localeCompare(b.name, undefined, { sensitivity: 'base', numeric: true })
+
+    return [...matches].sort((a, b) => {
+      switch (sortBy) {
+        case 'az':
+          return byName(a, b)
+        case 'za':
+          return byName(b, a)
+        case 'newest':
+          return b.created_at.localeCompare(a.created_at)
+        case 'deadline': {
+          // soonest real deadline first; undated entries last, alphabetical within
+          const da = daysLeft(a.deadline)
+          const db = daysLeft(b.deadline)
+          if (da === null && db === null) return byName(a, b)
+          if (da === null) return 1
+          if (db === null) return -1
+          return da - db || byName(a, b)
+        }
+      }
+    })
+  }, [opportunities, sector, country, fundingType, deadlineType, amountBand, showExpired, search, sortBy])
+
+  const activeFilters = [sector, country, fundingType, deadlineType, amountBand].filter(
+    (f) => f !== 'all',
+  ).length
 
   const selectClass =
-    'rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 focus:border-indigo-500 focus:outline-none'
+    'control-h w-full truncate border-2 border-[var(--ink)] bg-[var(--paper)] pl-4 pr-9 text-sm font-medium ' +
+    'cursor-pointer transition-colors hover:bg-[var(--paper-deep)] focus:outline-none ' +
+    'focus:bg-[var(--paper-deep)]'
 
   return (
-    <main className="mx-auto max-w-5xl px-4 py-10">
-      <h1 className="text-3xl font-bold text-gray-900">Grants Database</h1>
-      <p className="mt-1 text-gray-500">
-        Funding opportunities for the cultural and creative industries.
-      </p>
+    <main className="mx-auto max-w-6xl px-5">
+      {/* Masthead */}
+      <section className="border-b border-[var(--line)] py-12 sm:py-16">
+        <p className="text-xs font-semibold uppercase tracking-[0.25em] text-[var(--terracotta)]">
+          The Grants Database
+        </p>
+        <h1 className="mt-3 max-w-3xl font-[family-name:var(--font-display)] text-4xl font-semibold leading-[1.05] sm:text-6xl">
+          Funding for Africa&rsquo;s creative &amp; cultural industries.
+        </h1>
+        <p className="mt-5 max-w-xl text-base leading-relaxed text-[var(--ink-soft)]">
+          The money is out there. We track down the grants, prizes, residencies
+          and fellowships — so you can spend your time making the work.
+        </p>
+      </section>
 
-      {/* Filters */}
-      <div className="mt-6 flex flex-wrap gap-3">
-        <select className={selectClass} value={sector} onChange={(e) => setSector(e.target.value)}>
-          <option value="all">All sectors</option>
-          {sectors.map((s) => (
-            <option key={s} value={s}>{s}</option>
-          ))}
-        </select>
+      {/* Filter bar */}
+      <section className="sticky top-[66px] z-10 -mx-5 border-b border-[var(--line)] bg-[var(--paper)]/95 px-5 py-4 backdrop-blur-sm">
+        {/* Row 1: search (8 cols) + sort (2 cols) — same 10-col track as the filters */}
+        <div className="mb-3 grid grid-cols-1 gap-3 sm:grid-cols-10">
+          <div className="relative sm:col-span-8">
+            <svg
+              aria-hidden="true"
+              viewBox="0 0 20 20"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-[var(--ink-soft)]"
+            >
+              <circle cx="9" cy="9" r="6" />
+              <path d="M14 14l4 4" strokeLinecap="round" />
+            </svg>
+            <input
+              type="search"
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              placeholder="Search grants by name, funder, sector, country…"
+              aria-label="Search grants"
+              className="control-h w-full border-2 border-[var(--ink)] bg-[var(--paper)] pl-11 pr-10 text-sm font-medium placeholder:font-normal placeholder:text-[var(--ink-soft)] focus:bg-white focus:outline-none"
+            />
+            {search && (
+              <button
+                onClick={() => setSearch('')}
+                aria-label="Clear search"
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-lg leading-none text-[var(--ink-soft)] hover:text-[var(--terracotta)]"
+              >
+                ×
+              </button>
+            )}
+          </div>
+          <select
+            className={`${selectClass} sm:col-span-2`}
+            value={sortBy}
+            onChange={(e) => setSortBy(e.target.value as SortKey)}
+            aria-label="Sort grants"
+          >
+            {SORT_OPTIONS.map((s) => (
+              <option key={s.value} value={s.value}>{s.label}</option>
+            ))}
+          </select>
+        </div>
 
-        <select className={selectClass} value={country} onChange={(e) => setCountry(e.target.value)}>
-          <option value="all">All countries</option>
-          {countries.map((c) => (
-            <option key={c} value={c}>{c}</option>
-          ))}
-        </select>
-
-        <select className={selectClass} value={fundingType} onChange={(e) => setFundingType(e.target.value)}>
-          <option value="all">All funding types</option>
-          {fundingTypes.map((t) => (
-            <option key={t} value={t}>{t}</option>
-          ))}
-        </select>
-
-        <select className={selectClass} value={deadlineType} onChange={(e) => setDeadlineType(e.target.value)}>
-          <option value="all">All deadline types</option>
-          {deadlineTypes.map((t) => (
-            <option key={t} value={t}>{t}</option>
-          ))}
-        </select>
-
-        <select
-          className={selectClass}
-          value={amountBand}
-          onChange={(e) => setAmountBand(e.target.value as AmountBand)}
+        {/* Row 2: five equal-width selects on the same 10-col track (2 cols each) */}
+        <div
+          role="group"
+          aria-label="Filter grants"
+          className="grid grid-cols-2 gap-3 sm:grid-cols-10 [&>select]:sm:col-span-2"
         >
-          <option value="all">Any amount</option>
-          {AMOUNT_BANDS.map((b) => (
-            <option key={b.value} value={b.value}>{b.label}</option>
-          ))}
-        </select>
-      </div>
+          <select className={selectClass} value={sector} onChange={(e) => setSector(e.target.value)}>
+            <option value="all">All sectors</option>
+            {sectors.map((s) => (
+              <option key={s} value={s}>{s}</option>
+            ))}
+          </select>
+          <select className={selectClass} value={country} onChange={(e) => setCountry(e.target.value)}>
+            <option value="all">All countries</option>
+            {countries.map((c) => (
+              <option key={c} value={c}>{c}</option>
+            ))}
+          </select>
+          <select className={selectClass} value={fundingType} onChange={(e) => setFundingType(e.target.value)}>
+            <option value="all">All types</option>
+            {fundingTypes.map((t) => (
+              <option key={t} value={t}>{t}</option>
+            ))}
+          </select>
+          <select className={selectClass} value={deadlineType} onChange={(e) => setDeadlineType(e.target.value)}>
+            <option value="all">All deadlines</option>
+            {deadlineTypes.map((t) => (
+              <option key={t} value={t}>{t}</option>
+            ))}
+          </select>
+          <select
+            className={selectClass}
+            value={amountBand}
+            onChange={(e) => setAmountBand(e.target.value as AmountBand)}
+          >
+            <option value="all">Any amount</option>
+            {AMOUNT_BANDS.map((b) => (
+              <option key={b.value} value={b.value}>{b.label}</option>
+            ))}
+          </select>
+        </div>
+
+        {/* Row 2: toggles left, count right */}
+        <div className="mt-3 flex items-center gap-5">
+          <label className="flex cursor-pointer items-center gap-2 text-xs font-medium uppercase tracking-[0.12em] text-[var(--ink-soft)]">
+            <input
+              type="checkbox"
+              checked={showExpired}
+              onChange={(e) => setShowExpired(e.target.checked)}
+              className="h-4 w-4 accent-[var(--terracotta)]"
+            />
+            Show expired
+          </label>
+          {(activeFilters > 0 || search) && (
+            <button
+              onClick={() => {
+                setSector('all'); setCountry('all'); setFundingType('all')
+                setDeadlineType('all'); setAmountBand('all'); setSearch('')
+              }}
+              className="text-xs font-semibold uppercase tracking-[0.15em] text-[var(--terracotta)] underline underline-offset-4 hover:no-underline"
+            >
+              Clear all{activeFilters > 0 ? ` (${activeFilters})` : ''}
+            </button>
+          )}
+          <span className="ml-auto font-[family-name:var(--font-display)] text-sm text-[var(--ink-soft)]">
+            {loading ? '…' : `Showing ${filtered.length} of ${opportunities.length}`}
+          </span>
+        </div>
+      </section>
 
       {/* Results */}
-      <div className="mt-6">
-        {loading && <p className="text-gray-500">Loading opportunities…</p>}
-        {error && <p className="text-red-600">Failed to load: {error}</p>}
-        {!loading && !error && (
-          <>
-            <p className="mb-4 text-sm text-gray-500">
-              {filtered.length} of {opportunities.length} opportunities
-            </p>
-            <ul className="space-y-4">
-              {filtered.map((o) => (
-                <li key={o.id} className="rounded-xl border border-gray-200 bg-white p-5 shadow-sm">
-                  <div className="flex flex-wrap items-start justify-between gap-2">
-                    <div>
-                      <h2 className="text-lg font-semibold text-gray-900">{o.name}</h2>
-                      {o.funder && <p className="text-sm text-gray-500">{o.funder}</p>}
-                    </div>
-                    {o.amount && (
-                      <span className="rounded-full bg-green-50 px-3 py-1 text-sm font-medium text-green-700">
-                        {o.amount}
-                      </span>
-                    )}
-                  </div>
-
-                  {o.description && <p className="mt-2 text-sm text-gray-600">{o.description}</p>}
-
-                  <div className="mt-3 flex flex-wrap gap-2 text-xs">
-                    {o.cci_sector && (
-                      <span className="rounded-full bg-indigo-50 px-2.5 py-1 text-indigo-700">{o.cci_sector}</span>
-                    )}
-                    {o.funding_type && (
-                      <span className="rounded-full bg-amber-50 px-2.5 py-1 text-amber-700">{o.funding_type}</span>
-                    )}
-                    {o.deadline && (
-                      <span className="rounded-full bg-gray-100 px-2.5 py-1 text-gray-700">
-                        Deadline: {o.deadline}
-                        {o.deadline_type && o.deadline_type !== 'unknown' ? ` (${o.deadline_type})` : ''}
-                      </span>
-                    )}
-                    {(o.eligible_countries ?? []).slice(0, 4).map((c) => (
-                      <span key={c} className="rounded-full bg-gray-100 px-2.5 py-1 text-gray-700">{c}</span>
-                    ))}
-                    {(o.eligible_countries ?? []).length > 4 && (
-                      <span className="px-1 py-1 text-gray-400">
-                        +{(o.eligible_countries ?? []).length - 4} more
-                      </span>
-                    )}
-                  </div>
-
-                  {o.application_link && (
-                    <a
-                      href={o.application_link}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="mt-3 inline-block text-sm font-medium text-indigo-600 hover:text-indigo-800"
-                    >
-                      Apply / Learn more →
-                    </a>
-                  )}
-                </li>
-              ))}
-            </ul>
-            {filtered.length === 0 && (
-              <p className="rounded-lg border border-dashed border-gray-300 p-8 text-center text-gray-500">
-                No opportunities match these filters.
-              </p>
-            )}
-          </>
+      <section className="py-8">
+        {error && (
+          <p className="border-2 border-[var(--terracotta)] bg-[var(--terracotta-soft)] p-5 text-sm">
+            Failed to load: {error}
+          </p>
         )}
-      </div>
+        {loading && (
+          <p className="py-16 text-center text-sm uppercase tracking-[0.2em] text-[var(--ink-soft)]">
+            Loading opportunities…
+          </p>
+        )}
+
+        {!loading && !error && filtered.length === 0 && (
+          <div className="border-2 border-dashed border-[var(--line)] p-16 text-center">
+            <p className="font-[family-name:var(--font-display)] text-2xl">
+              {opportunities.length === 0
+                ? 'Nothing here yet.'
+                : search
+                  ? `No results for “${search}”.`
+                  : 'Nothing matches.'}
+            </p>
+            <p className="mt-2 text-sm text-[var(--ink-soft)]">
+              {opportunities.length === 0
+                ? 'Opportunities will appear as the pipeline collects them.'
+                : 'Try a different search term, or clear some filters.'}
+            </p>
+          </div>
+        )}
+
+        <ul className="divide-y divide-[var(--line)]">
+          {filtered.map((o, i) => {
+            const dl = daysLeft(o.deadline)
+            const urgent = dl !== null && dl >= 0 && dl <= 30
+            return (
+              <li
+                key={o.id}
+                className="rise-in group py-8"
+                style={{ animationDelay: `${Math.min(i, 8) * 60}ms` }}
+              >
+                <div className="grid gap-5 sm:grid-cols-[minmax(0,1fr)_15rem]">
+                  <div>
+                    {/* Kicker row */}
+                    <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs font-semibold uppercase tracking-[0.18em]">
+                      {o.cci_sector && (
+                        <span style={{ color: sectorColor(o.cci_sector) }}>{o.cci_sector}</span>
+                      )}
+                      {o.funding_type && (
+                        <>
+                          <span className="text-[var(--line)]">/</span>
+                          <span className="text-[var(--ink-soft)]">{o.funding_type}</span>
+                        </>
+                      )}
+                    </div>
+
+                    <h2 className="mt-2 font-[family-name:var(--font-display)] text-2xl font-semibold leading-snug sm:text-3xl">
+                      {o.application_link ? (
+                        <a
+                          href={o.application_link}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="decoration-[var(--terracotta)] decoration-2 underline-offset-4 group-hover:underline"
+                        >
+                          {o.name}
+                        </a>
+                      ) : (
+                        o.name
+                      )}
+                    </h2>
+
+                    {o.funder && (
+                      <p className="mt-1 text-sm font-medium text-[var(--ink-soft)]">{o.funder}</p>
+                    )}
+
+                    {o.description && (
+                      <p className="mt-3 max-w-2xl text-[15px] leading-relaxed text-[var(--ink)]/80">
+                        {o.description}
+                      </p>
+                    )}
+
+                    {(o.eligible_countries ?? []).length > 0 && (
+                      <p className="mt-3 text-xs uppercase tracking-[0.12em] text-[var(--ink-soft)]">
+                        <span className="font-semibold">Eligible: </span>
+                        {(o.eligible_countries ?? []).slice(0, 6).join(' · ')}
+                        {(o.eligible_countries ?? []).length > 6 &&
+                          ` · +${(o.eligible_countries ?? []).length - 6} more`}
+                      </p>
+                    )}
+                  </div>
+
+                  {/* Fact block */}
+                  <div className="flex flex-wrap gap-6 sm:flex-col sm:flex-nowrap sm:gap-4 sm:border-l-2 sm:border-[var(--ink)] sm:pl-6 sm:text-right">
+                    {o.amount && (
+                      <div>
+                        <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-[var(--ink-soft)]">
+                          Award
+                        </p>
+                        <p
+                          className="line-clamp-2 font-[family-name:var(--font-display)] text-lg font-semibold leading-snug text-[var(--forest)]"
+                          title={o.amount}
+                        >
+                          {o.amount}
+                        </p>
+                      </div>
+                    )}
+                    {formatDeadline(o.deadline, o.deadline_type) && (
+                      <div>
+                        <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-[var(--ink-soft)]">
+                          Deadline
+                        </p>
+                        <p
+                          className={`font-[family-name:var(--font-display)] text-lg font-semibold ${
+                            urgent ? 'text-[var(--terracotta)]' : ''
+                          }`}
+                        >
+                          {formatDeadline(o.deadline, o.deadline_type)}
+                        </p>
+                        {urgent && (
+                          <p className="text-[10px] font-bold uppercase tracking-[0.15em] text-[var(--terracotta)]">
+                            {dl === 0 ? 'Closes today' : dl === 1 ? '1 day left' : `${dl} days left`}
+                          </p>
+                        )}
+                        {dl !== null && dl < 0 && (
+                          <p className="text-[10px] font-bold uppercase tracking-[0.15em] text-[var(--ink-soft)]">
+                            Expired
+                          </p>
+                        )}
+                      </div>
+                    )}
+                    {o.application_link && (
+                      <a
+                        href={o.application_link}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="mt-auto block w-full border-2 border-[var(--ink)] px-4 py-2 text-center text-xs font-bold uppercase tracking-[0.15em] transition-colors hover:bg-[var(--ink)] hover:text-[var(--paper)] sm:w-auto"
+                      >
+                        Apply →
+                      </a>
+                    )}
+                  </div>
+                </div>
+              </li>
+            )
+          })}
+        </ul>
+      </section>
     </main>
   )
 }

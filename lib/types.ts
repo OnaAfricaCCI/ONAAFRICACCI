@@ -1,3 +1,21 @@
+export type PostType = 'article' | 'image' | 'video'
+
+export type Post = {
+  id: string
+  slug: string
+  title: string
+  excerpt: string | null
+  body: string | null
+  post_type: PostType
+  cover_url: string | null
+  video_url: string | null
+  author: string | null
+  tags: string[]
+  published: boolean
+  published_at: string | null
+  created_at: string
+}
+
 export type Funder = {
   id: string
   name: string

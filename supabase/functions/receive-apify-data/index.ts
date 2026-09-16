@@ -23,6 +23,11 @@ const EXTRACTION_TOOL = {
   input_schema: {
     type: 'object',
     properties: {
+      is_opportunity: {
+        type: 'boolean',
+        description:
+          'true ONLY if the text describes one specific, currently-applicable funding opportunity (a grant, prize, fellowship, residency, open call, etc.) with its own terms. false for: directories or lists of many opportunities, general articles or news, funder "about" pages, navigation/landing pages, and anything that is not itself an opportunity to apply for.',
+      },
       name: { type: 'string', description: 'Name/title of the funding opportunity' },
       funder: { type: 'string', description: 'Organization providing the funding' },
       deadline: { type: 'string', description: 'Application deadline, ISO 8601 date (YYYY-MM-DD) if possible' },
@@ -51,7 +56,7 @@ const EXTRACTION_TOOL = {
       application_link: { type: 'string', description: 'URL to apply or read more' },
       description: { type: 'string', description: 'Concise summary of the opportunity (2-4 sentences)' },
     },
-    required: ['name', 'description'],
+    required: ['is_opportunity', 'name', 'description'],
   },
 } as const
 
@@ -71,7 +76,7 @@ async function extractFields(rawText: string) {
       messages: [
         {
           role: 'user',
-          content: `Extract the funding opportunity details from this raw scraped text. Only include fields that are actually present in the text — do not invent values.\n\n${rawText}`,
+          content: `Extract the funding opportunity details from this raw scraped text. Only include fields that are actually present in the text — do not invent values. First judge is_opportunity strictly: pages that merely LIST or LINK TO many opportunities (directories, databases, aggregators, category pages) are NOT opportunities themselves.\n\n${rawText}`,
         },
       ],
     }),
@@ -105,31 +110,19 @@ function normalizeUrl(url: string): string {
   }
 }
 
-Deno.serve(async (req) => {
-  if (req.method !== 'POST') {
-    return new Response(JSON.stringify({ error: 'Method not allowed' }), {
-      status: 405,
-      headers: { 'content-type': 'application/json' },
-    })
-  }
+type ProcessResult =
+  | { status: 'inserted'; id: string }
+  | { status: 'deduplicated'; id?: string }
+  | { status: 'rejected' }
+  | { status: 'error'; error: string }
 
+/** Extract fields from one piece of raw text and insert it (dedup-aware). */
+async function processOne(rawText: string, payloadUrl?: string): Promise<ProcessResult> {
   try {
-    const payload = await req.json()
-
-    // Accept { text, sourceUrl } or Apify's default webhook shape.
-    const rawText: string | undefined =
-      payload.text ?? payload.rawText ?? payload.resource?.text
-    const payloadUrl: string | undefined =
-      payload.sourceUrl ?? payload.url ?? payload.resource?.url
-
-    if (!rawText || typeof rawText !== 'string' || rawText.trim() === '') {
-      return new Response(JSON.stringify({ error: 'Missing "text" field in payload' }), {
-        status: 400,
-        headers: { 'content-type': 'application/json' },
-      })
-    }
-
     const fields = await extractFields(rawText)
+
+    // Not an actual funding opportunity (directory page, article, etc.)
+    if (fields.is_opportunity === false) return { status: 'rejected' }
 
     // Dedup key: prefer the URL the scraper gives us, fall back to the
     // extracted application link.
@@ -144,13 +137,7 @@ Deno.serve(async (req) => {
         .maybeSingle()
 
       if (lookupError) throw new Error(`Dedup lookup failed: ${lookupError.message}`)
-
-      if (existing) {
-        return new Response(
-          JSON.stringify({ success: true, deduplicated: true, id: existing.id }),
-          { status: 200, headers: { 'content-type': 'application/json' } },
-        )
-      }
+      if (existing) return { status: 'deduplicated', id: existing.id }
     }
 
     const { data, error } = await supabase
@@ -170,25 +157,105 @@ Deno.serve(async (req) => {
         raw_text: rawText,
         source: 'apify',
       })
-      .select()
+      .select('id')
       .single()
 
     if (error) {
       // Unique-constraint race (two webhooks for the same URL landing at once):
       // treat as a successful dedup rather than an error.
-      if (error.code === '23505') {
-        return new Response(
-          JSON.stringify({ success: true, deduplicated: true }),
-          { status: 200, headers: { 'content-type': 'application/json' } },
-        )
-      }
+      if (error.code === '23505') return { status: 'deduplicated' }
       throw new Error(`Insert failed: ${error.message}`)
     }
 
-    return new Response(JSON.stringify({ success: true, deduplicated: false, opportunity: data }), {
-      status: 200,
+    return { status: 'inserted', id: data.id }
+  } catch (err) {
+    return { status: 'error', error: err instanceof Error ? err.message : String(err) }
+  }
+}
+
+/** Pull usable text out of one Apify dataset item, whatever the actor's shape. */
+function itemText(item: Record<string, unknown>): string | undefined {
+  for (const key of ['text', 'pageText', 'markdown', 'content', 'body', 'description']) {
+    const v = item[key]
+    if (typeof v === 'string' && v.trim().length > 50) return v
+  }
+  return undefined
+}
+
+Deno.serve(async (req) => {
+  if (req.method !== 'POST') {
+    return new Response(JSON.stringify({ error: 'Method not allowed' }), {
+      status: 405,
       headers: { 'content-type': 'application/json' },
     })
+  }
+
+  try {
+    const payload = await req.json()
+
+    // Mode 1: Apify "run succeeded" webhook — fetch the run's results
+    // from Apify storage, then process each scraped page.
+    const datasetId: string | undefined = payload.resource?.defaultDatasetId
+    if (datasetId) {
+      const apifyToken = Deno.env.get('APIFY_TOKEN')
+      if (!apifyToken) throw new Error('APIFY_TOKEN secret is not set')
+
+      const itemsRes = await fetch(
+        `https://api.apify.com/v2/datasets/${datasetId}/items?clean=true&format=json&limit=500`,
+        { headers: { authorization: `Bearer ${apifyToken}` } },
+      )
+      if (!itemsRes.ok) throw new Error(`Apify API error ${itemsRes.status}: ${await itemsRes.text()}`)
+
+      const items: Record<string, unknown>[] = await itemsRes.json()
+      const summary = { inserted: 0, deduplicated: 0, rejected: 0, skipped: 0, errors: [] as string[] }
+
+      for (const item of items) {
+        const text = itemText(item)
+        if (!text) {
+          summary.skipped++
+          continue
+        }
+        const url = typeof item.url === 'string' ? item.url : undefined
+        const result = await processOne(text, url)
+        if (result.status === 'inserted') summary.inserted++
+        else if (result.status === 'deduplicated') summary.deduplicated++
+        else if (result.status === 'rejected') summary.rejected++
+        else summary.errors.push(result.error)
+      }
+
+      console.log('apify run processed:', JSON.stringify(summary))
+      return new Response(JSON.stringify({ success: true, mode: 'apify-run', ...summary }), {
+        status: 200,
+        headers: { 'content-type': 'application/json' },
+      })
+    }
+
+    // Mode 2: direct { text, sourceUrl } payload (testing, manual submissions).
+    const rawText: string | undefined =
+      payload.text ?? payload.rawText ?? payload.resource?.text
+    const payloadUrl: string | undefined =
+      payload.sourceUrl ?? payload.url ?? payload.resource?.url
+
+    if (!rawText || typeof rawText !== 'string' || rawText.trim() === '') {
+      return new Response(JSON.stringify({ error: 'Missing "text" field in payload' }), {
+        status: 400,
+        headers: { 'content-type': 'application/json' },
+      })
+    }
+
+    const result = await processOne(rawText, payloadUrl)
+    if (result.status === 'error') throw new Error(result.error)
+    if (result.status === 'rejected') {
+      return new Response(
+        JSON.stringify({ success: true, rejected: true, reason: 'Not a funding opportunity' }),
+        { status: 200, headers: { 'content-type': 'application/json' } },
+      )
+    }
+
+    return new Response(
+      JSON.stringify({ success: true, deduplicated: result.status === 'deduplicated', id: result.id }),
+      { status: 200, headers: { 'content-type': 'application/json' } },
+    )
   } catch (err) {
     console.error('receive-apify-data error:', err)
     return new Response(
