@@ -4,6 +4,7 @@ import Link from 'next/link'
 import { useEffect, useMemo, useState } from 'react'
 import { supabase } from '@/lib/supabase'
 import type { Funder } from '@/lib/types'
+import { isPublishableInstitution } from '@/lib/quality'
 
 function FunderLogo({ funder, size = 44 }: { funder: Funder; size?: number }) {
   const [failed, setFailed] = useState(false)
@@ -47,10 +48,11 @@ export default function FundersPage() {
       .from('funders')
       .select('*')
       .eq('is_active', true)
+      .not('description', 'is', null)
       .order('name')
       .then(({ data, error }) => {
         if (error) setError(error.message)
-        else setFunders((data as Funder[]) ?? [])
+        else setFunders(((data as Funder[]) ?? []).filter(isPublishableInstitution))
         setLoading(false)
       })
   }, [])

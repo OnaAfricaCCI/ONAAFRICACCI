@@ -48,6 +48,7 @@ async function featured(): Promise<FeaturedGrant[]> {
     )
     .or(`deadline.is.null,deadline.gte.${today}`)
     .eq('link_ok', true)
+    .not('description', 'is', null)
 
   // If the link columns don't exist yet the query errors; hiding the strip is
   // the safe outcome — nothing unverified gets featured.

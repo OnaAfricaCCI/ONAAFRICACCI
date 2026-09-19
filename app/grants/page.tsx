@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from 'react'
 import EmailCapture from '@/app/components/EmailCapture'
 import { supabase } from '@/lib/supabase'
 import { parseAmount } from '@/lib/amount'
+import { isPublishableGrant } from '@/lib/quality'
 
 type Opportunity = {
   id: string
@@ -88,10 +89,11 @@ export default function GrantsPage() {
     supabase
       .from('opportunities')
       .select('*')
+      .not('description', 'is', null)
       .order('created_at', { ascending: false })
       .then(({ data, error }) => {
         if (error) setError(error.message)
-        else setOpportunities((data as Opportunity[]) ?? [])
+        else setOpportunities(((data as Opportunity[]) ?? []).filter(isPublishableGrant))
         setLoading(false)
       })
   }, [])

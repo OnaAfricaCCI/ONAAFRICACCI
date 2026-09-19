@@ -3,6 +3,7 @@ import { notFound } from 'next/navigation'
 import { supabase } from '@/lib/supabase'
 import { formatDate } from '@/lib/media'
 import type { Funder } from '@/lib/types'
+import { isPublishableInstitution } from '@/lib/quality'
 
 export const dynamic = 'force-dynamic'
 
@@ -77,7 +78,7 @@ export default async function FunderProfilePage({
     : await query.eq('slug', slug).maybeSingle()
 
   if (error) throw new Error(error.message)
-  if (!data) notFound()
+  if (!data || !isPublishableInstitution(data as Funder)) notFound()
 
   const f = data as Funder
 
