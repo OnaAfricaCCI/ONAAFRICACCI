@@ -10,6 +10,7 @@
 //   SUPABASE_URL / SUPABASE_SERVICE_ROLE_KEY are injected automatically.
 
 import { createClient } from 'npm:@supabase/supabase-js@2'
+import { checkLink } from '../_shared/check-link.ts'
 
 const ANTHROPIC_API_KEY = Deno.env.get('ANTHROPIC_API_KEY')!
 const SUPABASE_URL = Deno.env.get('SUPABASE_URL')!
@@ -140,25 +141,48 @@ async function processOne(rawText: string, payloadUrl?: string): Promise<Process
       if (existing) return { status: 'deduplicated', id: existing.id }
     }
 
-    const { data, error } = await supabase
+    // Verify the link before it can be featured anywhere. Same rules as the
+    // scheduled check-links function.
+    const link = fields.application_link?.trim() || null
+    const linkCheck = link ? await checkLink(link) : null
+
+    const baseRow = {
+      name: fields.name,
+      funder: fields.funder ?? null,
+      deadline: fields.deadline ?? null,
+      amount: fields.amount ?? null,
+      eligible_countries: fields.eligible_countries ?? [],
+      cci_sector: fields.cci_sector ?? null,
+      funding_type: fields.funding_type ?? null,
+      deadline_type: fields.deadline_type ?? null,
+      application_link: link,
+      description: fields.description,
+      source_url: normalizedUrl,
+      raw_text: rawText,
+      source: 'apify',
+    }
+    const linkColumns = {
+      link_ok: linkCheck?.ok ?? null,
+      link_status: linkCheck?.status ?? null,
+      link_error: linkCheck?.error ?? null,
+      link_checked_at: linkCheck ? new Date().toISOString() : null,
+    }
+
+    let { data, error } = await supabase
       .from('opportunities')
-      .insert({
-        name: fields.name,
-        funder: fields.funder ?? null,
-        deadline: fields.deadline ?? null,
-        amount: fields.amount ?? null,
-        eligible_countries: fields.eligible_countries ?? [],
-        cci_sector: fields.cci_sector ?? null,
-        funding_type: fields.funding_type ?? null,
-        deadline_type: fields.deadline_type ?? null,
-        application_link: fields.application_link ?? null,
-        description: fields.description,
-        source_url: normalizedUrl,
-        raw_text: rawText,
-        source: 'apify',
-      })
+      .insert({ ...baseRow, ...linkColumns })
       .select('id')
       .single()
+
+    // If the link_* columns haven't been added to the table yet, insert
+    // without them rather than losing the grant.
+    if (error?.code === '42703' || error?.code === 'PGRST204') {
+      ;({ data, error } = await supabase
+        .from('opportunities')
+        .insert(baseRow)
+        .select('id')
+        .single())
+    }
 
     if (error) {
       // Unique-constraint race (two webhooks for the same URL landing at once):

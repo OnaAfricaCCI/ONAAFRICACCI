@@ -42,7 +42,7 @@ export default function ContactPage() {
           Talk to us.
         </h1>
         <p className="mt-5 max-w-xl text-base leading-relaxed text-[var(--ink-soft)]">
-          Whether you&rsquo;re looking for funding or offering it, this is the door.
+          Looking for funding, or offering it? Start here.
         </p>
       </section>
 
@@ -50,13 +50,14 @@ export default function ContactPage() {
         {/* Seekers + general */}
         <div className="bg-[var(--paper)] p-8 sm:p-10">
           <p className="text-xs font-semibold uppercase tracking-[0.2em] text-[var(--forest)]">
-            For grant seekers &amp; everyone else
+            For grant seekers and everyone else
           </p>
           <h2 className="mt-2 font-[family-name:var(--font-display)] text-3xl font-semibold">
             Get in touch
           </h2>
           <p className="mt-3 text-sm leading-relaxed text-[var(--ink-soft)]">
-            Questions, corrections, ideas, partnerships — we read everything.
+            Found a grant that&rsquo;s out of date? Spotted something we missed? Want to work
+            together? Send us a note. We read every message.
           </p>
 
           {status === 'sent' ? (
@@ -110,22 +111,22 @@ export default function ContactPage() {
         {/* Providers */}
         <div className="flex flex-col bg-[var(--paper-deep)] p-8 sm:p-10">
           <p className="text-xs font-semibold uppercase tracking-[0.2em] text-[var(--terracotta)]">
-            For grant &amp; fund providers
+            For grant and fund providers
           </p>
           <h2 className="mt-2 font-[family-name:var(--font-display)] text-3xl font-semibold">
             List your opportunity
           </h2>
           <p className="mt-3 text-sm leading-relaxed text-[var(--ink-soft)]">
-            Reach creatives and cultural organizations across Africa. Tell us the
-            essentials — it takes about two minutes — and we&rsquo;ll review and publish
-            it in the grants database.
+            Reach creatives and cultural organisations across Africa. Tell us the
+            essentials, it takes about two minutes, and we&rsquo;ll review it and add it
+            to the database.
           </p>
 
           <ul className="mt-8 space-y-3 text-sm">
             {[
-              'Five quick fields — no lengthy applications',
-              'Reviewed by our team before publishing',
-              'Reaches a pan-African creative audience',
+              'Five quick fields, no lengthy applications',
+              'Reviewed by our team before it goes live',
+              'Seen by creatives across the continent and the diaspora',
             ].map((line) => (
               <li key={line} className="flex items-start gap-3">
                 <span className="mt-0.5 font-[family-name:var(--font-display)] font-bold text-[var(--terracotta)]">

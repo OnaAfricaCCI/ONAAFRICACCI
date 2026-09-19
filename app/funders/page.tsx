@@ -98,15 +98,14 @@ export default function FundersPage() {
     <main className="mx-auto max-w-6xl px-5">
       <section className="border-b border-[var(--line)] py-12 sm:py-16">
         <p className="text-xs font-semibold uppercase tracking-[0.25em] text-[var(--terracotta)]">
-          The Funders Directory
+          The funders directory
         </p>
         <h1 className="mt-3 max-w-3xl font-[family-name:var(--font-display)] text-4xl font-semibold leading-[1.05] sm:text-6xl">
           Who funds the culture.
         </h1>
         <p className="mt-5 max-w-xl text-base leading-relaxed text-[var(--ink-soft)]">
-          {funders.length > 0 ? `${funders.length} organizations backing` : 'Organizations backing'}{' '}
-          Africa&rsquo;s cultural and creative industries — from pan-African funds to
-          bilateral institutes.
+          These are the organisations putting money into African creative work. Each
+          profile tells you what they fund, who can apply, and how to reach them.
         </p>
       </section>
 
@@ -176,9 +175,9 @@ export default function FundersPage() {
           </select>
         </div>
 
-        {/* Row 3: clear + count */}
-        <div className="mt-3 flex items-center gap-5">
-          {(activeFilters > 0 || search) && (
+        {/* Row 3: clear — only rendered when there is something to clear */}
+        {(activeFilters > 0 || search) && (
+          <div className="mt-3 flex items-center gap-5">
             <button
               onClick={() => {
                 setType('all'); setRegion('all'); setSector('all'); setSupport('all'); setSearch('')
@@ -187,11 +186,8 @@ export default function FundersPage() {
             >
               Clear all{activeFilters > 0 ? ` (${activeFilters})` : ''}
             </button>
-          )}
-          <span className="ml-auto font-[family-name:var(--font-display)] text-sm text-[var(--ink-soft)]">
-            {loading ? '…' : `Showing ${filtered.length} of ${funders.length}`}
-          </span>
-        </div>
+          </div>
+        )}
       </section>
 
       {error && (
@@ -201,18 +197,16 @@ export default function FundersPage() {
       )}
       {loading && (
         <p className="py-16 text-center text-sm uppercase tracking-[0.2em] text-[var(--ink-soft)]">
-          Loading funders…
+          Finding funders…
         </p>
       )}
 
       {!loading && !error && filtered.length === 0 && (
         <div className="my-10 border-2 border-dashed border-[var(--line)] p-16 text-center">
           <p className="font-[family-name:var(--font-display)] text-2xl">
-            {funders.length === 0 ? 'No funders yet.' : 'No funders match.'}
+            No funders match those filters.
           </p>
-          {funders.length > 0 && (
-            <p className="mt-2 text-sm text-[var(--ink-soft)]">Try clearing some filters.</p>
-          )}
+          <p className="mt-2 text-sm text-[var(--ink-soft)]">Try clearing one.</p>
         </div>
       )}
 
@@ -221,7 +215,7 @@ export default function FundersPage() {
           {filtered.map((f, i) => (
             <li key={f.id} className="rise-in bg-[var(--paper)]" style={{ animationDelay: `${Math.min(i, 11) * 40}ms` }}>
               <Link
-                href={`/funders/${f.id}`}
+                href={`/funders/${f.slug ?? f.id}`}
                 className="group flex h-full flex-col p-6 transition-colors hover:bg-[var(--paper-deep)]"
               >
                 <div className="flex items-start justify-between gap-3">
@@ -254,6 +248,23 @@ export default function FundersPage() {
             </li>
           ))}
         </ul>
+      )}
+
+      {/* Foot CTA */}
+      {!loading && (
+        <section className="mb-8 border-t border-[var(--line)] py-10">
+          <div className="flex flex-wrap items-baseline justify-between gap-4">
+            <p className="font-[family-name:var(--font-display)] text-2xl leading-snug">
+              Fund this work?
+            </p>
+            <Link
+              href="/contact/submit"
+              className="text-xs font-semibold uppercase tracking-[0.15em] text-[var(--terracotta)] underline underline-offset-4 hover:no-underline"
+            >
+              List your opportunity →
+            </Link>
+          </div>
+        </section>
       )}
     </main>
   )

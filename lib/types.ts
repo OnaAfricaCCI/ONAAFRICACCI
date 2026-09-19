@@ -18,6 +18,7 @@ export type Post = {
 
 export type Funder = {
   id: string
+  slug: string | null
   name: string
   acronym: string | null
   funder_type: string | null
@@ -35,4 +36,13 @@ export type Funder = {
   notes: string | null
   is_active: boolean
   created_at: string
+
+  // Profile detail
+  what_they_fund: string | null
+  how_to_apply: string | null
+  deadline_notes: string | null
+  notable_grantees: string[] | null
+  grants_page_url: string | null
+  last_verified: string | null
+  source_url: string | null
 }

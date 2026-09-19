@@ -1,57 +1,95 @@
 import Link from 'next/link'
+import EmailCapture from '@/app/components/EmailCapture'
+import FeaturedCarousel, { type FeaturedGrant } from '@/app/components/FeaturedCarousel'
 import { supabase } from '@/lib/supabase'
+import { daysUntil, deadlineLabel } from '@/lib/amount'
 
 export const dynamic = 'force-dynamic'
 
-async function counts() {
-  const [grants, funders] = await Promise.all([
-    supabase.from('opportunities').select('id', { count: 'exact', head: true }),
-    supabase.from('funders').select('id', { count: 'exact', head: true }).eq('is_active', true),
-  ])
-  return { grants: grants.count ?? 0, funders: funders.count ?? 0 }
+type Row = {
+  id: string
+  name: string
+  funder: string | null
+  amount: string | null
+  deadline: string | null
+  deadline_type: string | null
+  cci_sector: string | null
+  eligible_countries: string[] | null
+  application_link: string | null
+}
+
+const FEATURED_COUNT = 6
+
+/** Fisher–Yates; returns a new array. */
+function shuffle<T>(items: T[]): T[] {
+  const out = [...items]
+  for (let i = out.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1))
+    ;[out[i], out[j]] = [out[j], out[i]]
+  }
+  return out
+}
+
+/**
+ * Featured strip: a random handful of live grants, re-drawn on every request.
+ *
+ * Only grants whose application link has been verified as working
+ * (link_ok = true, set by the check-links function) qualify, so a visitor
+ * is never sent to a dead page. "Live" means the deadline has not passed —
+ * the same rule /grants uses to hide expired calls.
+ */
+async function featured(): Promise<FeaturedGrant[]> {
+  const today = new Date().toISOString().slice(0, 10)
+
+  const { data, error } = await supabase
+    .from('opportunities')
+    .select(
+      'id,name,funder,amount,deadline,deadline_type,cci_sector,eligible_countries,application_link',
+    )
+    .or(`deadline.is.null,deadline.gte.${today}`)
+    .eq('link_ok', true)
+
+  // If the link columns don't exist yet the query errors; hiding the strip is
+  // the safe outcome — nothing unverified gets featured.
+  if (error || !data) return []
+
+  const linked = (data as Row[]).filter((r) => (r.application_link ?? '').trim() !== '')
+
+  return shuffle(linked)
+    .slice(0, FEATURED_COUNT)
+    .map((r) => {
+      const days = daysUntil(r.deadline)
+      return {
+        id: r.id,
+        name: r.name,
+        funder: r.funder,
+        amount: r.amount,
+        deadlineText: deadlineLabel(r.deadline, r.deadline_type),
+        urgent: days !== null && days >= 0 && days <= 30,
+        tag: r.cci_sector ?? r.eligible_countries?.[0] ?? null,
+        href: r.application_link!.trim(),
+      }
+    })
 }
 
 export default async function Home() {
-  const { grants, funders } = await counts()
-
-  const doors = [
-    {
-      href: '/grants',
-      kicker: 'Grants',
-      title: 'Find funding',
-      body: 'Grants, prizes, residencies and fellowships — filterable by sector, country, type and amount.',
-      stat: grants > 0 ? `${grants} opportunities` : null,
-    },
-    {
-      href: '/funders',
-      kicker: 'Funders',
-      title: 'Know who funds',
-      body: 'Profiles of the foundations, funds, institutes and public bodies backing African creative work.',
-      stat: funders > 0 ? `${funders} organizations` : null,
-    },
-    {
-      href: '/blog',
-      kicker: 'Blog',
-      title: 'Read the ecosystem',
-      body: 'Stories, updates and conversations from across the continent’s cultural and creative industries.',
-      stat: null,
-    },
-  ]
+  const featuredGrants = await featured()
 
   return (
-    <main className="mx-auto max-w-6xl px-5">
+    <main>
       {/* Hero */}
-      <section className="border-b border-[var(--line)] py-16 sm:py-24">
+      <section className="mx-auto max-w-6xl px-5 py-16 sm:py-24">
         <p className="text-xs font-semibold uppercase tracking-[0.25em] text-[var(--terracotta)]">
-          Ona — Africa CCI
+          Ona — Cultural &amp; Creative Industries
         </p>
         <h1 className="mt-4 max-w-4xl font-[family-name:var(--font-display)] text-5xl font-semibold leading-[1.02] sm:text-7xl">
-          Africa&rsquo;s creative economy,
-          <br className="hidden sm:block" /> and the money behind it.
+          The funding is out there.
+          <br className="hidden sm:block" /> We help you find it.
         </h1>
         <p className="mt-6 max-w-xl text-lg leading-relaxed text-[var(--ink-soft)]">
-          One place to find funding, understand who gives it, and follow what&rsquo;s
-          happening across the continent&rsquo;s cultural and creative industries.
+          We gather the grants, prizes, residencies and fellowships open to African
+          creatives, check they&rsquo;re real, and let you filter to what fits. On the
+          continent or in the diaspora, this is one place to look.
         </p>
         <div className="mt-9 flex flex-wrap gap-3">
           <Link
@@ -69,35 +107,25 @@ export default async function Home() {
         </div>
       </section>
 
-      {/* Three doors */}
-      <section className="grid gap-6 py-12 sm:grid-cols-2 lg:grid-cols-3">
-        {doors.map((d, i) => (
-          <Link
-            key={d.href}
-            href={d.href}
-            className="rise-in group flex flex-col border border-[var(--line)] p-7 transition-colors hover:border-[var(--ink)] hover:bg-[var(--paper-deep)]"
-            style={{ animationDelay: `${i * 80}ms` }}
-          >
-            <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-[var(--terracotta)]">
-              {d.kicker}
-            </p>
-            <h2 className="mt-2 font-[family-name:var(--font-display)] text-2xl font-semibold decoration-[var(--terracotta)] decoration-2 underline-offset-4 group-hover:underline">
-              {d.title}
-            </h2>
-            <p className="mt-3 text-sm leading-relaxed text-[var(--ink)]/75">{d.body}</p>
-            <p className="mt-auto pt-6 text-[10px] font-semibold uppercase tracking-[0.15em] text-[var(--ink-soft)]">
-              {d.stat ?? 'Explore'} →
-            </p>
-          </Link>
-        ))}
-      </section>
+      {/* Featured grants — full-bleed terracotta band */}
+      <FeaturedCarousel grants={featuredGrants} />
+
+      {/* Email capture */}
+      <div className="mx-auto max-w-6xl px-5 py-12">
+        <EmailCapture />
+      </div>
 
       {/* Closing note */}
-      <section className="mb-8 border-t border-[var(--line)] py-12">
+      <section className="mx-auto mb-8 max-w-6xl border-t border-[var(--line)] px-5 py-12">
         <div className="flex flex-wrap items-end justify-between gap-6">
-          <p className="max-w-xl font-[family-name:var(--font-display)] text-2xl leading-snug sm:text-3xl">
-            Funding the culture shouldn&rsquo;t depend on knowing the right people.
-          </p>
+          <div className="max-w-xl">
+            <p className="font-[family-name:var(--font-display)] text-2xl leading-snug sm:text-3xl">
+              Funding the culture shouldn&rsquo;t depend on knowing the right people.
+            </p>
+            <p className="mt-3 text-base leading-relaxed text-[var(--ink-soft)]">
+              We don&rsquo;t hand out money. We show you who does, and help you reach them.
+            </p>
+          </div>
           <Link
             href="/contact"
             className="text-xs font-semibold uppercase tracking-[0.15em] text-[var(--terracotta)] underline underline-offset-4 hover:no-underline"

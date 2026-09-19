@@ -7,16 +7,27 @@ const inputClass =
   'w-full border-2 border-[var(--ink)] bg-[var(--paper)] px-4 py-3 text-sm ' +
   'placeholder:text-[var(--ink-soft)] focus:bg-white focus:outline-none transition-colors'
 
-function Label({ children, optional }: { children: React.ReactNode; optional?: boolean }) {
+function Label({
+  children,
+  optional,
+  help,
+}: {
+  children: React.ReactNode
+  optional?: boolean
+  help?: string
+}) {
   return (
-    <label className="mb-1.5 block text-xs font-semibold uppercase tracking-[0.15em]">
-      {children}
-      {optional && (
-        <span className="ml-2 font-normal normal-case tracking-normal text-[var(--ink-soft)]">
-          optional
-        </span>
-      )}
-    </label>
+    <div className="mb-1.5">
+      <label className="block text-xs font-semibold uppercase tracking-[0.15em]">
+        {children}
+        {optional && (
+          <span className="ml-2 font-normal normal-case tracking-normal text-[var(--ink-soft)]">
+            optional
+          </span>
+        )}
+      </label>
+      {help && <p className="mt-1 text-xs text-[var(--ink-soft)]">{help}</p>}
+    </div>
   )
 }
 
@@ -52,7 +63,11 @@ export default function SubmitOpportunityPage() {
       if (!res.ok) throw new Error(data.error ?? 'Failed')
       setStatus('sent')
     } catch (err) {
-      setErrorMsg(err instanceof Error ? err.message : 'Something went wrong.')
+      setErrorMsg(
+        err instanceof Error && err.message !== 'Failed'
+          ? err.message
+          : 'Something went wrong sending that. Give it another go, or email us directly.',
+      )
       setStatus('error')
     }
   }
@@ -62,11 +77,11 @@ export default function SubmitOpportunityPage() {
       <main className="mx-auto max-w-2xl px-5 py-24 text-center">
         <p className="font-[family-name:var(--font-display)] text-5xl">✓</p>
         <h1 className="mt-4 font-[family-name:var(--font-display)] text-4xl font-semibold">
-          Thank you.
+          Thanks, we&rsquo;ve got it.
         </h1>
         <p className="mt-4 text-[var(--ink-soft)]">
-          Your opportunity has been received. We&rsquo;ll review it and be in touch at{' '}
-          <strong>{form.contact_email}</strong> before it goes live.
+          We&rsquo;ll review your opportunity and add it to the database. If anything
+          needs clarifying, we&rsquo;ll email you at <strong>{form.contact_email}</strong>.
         </p>
         <Link
           href="/grants"
@@ -95,14 +110,14 @@ export default function SubmitOpportunityPage() {
           Submit an opportunity.
         </h1>
         <p className="mt-3 text-sm leading-relaxed text-[var(--ink-soft)]">
-          Just the essentials — about two minutes. We&rsquo;ll review it before it appears
-          in the database, and contact you if we need anything else.
+          Just the essentials, about two minutes. We&rsquo;ll review it before it appears
+          in the database, and get in touch if we need anything else.
         </p>
       </header>
 
       <form onSubmit={submit} className="mt-10 space-y-6">
         <div>
-          <Label>Name of grant / opportunity</Label>
+          <Label>Name of grant or opportunity</Label>
           <input
             className={inputClass}
             placeholder="e.g. East Africa Music Production Fund 2027"
@@ -113,7 +128,7 @@ export default function SubmitOpportunityPage() {
         </div>
 
         <div>
-          <Label optional>Your organization</Label>
+          <Label optional>Your organisation</Label>
           <input
             className={inputClass}
             placeholder="e.g. The Example Foundation"
@@ -123,7 +138,9 @@ export default function SubmitOpportunityPage() {
         </div>
 
         <div>
-          <Label>Amount / what you&rsquo;re offering</Label>
+          <Label help="A figure, a range, or what the award includes.">
+            Amount or what you&rsquo;re offering
+          </Label>
           <input
             className={inputClass}
             placeholder="e.g. $5,000 – $20,000 per project"
@@ -134,7 +151,9 @@ export default function SubmitOpportunityPage() {
         </div>
 
         <div>
-          <Label>Who it&rsquo;s for</Label>
+          <Label help="Countries, sectors, career stage, anything that decides eligibility.">
+            Who it&rsquo;s for
+          </Label>
           <input
             className={inputClass}
             placeholder="e.g. Emerging musicians in Kenya, Uganda and Tanzania"

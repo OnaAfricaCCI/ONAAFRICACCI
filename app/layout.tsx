@@ -21,10 +21,30 @@ const archivo = Archivo({
   subsets: ["latin"],
 });
 
+const SITE_TITLE = "Ona — Funding for Africa's creative industries";
+const SITE_DESCRIPTION =
+  "Find grants, prizes, residencies and fellowships for African creatives. Checked, filterable and current, for the continent and the diaspora.";
+const SITE_DEFINITION =
+  "Ona is a public record of the funding open to Africa's cultural and creative industries.";
+
 export const metadata: Metadata = {
-  title: "Ona — CCI Funding Platform",
-  description:
-    "Funding opportunities and funders for Africa's cultural and creative industries.",
+  title: {
+    default: SITE_TITLE,
+    template: "%s — Ona",
+  },
+  description: SITE_DESCRIPTION,
+  openGraph: {
+    title: SITE_TITLE,
+    description: SITE_DEFINITION,
+    siteName: "Ona",
+    type: "website",
+    locale: "en_GB",
+  },
+  twitter: {
+    card: "summary",
+    title: SITE_TITLE,
+    description: SITE_DEFINITION,
+  },
 };
 
 export default function RootLayout({
@@ -50,9 +70,6 @@ export default function RootLayout({
               className="font-[family-name:var(--font-display)] text-2xl font-semibold tracking-tight"
             >
               Ona<span className="text-[var(--terracotta)]">.</span>
-              <span className="ml-2 hidden text-xs font-normal uppercase tracking-[0.2em] text-[var(--ink-soft)] sm:inline">
-                Africa CCI
-              </span>
             </Link>
             <nav className="flex gap-6 text-sm font-medium uppercase tracking-[0.12em]">
               <Link href="/grants" className="hover:text-[var(--terracotta)] transition-colors">
@@ -63,6 +80,9 @@ export default function RootLayout({
               </Link>
               <Link href="/blog" className="hover:text-[var(--terracotta)] transition-colors">
                 Blog
+              </Link>
+              <Link href="/about" className="hover:text-[var(--terracotta)] transition-colors">
+                About
               </Link>
               <Link href="/contact" className="hover:text-[var(--terracotta)] transition-colors">
                 Contact
@@ -75,9 +95,20 @@ export default function RootLayout({
 
         <footer className="mt-16 border-t-2 border-[var(--ink)]">
           <div className="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-4 px-5 py-6">
-            <span className="text-xs uppercase tracking-[0.15em] text-[var(--ink-soft)]">
-              Ona — Cultural &amp; Creative Industries
-            </span>
+            <div className="flex flex-col gap-2">
+              <p className="font-[family-name:var(--font-display)] text-base">
+                Funding for Africa&rsquo;s creative work, in one place.
+              </p>
+              <div className="flex flex-wrap items-center gap-x-5 gap-y-2 text-xs uppercase tracking-[0.15em] text-[var(--ink-soft)]">
+                <span>Ona — Cultural &amp; Creative Industries</span>
+                <Link href="/about" className="transition-colors hover:text-[var(--terracotta)]">
+                  About
+                </Link>
+                <Link href="/contact" className="transition-colors hover:text-[var(--terracotta)]">
+                  Contact
+                </Link>
+              </div>
+            </div>
 
             <div className="flex items-center gap-3">
               <span className="mr-1 hidden text-xs uppercase tracking-[0.15em] text-[var(--ink-soft)] sm:inline">

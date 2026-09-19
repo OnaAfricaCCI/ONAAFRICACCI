@@ -37,15 +37,55 @@ body {
   color: var(--ink);
 }
 
-/* Editorial form controls — sharp, square, uniform */
+/* Editorial form controls — sharp, square, uniform.
+   Checkboxes and radios are excluded here and styled below; stripping their
+   appearance without replacing it renders them invisible. */
 select,
-input,
-textarea {
+textarea,
+input:not([type='checkbox']):not([type='radio']) {
   appearance: none;
   -webkit-appearance: none;
   border-radius: 0;
   box-sizing: border-box;
   font: inherit;
+}
+
+/* Square checkbox with a terracotta fill when ticked */
+input[type='checkbox'] {
+  appearance: none;
+  -webkit-appearance: none;
+  width: 1.05rem;
+  height: 1.05rem;
+  flex: 0 0 auto;
+  border: 2px solid var(--ink);
+  border-radius: 0;
+  background: var(--paper);
+  display: inline-grid;
+  place-content: center;
+  cursor: pointer;
+  transition: background-color 120ms ease;
+}
+
+input[type='checkbox']::before {
+  content: '';
+  width: 0.5rem;
+  height: 0.5rem;
+  background: var(--terracotta);
+  transform: scale(0);
+  transition: transform 120ms ease;
+}
+
+input[type='checkbox']:checked::before {
+  transform: scale(1);
+}
+
+input[type='checkbox']:hover {
+  background: var(--paper-deep);
+}
+
+input[type='checkbox']:focus-visible {
+  outline: 2px solid var(--terracotta);
+  outline-offset: 2px;
 }
 
 select {

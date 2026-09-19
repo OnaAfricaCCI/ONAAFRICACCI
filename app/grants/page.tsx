@@ -1,7 +1,9 @@
 'use client'
 
 import { useEffect, useMemo, useState } from 'react'
+import EmailCapture from '@/app/components/EmailCapture'
 import { supabase } from '@/lib/supabase'
+import { parseAmount } from '@/lib/amount'
 
 type Opportunity = {
   id: string
@@ -51,20 +53,6 @@ const SECTOR_COLORS: Record<string, string> = {
 
 function sectorColor(sector: string | null): string {
   return SECTOR_COLORS[(sector ?? '').toLowerCase()] ?? 'var(--forest)'
-}
-
-function parseAmount(amount: string | null): number | null {
-  if (!amount) return null
-  const matches = amount.replace(/,/g, '').match(/\d+(?:\.\d+)?\s*[kKmM]?/g)
-  if (!matches) return null
-  const values = matches.map((m) => {
-    const suffix = m.trim().slice(-1).toLowerCase()
-    const num = parseFloat(m)
-    if (suffix === 'k') return num * 1_000
-    if (suffix === 'm') return num * 1_000_000
-    return num
-  })
-  return Math.max(...values)
 }
 
 function formatDeadline(deadline: string | null, deadlineType: string | null): string | null {
@@ -198,14 +186,15 @@ export default function GrantsPage() {
       {/* Masthead */}
       <section className="border-b border-[var(--line)] py-12 sm:py-16">
         <p className="text-xs font-semibold uppercase tracking-[0.25em] text-[var(--terracotta)]">
-          The Grants Database
+          The grants database
         </p>
         <h1 className="mt-3 max-w-3xl font-[family-name:var(--font-display)] text-4xl font-semibold leading-[1.05] sm:text-6xl">
-          Funding for Africa&rsquo;s creative &amp; cultural industries.
+          Funding for Africa&rsquo;s creative and cultural industries.
         </h1>
         <p className="mt-5 max-w-xl text-base leading-relaxed text-[var(--ink-soft)]">
-          The money is out there. We track down the grants, prizes, residencies
-          and fellowships — so you can spend your time making the work.
+          Grants, prizes, residencies and fellowships from across the continent. We
+          check each one and keep it current, so your time goes into making the work,
+          not chasing the money.
         </p>
       </section>
 
@@ -297,7 +286,7 @@ export default function GrantsPage() {
           </select>
         </div>
 
-        {/* Row 2: toggles left, count right */}
+        {/* Row 2: toggles */}
         <div className="mt-3 flex items-center gap-5">
           <label className="flex cursor-pointer items-center gap-2 text-xs font-medium uppercase tracking-[0.12em] text-[var(--ink-soft)]">
             <input
@@ -319,9 +308,6 @@ export default function GrantsPage() {
               Clear all{activeFilters > 0 ? ` (${activeFilters})` : ''}
             </button>
           )}
-          <span className="ml-auto font-[family-name:var(--font-display)] text-sm text-[var(--ink-soft)]">
-            {loading ? '…' : `Showing ${filtered.length} of ${opportunities.length}`}
-          </span>
         </div>
       </section>
 
@@ -334,24 +320,32 @@ export default function GrantsPage() {
         )}
         {loading && (
           <p className="py-16 text-center text-sm uppercase tracking-[0.2em] text-[var(--ink-soft)]">
-            Loading opportunities…
+            Finding opportunities…
           </p>
         )}
 
         {!loading && !error && filtered.length === 0 && (
           <div className="border-2 border-dashed border-[var(--line)] p-16 text-center">
-            <p className="font-[family-name:var(--font-display)] text-2xl">
-              {opportunities.length === 0
-                ? 'Nothing here yet.'
-                : search
-                  ? `No results for “${search}”.`
-                  : 'Nothing matches.'}
-            </p>
-            <p className="mt-2 text-sm text-[var(--ink-soft)]">
-              {opportunities.length === 0
-                ? 'Opportunities will appear as the pipeline collects them.'
-                : 'Try a different search term, or clear some filters.'}
-            </p>
+            {activeFilters > 0 || search ? (
+              <>
+                <p className="font-[family-name:var(--font-display)] text-2xl">
+                  Nothing matches those filters yet.
+                </p>
+                <p className="mt-2 text-sm text-[var(--ink-soft)]">
+                  Try widening your search or clearing a filter.
+                </p>
+              </>
+            ) : (
+              <>
+                <p className="font-[family-name:var(--font-display)] text-2xl">
+                  No open opportunities right now.
+                </p>
+                <p className="mt-2 text-sm text-[var(--ink-soft)]">
+                  Check back soon, or turn on &ldquo;Show expired&rdquo; to see what&rsquo;s
+                  been listed before.
+                </p>
+              </>
+            )}
           </div>
         )}
 
@@ -471,6 +465,17 @@ export default function GrantsPage() {
           })}
         </ul>
       </section>
+
+      {!loading && !error && (
+        <div className="mb-14">
+          <EmailCapture
+            sectors={sectors}
+            countries={countries}
+            heading="Never miss a deadline"
+            blurb="A weekly email with what’s new and what’s closing soon. Tell us what you’re looking for and we’ll keep it relevant."
+          />
+        </div>
+      )}
     </main>
   )
 }

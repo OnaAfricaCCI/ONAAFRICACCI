@@ -148,7 +148,7 @@ export default function BlogPage() {
     <main className="mx-auto max-w-6xl px-5">
       <section className="border-b border-[var(--line)] py-12 sm:py-16">
         <p className="text-xs font-semibold uppercase tracking-[0.25em] text-[var(--terracotta)]">
-          The Blog
+          The blog
         </p>
         <h1 className="mt-3 max-w-3xl font-[family-name:var(--font-display)] text-4xl font-semibold leading-[1.05] sm:text-6xl">
           News from the ecosystem.
@@ -204,9 +204,9 @@ export default function BlogPage() {
       {!loading && !error && filtered.length === 0 && (
         <div className="my-10 border-2 border-dashed border-[var(--line)] p-16 text-center">
           <p className="font-[family-name:var(--font-display)] text-2xl">
-            Nothing of this kind yet.
+            No posts here yet.
           </p>
-          <p className="mt-2 text-sm text-[var(--ink-soft)]">Try another category.</p>
+          <p className="mt-2 text-sm text-[var(--ink-soft)]">Check back soon.</p>
         </div>
       )}
 
