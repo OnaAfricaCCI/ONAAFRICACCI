@@ -192,7 +192,7 @@ export default function FundersPage() {
       </section>
 
       {error && (
-        <p className="mt-8 border-2 border-[var(--error)] bg-[#fef2f2] p-5 text-sm">
+        <p className="mt-8 border-2 border-[var(--error)] bg-[var(--error-soft)] p-5 text-sm">
           Failed to load funders: {error}
         </p>
       )}

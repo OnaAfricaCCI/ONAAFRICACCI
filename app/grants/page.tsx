@@ -315,7 +315,7 @@ export default function GrantsPage() {
       {/* Results */}
       <section className="py-8">
         {error && (
-          <p className="border-2 border-[var(--error)] bg-[#fef2f2] p-5 text-sm">
+          <p className="border-2 border-[var(--error)] bg-[var(--error-soft)] p-5 text-sm">
             Failed to load: {error}
           </p>
         )}

@@ -3,6 +3,7 @@ import { Archivo_Black, Work_Sans, Space_Mono } from "next/font/google";
 import Link from "next/link";
 import BackToTop from "./components/BackToTop";
 import NavLinks from "./components/NavLinks";
+import ThemeToggle, { THEME_INIT_SCRIPT } from "./components/ThemeToggle";
 import "./globals.css";
 
 // TODO: replace with the real Ona profile URLs
@@ -62,6 +63,7 @@ export default function RootLayout({
   return (
     <html
       lang="en"
+      suppressHydrationWarning
       className={`${display.variable} ${body.variable} ${mono.variable} h-full antialiased`}
     >
       {/* Browser extensions (Grammarly et al.) inject attributes into <body>
@@ -70,6 +72,7 @@ export default function RootLayout({
         suppressHydrationWarning
         className="min-h-full flex flex-col bg-[var(--bg)] text-[var(--ink)] font-[family-name:var(--font-body)]"
       >
+        <script dangerouslySetInnerHTML={{ __html: THEME_INIT_SCRIPT }} />
         <header className="sticky top-0 z-30 border-b-2 border-[var(--ink)] bg-[var(--bg)]">
           <div className="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-x-6 gap-y-2 px-5 py-3 sm:h-16 sm:flex-nowrap sm:py-0">
             <Link
@@ -78,7 +81,10 @@ export default function RootLayout({
             >
               Ona.
             </Link>
-            <NavLinks />
+            <div className="flex basis-full items-center justify-between gap-4 sm:basis-auto">
+              <NavLinks />
+              <ThemeToggle />
+            </div>
           </div>
         </header>
 

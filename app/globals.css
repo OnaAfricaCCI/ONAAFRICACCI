@@ -6,7 +6,7 @@
    ============================================================================ */
 
 :root {
-  color-scheme: light only;
+  color-scheme: light;
 
   /* Brand */
   --ink: #0a0a0a;            /* Primary — headings, primary UI */
@@ -31,11 +31,46 @@
   --success: #16a34a;
   --warning: #ca8a04;
   --error: #ef4444;
+  --error-soft: #fef2f2;
 
-  /* ---- Legacy aliases ------------------------------------------------------
-     Components were built against the previous palette. Map those names onto
-     VoiceBox so everything converts at once. Note --terracotta deliberately
-     becomes BLACK: red is reintroduced only where --accent is used explicitly. */
+  /* Chevron for <select>, in the current ink colour */
+  --select-arrow: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%230a0a0a'/%3E%3C/svg%3E");
+}
+
+/* ---- Dark theme ----------------------------------------------------------
+   The same system, inverted: near-black page, off-white ink, greys stepped
+   the other way. Red stays red. Applied when the visitor has chosen dark, or
+   when they've made no choice and their device prefers dark. */
+:root[data-theme='dark'],
+:root:not([data-theme='light']):not([data-theme='dark']).system-dark {
+  color-scheme: dark;
+
+  --ink: #fafafa;
+  --bg: #0a0a0a;
+
+  --surface: #171717;
+  --surface-raised: #262626;
+
+  --ink-2: #a3a3a3;
+  --ink-3: #737373;
+
+  --border: #262626;
+  --border-md: #404040;
+  --border-strong: #fafafa;
+
+  --success: #22c55e;
+  --warning: #eab308;
+  --error-soft: #2a1414;
+
+  --select-arrow: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%23fafafa'/%3E%3C/svg%3E");
+}
+
+/* ---- Legacy aliases --------------------------------------------------------
+   Components were built against the previous palette. Map those names onto
+   VoiceBox so everything converts at once. They reference the theme tokens
+   via var(), so they follow light/dark automatically. Note --terracotta
+   deliberately becomes BLACK: red is reintroduced only via --accent. */
+:root {
   --paper: var(--bg);
   --paper-deep: var(--surface);
   --line: var(--border);
@@ -92,9 +127,31 @@ input:not([type='checkbox']):not([type='radio']) {
 }
 
 select {
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%230a0a0a'/%3E%3C/svg%3E");
+  background-image: var(--select-arrow);
   background-repeat: no-repeat;
   background-position: right 0.9rem center;
+  color: var(--ink);
+}
+
+/* Native dropdown lists and date pickers follow the theme */
+select option {
+  background: var(--bg);
+  color: var(--ink);
+}
+
+/* Theme change: fade colours rather than snap */
+body,
+header,
+footer,
+section,
+input,
+select,
+textarea,
+a,
+button {
+  transition-property: background-color, border-color, color;
+  transition-duration: 150ms;
+  transition-timing-function: ease;
 }
 
 input[type='search']::-webkit-search-decoration,
