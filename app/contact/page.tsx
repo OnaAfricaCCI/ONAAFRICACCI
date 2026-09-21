@@ -4,8 +4,8 @@ import Link from 'next/link'
 import { useState } from 'react'
 
 const inputClass =
-  'w-full border-2 border-[var(--ink)] bg-[var(--paper)] px-4 py-3 text-sm ' +
-  'placeholder:text-[var(--ink-soft)] focus:bg-white focus:outline-none transition-colors'
+  'control-h w-full border-2 border-[var(--border-md)] bg-[var(--bg)] px-[14px] text-sm ' +
+  'placeholder:text-[var(--ink-3)] focus:border-[var(--ink)] focus:outline-none transition-colors'
 
 export default function ContactPage() {
   const [name, setName] = useState('')
@@ -35,10 +35,10 @@ export default function ContactPage() {
   return (
     <main className="mx-auto max-w-6xl px-5">
       <section className="border-b border-[var(--line)] py-12 sm:py-16">
-        <p className="text-xs font-semibold uppercase tracking-[0.25em] text-[var(--terracotta)]">
+        <p className="text-[11px] font-bold uppercase tracking-[0.12em] text-[var(--ink-2)]">
           Contact
         </p>
-        <h1 className="mt-3 max-w-3xl font-[family-name:var(--font-display)] text-4xl font-semibold leading-[1.05] sm:text-6xl">
+        <h1 className="mt-3 max-w-3xl font-[family-name:var(--font-display)] text-[38px] leading-[1.05] sm:text-[56px]">
           Talk to us.
         </h1>
         <p className="mt-5 max-w-xl text-base leading-relaxed text-[var(--ink-soft)]">
@@ -49,10 +49,10 @@ export default function ContactPage() {
       <section className="grid gap-px border border-[var(--line)] bg-[var(--line)] my-12 lg:grid-cols-2">
         {/* Seekers + general */}
         <div className="bg-[var(--paper)] p-8 sm:p-10">
-          <p className="text-xs font-semibold uppercase tracking-[0.2em] text-[var(--forest)]">
+          <p className="text-[11px] font-bold uppercase tracking-[0.12em] text-[var(--ink-2)]">
             For grant seekers and everyone else
           </p>
-          <h2 className="mt-2 font-[family-name:var(--font-display)] text-3xl font-semibold">
+          <h2 className="mt-2 font-[family-name:var(--font-display)] text-2xl leading-[1.2]">
             Get in touch
           </h2>
           <p className="mt-3 text-sm leading-relaxed text-[var(--ink-soft)]">
@@ -87,7 +87,7 @@ export default function ContactPage() {
                 required
               />
               <textarea
-                className={inputClass}
+                className={`${inputClass} h-auto py-3`}
                 placeholder="Your message"
                 rows={5}
                 value={message}
@@ -95,12 +95,12 @@ export default function ContactPage() {
                 required
               />
               {status === 'error' && (
-                <p className="text-sm font-medium text-[var(--terracotta)]">{errorMsg}</p>
+                <p className="text-sm font-medium text-[var(--error)]">{errorMsg}</p>
               )}
               <button
                 type="submit"
                 disabled={status === 'sending'}
-                className="border-2 border-[var(--ink)] bg-[var(--ink)] px-6 py-3 text-xs font-bold uppercase tracking-[0.15em] text-[var(--paper)] transition-colors hover:bg-transparent hover:text-[var(--ink)] disabled:opacity-50"
+                className="border-2 border-[var(--ink)] bg-[var(--ink)] px-6 py-3 text-[13px] font-bold uppercase tracking-[0.06em] text-[var(--bg)] transition-colors hover:border-[var(--accent)] hover:bg-[var(--accent)] disabled:opacity-50"
               >
                 {status === 'sending' ? 'Sending…' : 'Send message'}
               </button>
@@ -110,10 +110,10 @@ export default function ContactPage() {
 
         {/* Providers */}
         <div className="flex flex-col bg-[var(--paper-deep)] p-8 sm:p-10">
-          <p className="text-xs font-semibold uppercase tracking-[0.2em] text-[var(--terracotta)]">
+          <p className="text-[11px] font-bold uppercase tracking-[0.12em] text-[var(--ink-2)]">
             For grant and fund providers
           </p>
-          <h2 className="mt-2 font-[family-name:var(--font-display)] text-3xl font-semibold">
+          <h2 className="mt-2 font-[family-name:var(--font-display)] text-2xl leading-[1.2]">
             List your opportunity
           </h2>
           <p className="mt-3 text-sm leading-relaxed text-[var(--ink-soft)]">
@@ -140,7 +140,7 @@ export default function ContactPage() {
           <div className="mt-auto pt-10">
             <Link
               href="/contact/submit"
-              className="inline-block border-2 border-[var(--ink)] bg-[var(--terracotta)] px-6 py-3 text-xs font-bold uppercase tracking-[0.15em] text-[var(--paper)] transition-colors hover:bg-[var(--ink)]"
+              className="inline-block border-2 border-[var(--ink)] bg-[var(--ink)] px-6 py-3 text-[13px] font-bold uppercase tracking-[0.06em] text-[var(--bg)] transition-colors hover:border-[var(--accent)] hover:bg-[var(--accent)]"
             >
               Submit an opportunity →
             </Link>

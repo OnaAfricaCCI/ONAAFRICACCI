@@ -33,7 +33,7 @@ export default async function UnsubscribePage({
     <main className="mx-auto max-w-2xl px-5 py-24 text-center">
       {state === 'done' && (
         <>
-          <h1 className="font-[family-name:var(--font-display)] text-4xl font-semibold">
+          <h1 className="font-[family-name:var(--font-display)] text-[38px] leading-[1.1]">
             You&rsquo;re unsubscribed.
           </h1>
           <p className="mt-4 text-[var(--ink-soft)]">
@@ -45,13 +45,13 @@ export default async function UnsubscribePage({
 
       {state === 'missing' && (
         <>
-          <h1 className="font-[family-name:var(--font-display)] text-4xl font-semibold">
+          <h1 className="font-[family-name:var(--font-display)] text-[38px] leading-[1.1]">
             Link not recognised.
           </h1>
           <p className="mt-4 text-[var(--ink-soft)]">
             This unsubscribe link is invalid or has already been used. If you&rsquo;re
             still receiving emails,{' '}
-            <Link href="/contact" className="underline underline-offset-4 hover:text-[var(--terracotta)]">
+            <Link href="/contact" className="underline underline-offset-4 hover:text-[var(--accent)]">
               tell us
             </Link>{' '}
             and we&rsquo;ll remove you by hand.
@@ -61,12 +61,12 @@ export default async function UnsubscribePage({
 
       {state === 'error' && (
         <>
-          <h1 className="font-[family-name:var(--font-display)] text-4xl font-semibold">
+          <h1 className="font-[family-name:var(--font-display)] text-[38px] leading-[1.1]">
             Something went wrong.
           </h1>
           <p className="mt-4 text-[var(--ink-soft)]">
             We couldn&rsquo;t process that just now. Please try the link again, or{' '}
-            <Link href="/contact" className="underline underline-offset-4 hover:text-[var(--terracotta)]">
+            <Link href="/contact" className="underline underline-offset-4 hover:text-[var(--accent)]">
               contact us
             </Link>
             .
@@ -76,7 +76,7 @@ export default async function UnsubscribePage({
 
       <Link
         href="/grants"
-        className="mt-10 inline-block border-2 border-[var(--ink)] px-6 py-3 text-xs font-bold uppercase tracking-[0.15em] transition-colors hover:bg-[var(--ink)] hover:text-[var(--paper)]"
+        className="mt-10 inline-block border-2 border-[var(--ink)] px-6 py-3 text-[13px] font-bold uppercase tracking-[0.06em] transition-colors hover:bg-[var(--ink)] hover:text-[var(--bg)]"
       >
         Browse the grants database
       </Link>

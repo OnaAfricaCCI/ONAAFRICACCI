@@ -33,7 +33,7 @@ function Section({
 /** Blank-line separated paragraphs. */
 function Prose({ text }: { text: string }) {
   return (
-    <div className="space-y-4 text-[17px] leading-relaxed text-[var(--ink)]/90">
+    <div className="space-y-4 text-[17px] leading-relaxed text-[var(--ink-2)]">
       {text
         .split(/\n{2,}/)
         .map((p) => p.trim())
@@ -111,7 +111,7 @@ export default async function FunderProfilePage({
             <p className="text-xs font-semibold uppercase tracking-[0.25em] text-[var(--ink-soft)]">
               {f.funder_type ?? 'Funder'}
             </p>
-            <h1 className="mt-2 font-[family-name:var(--font-display)] text-4xl font-semibold leading-tight sm:text-5xl">
+            <h1 className="mt-2 font-[family-name:var(--font-display)] text-[34px] leading-[1.1] sm:text-[48px]">
               {f.name}
             </h1>
             {f.acronym && (
@@ -235,7 +235,7 @@ export default async function FunderProfilePage({
                 <span className="text-[10px] font-semibold uppercase tracking-[0.15em] text-[var(--ink-soft)]">
                   {l.label}
                 </span>
-                <span className="underline decoration-[var(--terracotta)] decoration-2 underline-offset-4 group-hover:text-[var(--terracotta)]">
+                <span className="underline decoration-[var(--ink)] decoration-2 underline-offset-4 group-hover:text-[var(--accent)]">
                   {l.href!.replace(/^https?:\/\//, '').replace(/\/$/, '')} ↗
                 </span>
               </a>
@@ -256,7 +256,7 @@ export default async function FunderProfilePage({
               </span>{' '}
               <a
                 href={`mailto:${f.contact_email}`}
-                className="underline decoration-[var(--terracotta)] decoration-2 underline-offset-4 hover:text-[var(--terracotta)]"
+                className="underline decoration-[var(--ink)] decoration-2 underline-offset-4 hover:text-[var(--accent)]"
               >
                 {f.contact_email}
               </a>
@@ -283,7 +283,7 @@ export default async function FunderProfilePage({
                 href={f.source_url}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="underline underline-offset-4 hover:text-[var(--terracotta)]"
+                className="underline underline-offset-4 hover:text-[var(--accent)]"
               >
                 source ↗
               </a>

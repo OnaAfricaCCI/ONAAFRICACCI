@@ -52,7 +52,7 @@ export default async function PostPage({
             </>
           )}
         </div>
-        <h1 className="mt-3 font-[family-name:var(--font-display)] text-4xl font-semibold leading-tight sm:text-5xl">
+        <h1 className="mt-3 font-[family-name:var(--font-display)] text-[34px] leading-[1.1] sm:text-[48px]">
           {post.title}
         </h1>
         {post.excerpt && (
@@ -82,7 +82,7 @@ export default async function PostPage({
 
       {/* Body — blank-line separated paragraphs */}
       {post.body && (
-        <div className="mt-10 space-y-5 text-[17px] leading-relaxed text-[var(--ink)]/90">
+        <div className="mt-10 space-y-5 text-[17px] leading-relaxed text-[var(--ink-2)]">
           {post.body
             .split(/\n{2,}/)
             .map((para) => para.trim())

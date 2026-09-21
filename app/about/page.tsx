@@ -52,31 +52,31 @@ export default function AboutPage() {
     <main className="mx-auto max-w-3xl px-5">
       {/* Mission */}
       <section className="border-b border-[var(--line)] py-12 sm:py-16">
-        <p className="text-xs font-semibold uppercase tracking-[0.25em] text-[var(--terracotta)]">
+        <p className="text-[11px] font-bold uppercase tracking-[0.12em] text-[var(--ink-2)]">
           About Ona
         </p>
-        <h1 className="mt-3 font-[family-name:var(--font-display)] text-4xl font-semibold leading-[1.05] sm:text-6xl">
+        <h1 className="mt-3 font-[family-name:var(--font-display)] text-[38px] leading-[1.05] sm:text-[56px]">
           We put the funding where everyone can see it.
         </h1>
-        <p className="mt-6 text-lg leading-relaxed text-[var(--ink)]/90">
+        <p className="mt-6 text-lg leading-relaxed text-[var(--ink-2)]">
           Ona is a public record of the funding open to Africa&rsquo;s cultural and
           creative industries. We gather the grants, prizes, residencies and fellowships
           scattered across hundreds of websites, put them in one place, and keep them
           current. Whether you&rsquo;re in Kisumu or Dakar, you see what someone with a
           well-connected inbox sees.
         </p>
-        <p className="mt-6 border-l-4 border-[var(--ochre)] pl-4 text-[15px] leading-relaxed text-[var(--ink-soft)]">
-          <em>Ona</em> means &ldquo;see&rdquo; in Swahili. That&rsquo;s the point. Making
+        <p className="pull-quote mt-8 text-[var(--ink)]">
+          <em>Ona</em>{' '}means &ldquo;see&rdquo; in Swahili. That&rsquo;s the point. Making
           funding visible to the people who should have it.
         </p>
       </section>
 
       {/* The problem */}
       <section className="border-b border-[var(--line)] py-12">
-        <h2 className="font-[family-name:var(--font-display)] text-2xl font-semibold sm:text-3xl">
+        <h2 className="font-[family-name:var(--font-display)] text-2xl leading-[1.2]">
           The problem we&rsquo;re solving
         </h2>
-        <div className="mt-5 space-y-4 text-[17px] leading-relaxed text-[var(--ink)]/85">
+        <div className="mt-5 space-y-4 text-[17px] leading-relaxed text-[var(--ink-2)]">
           <p>
             The money exists. Funders across the continent and beyond put real sums into
             African creative work every year. What doesn&rsquo;t exist is an easy way to
@@ -98,7 +98,7 @@ export default function AboutPage() {
 
       {/* How we verify */}
       <section className="border-b border-[var(--line)] py-12">
-        <h2 className="font-[family-name:var(--font-display)] text-2xl font-semibold sm:text-3xl">
+        <h2 className="font-[family-name:var(--font-display)] text-2xl leading-[1.2]">
           How we verify
         </h2>
         <p className="mt-3 text-[15px] text-[var(--ink-soft)]">
@@ -119,7 +119,7 @@ export default function AboutPage() {
                 <h3 className="font-[family-name:var(--font-display)] text-xl font-semibold leading-snug">
                   {step.title}
                 </h3>
-                <p className="mt-1.5 text-[15px] leading-relaxed text-[var(--ink)]/80">
+                <p className="mt-1.5 text-[15px] leading-relaxed text-[var(--ink-2)]">
                   {step.body}
                 </p>
               </div>
@@ -130,14 +130,14 @@ export default function AboutPage() {
 
       {/* Who's behind Ona */}
       <section className="py-12">
-        <h2 className="font-[family-name:var(--font-display)] text-2xl font-semibold sm:text-3xl">
+        <h2 className="font-[family-name:var(--font-display)] text-2xl leading-[1.2]">
           Who&rsquo;s behind Ona
         </h2>
 
         <div className="mt-6 flex flex-col gap-6 sm:flex-row sm:items-start">
           {/* Photo, with a monogram fallback so a missing file never looks broken */}
           <div className="relative h-32 w-32 shrink-0 overflow-hidden border-2 border-[var(--ink)] bg-[var(--paper-deep)]">
-            <span className="absolute inset-0 flex items-center justify-center font-[family-name:var(--font-display)] text-4xl font-semibold text-[var(--ink)]/25">
+            <span className="absolute inset-0 flex items-center justify-center font-[family-name:var(--font-display)] text-[38px] leading-[1.1] text-[var(--ink)]/25">
               {FOUNDER.name.charAt(0)}
             </span>
             {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -156,7 +156,7 @@ export default function AboutPage() {
               {FOUNDER.role}
             </p>
 
-            <div className="mt-4 space-y-4 text-[17px] leading-relaxed text-[var(--ink)]/85">
+            <div className="mt-4 space-y-4 text-[17px] leading-relaxed text-[var(--ink-2)]">
               {FOUNDER.bio.map((para) => (
                 <p key={para.slice(0, 24)}>{para}</p>
               ))}
@@ -164,7 +164,7 @@ export default function AboutPage() {
 
             <Link
               href="/contact"
-              className="mt-6 inline-block border-2 border-[var(--ink)] px-6 py-3 text-xs font-bold uppercase tracking-[0.15em] transition-colors hover:bg-[var(--ink)] hover:text-[var(--paper)]"
+              className="mt-6 inline-block border-2 border-[var(--ink)] px-6 py-3 text-[13px] font-bold uppercase tracking-[0.06em] transition-colors hover:bg-[var(--ink)] hover:text-[var(--bg)]"
             >
               Get in touch
             </Link>

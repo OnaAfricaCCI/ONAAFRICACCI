@@ -1,7 +1,8 @@
 import type { Metadata } from "next";
-import { Fraunces, Archivo } from "next/font/google";
+import { Archivo_Black, Work_Sans, Space_Mono } from "next/font/google";
 import Link from "next/link";
 import BackToTop from "./components/BackToTop";
+import NavLinks from "./components/NavLinks";
 import "./globals.css";
 
 // TODO: replace with the real Ona profile URLs
@@ -10,14 +11,20 @@ const SOCIAL = {
   linkedin: "https://www.linkedin.com/",
 };
 
-const fraunces = Fraunces({
+const display = Archivo_Black({
   variable: "--font-display",
+  weight: "400",
   subsets: ["latin"],
-  axes: ["SOFT", "WONK", "opsz"],
 });
 
-const archivo = Archivo({
+const body = Work_Sans({
   variable: "--font-body",
+  subsets: ["latin"],
+});
+
+const mono = Space_Mono({
+  variable: "--font-mono",
+  weight: ["400", "700"],
   subsets: ["latin"],
 });
 
@@ -55,63 +62,47 @@ export default function RootLayout({
   return (
     <html
       lang="en"
-      className={`${fraunces.variable} ${archivo.variable} h-full antialiased`}
+      className={`${display.variable} ${body.variable} ${mono.variable} h-full antialiased`}
     >
       {/* Browser extensions (Grammarly et al.) inject attributes into <body>
           before hydration; ignore those rather than warn on every load. */}
       <body
         suppressHydrationWarning
-        className="min-h-full flex flex-col bg-[var(--paper)] text-[var(--ink)] font-[family-name:var(--font-body)]"
+        className="min-h-full flex flex-col bg-[var(--bg)] text-[var(--ink)] font-[family-name:var(--font-body)]"
       >
-        <header className="sticky top-0 z-30 border-b-2 border-[var(--ink)] bg-[var(--paper)]/95 backdrop-blur-sm">
-          <div className="mx-auto flex h-16 max-w-6xl items-center justify-between px-5">
+        <header className="sticky top-0 z-30 border-b-2 border-[var(--ink)] bg-[var(--bg)]">
+          <div className="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-x-6 gap-y-2 px-5 py-3 sm:h-16 sm:flex-nowrap sm:py-0">
             <Link
               href="/"
-              className="font-[family-name:var(--font-display)] text-2xl font-semibold tracking-tight"
+              className="font-[family-name:var(--font-display)] text-[26px] leading-none"
             >
-              Ona<span className="text-[var(--terracotta)]">.</span>
+              Ona.
             </Link>
-            <nav className="flex gap-6 text-sm font-medium uppercase tracking-[0.12em]">
-              <Link href="/grants" className="hover:text-[var(--terracotta)] transition-colors">
-                Grants
-              </Link>
-              <Link href="/funders" className="hover:text-[var(--terracotta)] transition-colors">
-                Funders
-              </Link>
-              <Link href="/blog" className="hover:text-[var(--terracotta)] transition-colors">
-                Blog
-              </Link>
-              <Link href="/about" className="hover:text-[var(--terracotta)] transition-colors">
-                About
-              </Link>
-              <Link href="/contact" className="hover:text-[var(--terracotta)] transition-colors">
-                Contact
-              </Link>
-            </nav>
+            <NavLinks />
           </div>
         </header>
 
         <div className="flex-1">{children}</div>
 
-        <footer className="mt-16 border-t-2 border-[var(--ink)]">
-          <div className="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-4 px-5 py-6">
-            <div className="flex flex-col gap-2">
-              <p className="font-[family-name:var(--font-display)] text-base">
+        <footer className="mt-24 border-t-2 border-[var(--ink)] bg-[var(--ink)] text-[var(--bg)]">
+          <div className="mx-auto flex max-w-6xl flex-wrap items-end justify-between gap-6 px-5 py-10">
+            <div className="flex flex-col gap-3">
+              <p className="font-[family-name:var(--font-display)] text-2xl leading-tight sm:text-3xl">
                 Funding for Africa&rsquo;s creative work, in one place.
               </p>
-              <div className="flex flex-wrap items-center gap-x-5 gap-y-2 text-xs uppercase tracking-[0.15em] text-[var(--ink-soft)]">
+              <div className="flex flex-wrap items-center gap-x-5 gap-y-2 text-[11px] font-bold uppercase tracking-[0.12em] text-[var(--ink-3)]">
                 <span>Ona — Cultural &amp; Creative Industries</span>
-                <Link href="/about" className="transition-colors hover:text-[var(--terracotta)]">
+                <Link href="/about" className="transition-colors hover:text-[var(--bg)]">
                   About
                 </Link>
-                <Link href="/contact" className="transition-colors hover:text-[var(--terracotta)]">
+                <Link href="/contact" className="transition-colors hover:text-[var(--bg)]">
                   Contact
                 </Link>
               </div>
             </div>
 
             <div className="flex items-center gap-3">
-              <span className="mr-1 hidden text-xs uppercase tracking-[0.15em] text-[var(--ink-soft)] sm:inline">
+              <span className="mr-1 hidden text-[11px] font-bold uppercase tracking-[0.12em] text-[var(--ink-3)] sm:inline">
                 Follow
               </span>
               <a
@@ -119,7 +110,7 @@ export default function RootLayout({
                 target="_blank"
                 rel="noopener noreferrer"
                 aria-label="Ona on Instagram"
-                className="flex h-9 w-9 items-center justify-center border-2 border-[var(--ink)] text-[var(--ink)] transition-colors hover:bg-[var(--ink)] hover:text-[var(--paper)]"
+                className="flex h-10 w-10 items-center justify-center border-2 border-[var(--bg)] text-[var(--bg)] transition-colors hover:bg-[var(--bg)] hover:text-[var(--ink)]"
               >
                 <svg viewBox="0 0 24 24" fill="currentColor" className="h-4 w-4">
                   <path d="M12 2.2c3.2 0 3.6 0 4.9.07 1.2.05 1.8.25 2.2.42.6.22 1 .48 1.4.9.4.4.7.8.9 1.4.2.4.4 1 .4 2.2.1 1.3.1 1.7.1 4.9s0 3.6-.1 4.9c0 1.2-.2 1.8-.4 2.2-.2.6-.5 1-.9 1.4-.4.4-.8.7-1.4.9-.4.2-1 .4-2.2.4-1.3.1-1.7.1-4.9.1s-3.6 0-4.9-.1c-1.2 0-1.8-.2-2.2-.4-.6-.2-1-.5-1.4-.9-.4-.4-.7-.8-.9-1.4-.2-.4-.4-1-.4-2.2C2.2 15.6 2.2 15.2 2.2 12s0-3.6.1-4.9c0-1.2.2-1.8.4-2.2.2-.6.5-1 .9-1.4.4-.4.8-.7 1.4-.9.4-.2 1-.4 2.2-.4C8.4 2.2 8.8 2.2 12 2.2zm0 1.8c-3.1 0-3.5 0-4.7.07-1.1.05-1.7.24-2.1.4-.5.2-.9.44-1.3.84-.4.4-.64.8-.84 1.3-.16.4-.35 1-.4 2.1C2.6 8.5 2.6 8.9 2.6 12s0 3.5.07 4.7c.05 1.1.24 1.7.4 2.1.2.5.44.9.84 1.3.4.4.8.64 1.3.84.4.16 1 .35 2.1.4 1.2.07 1.6.07 4.7.07s3.5 0 4.7-.07c1.1-.05 1.7-.24 2.1-.4.5-.2.9-.44 1.3-.84.4-.4.64-.8.84-1.3.16-.4.35-1 .4-2.1.07-1.2.07-1.6.07-4.7s0-3.5-.07-4.7c-.05-1.1-.24-1.7-.4-2.1-.2-.5-.44-.9-.84-1.3-.4-.4-.8-.64-1.3-.84-.4-.16-1-.35-2.1-.4C15.5 4 15.1 4 12 4z" />
@@ -132,7 +123,7 @@ export default function RootLayout({
                 target="_blank"
                 rel="noopener noreferrer"
                 aria-label="Ona on LinkedIn"
-                className="flex h-9 w-9 items-center justify-center border-2 border-[var(--ink)] text-[var(--ink)] transition-colors hover:bg-[var(--ink)] hover:text-[var(--paper)]"
+                className="flex h-10 w-10 items-center justify-center border-2 border-[var(--bg)] text-[var(--bg)] transition-colors hover:bg-[var(--bg)] hover:text-[var(--ink)]"
               >
                 <svg viewBox="0 0 24 24" fill="currentColor" className="h-4 w-4">
                   <path d="M4.98 3.5a2.5 2.5 0 11-.02 5 2.5 2.5 0 01.02-5zM3 9h4v12H3zM10 9h3.8v1.65h.05c.53-1 1.83-2.05 3.75-2.05C21.3 8.6 22 10.9 22 14.05V21h-4v-6.2c0-1.48-.03-3.38-2.05-3.38-2.06 0-2.37 1.6-2.37 3.27V21h-4z" />

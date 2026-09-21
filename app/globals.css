@@ -1,45 +1,86 @@
 @import "tailwindcss";
 
+/* ============================================================================
+   VoiceBox design system — bold, flat, editorial.
+   Black-on-white foundations, thick borders, one red accent used sparingly.
+   ============================================================================ */
+
 :root {
   color-scheme: light only;
-  --paper: #faf5ec;
-  --paper-deep: #f2ead9;
-  --ink: #211a12;
-  --ink-soft: #6f6455;
-  --terracotta: #c14a1b;
-  --terracotta-soft: #f3ddd2;
-  --forest: #2e4a3a;
-  --forest-soft: #dde8dd;
-  --ochre: #d99a2b;
-  --ochre-soft: #f6ead0;
-  --line: #d8cdb9;
+
+  /* Brand */
+  --ink: #0a0a0a;            /* Primary — headings, primary UI */
+  --accent: #ef4444;         /* Secondary — the one red. Use like a scalpel. */
+  --accent-active: #dc2626;
+  --bg: #fafafa;             /* Tertiary — page background, inverse text */
+
+  /* Surfaces */
+  --surface: #f5f5f5;        /* cards, aside blocks */
+  --surface-raised: #e5e5e5; /* hover backgrounds, pull-quote blocks */
+
+  /* Content */
+  --ink-2: #525252;          /* bylines, secondary prose */
+  --ink-3: #a3a3a3;          /* placeholders, disabled */
+
+  /* Borders */
+  --border: #e5e5e5;         /* subtle */
+  --border-md: #d4d4d4;      /* medium */
+  --border-strong: #0a0a0a;
+
+  /* Semantic */
+  --success: #16a34a;
+  --warning: #ca8a04;
+  --error: #ef4444;
+
+  /* ---- Legacy aliases ------------------------------------------------------
+     Components were built against the previous palette. Map those names onto
+     VoiceBox so everything converts at once. Note --terracotta deliberately
+     becomes BLACK: red is reintroduced only where --accent is used explicitly. */
+  --paper: var(--bg);
+  --paper-deep: var(--surface);
+  --line: var(--border);
+  --ink-soft: var(--ink-2);
+  --terracotta: var(--ink);
+  --terracotta-soft: var(--surface);
+  --forest: var(--ink);
+  --forest-soft: var(--surface);
+  --ochre: var(--border-md);
+  --ochre-soft: var(--surface);
 }
 
 @theme inline {
-  --color-paper: var(--paper);
+  --color-bg: var(--bg);
   --color-ink: var(--ink);
+  --color-accent: var(--accent);
   --font-sans: var(--font-body);
+  --font-mono: var(--font-mono);
 }
 
+/* No textures, no gradients: typography does the work. */
 body {
-  background-color: var(--paper);
+  background-color: var(--bg);
   color: var(--ink);
-  /* faint paper grain */
-  background-image: radial-gradient(
-      rgba(33, 26, 18, 0.035) 1px,
-      transparent 1px
-    );
-  background-size: 24px 24px;
+  font-family: var(--font-body), -apple-system, "Segoe UI", Helvetica, sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Display type: Archivo Black is a single weight, so scale and tracking carry
+   the hierarchy. These apply wherever the display font is requested. */
+.font-\[family-name\:var\(--font-display\)\] {
+  font-weight: 400 !important;
+  letter-spacing: -0.02em;
+}
+h1.font-\[family-name\:var\(--font-display\)\] {
+  letter-spacing: -0.03em;
+  line-height: 1.05;
 }
 
 ::selection {
-  background: var(--ochre);
-  color: var(--ink);
+  background: var(--ink);
+  color: var(--bg);
 }
 
-/* Editorial form controls — sharp, square, uniform.
-   Checkboxes and radios are excluded here and styled below; stripping their
-   appearance without replacing it renders them invisible. */
+/* ---- Form controls: sharp, 44px, thick borders ---------------------------- */
 select,
 textarea,
 input:not([type='checkbox']):not([type='radio']) {
@@ -50,52 +91,12 @@ input:not([type='checkbox']):not([type='radio']) {
   font: inherit;
 }
 
-/* Square checkbox with a terracotta fill when ticked */
-input[type='checkbox'] {
-  appearance: none;
-  -webkit-appearance: none;
-  width: 1.05rem;
-  height: 1.05rem;
-  flex: 0 0 auto;
-  border: 2px solid var(--ink);
-  border-radius: 0;
-  background: var(--paper);
-  display: inline-grid;
-  place-content: center;
-  cursor: pointer;
-  transition: background-color 120ms ease;
-}
-
-input[type='checkbox']::before {
-  content: '';
-  width: 0.5rem;
-  height: 0.5rem;
-  background: var(--terracotta);
-  transform: scale(0);
-  transition: transform 120ms ease;
-}
-
-input[type='checkbox']:checked::before {
-  transform: scale(1);
-}
-
-input[type='checkbox']:hover {
-  background: var(--paper-deep);
-}
-
-input[type='checkbox']:focus-visible {
-  outline: 2px solid var(--terracotta);
-  outline-offset: 2px;
-}
-
 select {
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%23211a12'/%3E%3C/svg%3E");
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%230a0a0a'/%3E%3C/svg%3E");
   background-repeat: no-repeat;
   background-position: right 0.9rem center;
 }
 
-/* Suppress the native search widget (its built-in clear button and inset
-   decoration overflow our own border box) */
 input[type='search']::-webkit-search-decoration,
 input[type='search']::-webkit-search-cancel-button,
 input[type='search']::-webkit-search-results-button,
@@ -105,22 +106,91 @@ input[type='search']::-webkit-search-results-decoration {
   display: none;
 }
 
-/* Uniform control height across the filter bar */
 .control-h {
-  height: 2.75rem;
+  height: 2.75rem; /* 44px */
+}
+
+/* Stark focus ring: white gap, then black. */
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible,
+button:focus-visible,
+a:focus-visible,
+[tabindex]:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 2px var(--bg), 0 0 0 4px var(--ink);
+}
+
+/* Checkbox: 18px square, fills black with a white tick. */
+input[type='checkbox'] {
+  appearance: none;
+  -webkit-appearance: none;
+  width: 18px;
+  height: 18px;
+  flex: 0 0 auto;
+  border: 2px solid var(--ink);
+  border-radius: 0;
+  background: var(--bg);
+  display: inline-grid;
+  place-content: center;
+  cursor: pointer;
+  transition: background-color 120ms ease;
+}
+input[type='checkbox']::before {
+  content: '';
+  width: 10px;
+  height: 6px;
+  border-left: 2px solid var(--bg);
+  border-bottom: 2px solid var(--bg);
+  transform: translateY(-1px) rotate(-45deg) scale(0);
+  transition: transform 120ms ease;
+}
+input[type='checkbox']:checked {
+  background: var(--ink);
+}
+input[type='checkbox']:checked::before {
+  transform: translateY(-1px) rotate(-45deg) scale(1);
+}
+input[type='checkbox']:hover:not(:checked) {
+  background: var(--surface);
+}
+input[type='checkbox']:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+
+/* ---- Editorial accents ----------------------------------------------------- */
+
+/* Red underline: featured items and the active nav link. */
+.red-rule {
+  border-bottom: 3px solid var(--accent);
+}
+
+/* Pull quote: red left rule, large italic. */
+.pull-quote {
+  border-left: 4px solid var(--accent);
+  padding-left: 1.25rem;
+  font-size: 1.25rem;
+  line-height: 1.65;
+  font-style: italic;
 }
 
 @keyframes rise-in {
   from {
     opacity: 0;
-    transform: translateY(14px);
+    transform: translateY(10px);
   }
   to {
     opacity: 1;
     transform: translateY(0);
   }
 }
-
 .rise-in {
-  animation: rise-in 0.5s cubic-bezier(0.2, 0.7, 0.2, 1) both;
+  animation: rise-in 0.4s cubic-bezier(0.2, 0.7, 0.2, 1) both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .rise-in {
+    animation: none;
+  }
 }

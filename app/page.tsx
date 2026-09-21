@@ -80,10 +80,10 @@ export default async function Home() {
     <main>
       {/* Hero */}
       <section className="mx-auto max-w-6xl px-5 py-16 sm:py-24">
-        <p className="text-xs font-semibold uppercase tracking-[0.25em] text-[var(--terracotta)]">
+        <p className="text-[11px] font-bold uppercase tracking-[0.12em] text-[var(--ink-2)]">
           Ona — Cultural &amp; Creative Industries
         </p>
-        <h1 className="mt-4 max-w-4xl font-[family-name:var(--font-display)] text-5xl font-semibold leading-[1.02] sm:text-7xl">
+        <h1 className="mt-4 max-w-4xl font-[family-name:var(--font-display)] text-[40px] leading-[1.05] sm:text-[64px]">
           The funding is out there.
           <br className="hidden sm:block" /> We help you find it.
         </h1>
@@ -95,13 +95,13 @@ export default async function Home() {
         <div className="mt-9 flex flex-wrap gap-3">
           <Link
             href="/grants"
-            className="border-2 border-[var(--ink)] bg-[var(--ink)] px-7 py-3.5 text-xs font-bold uppercase tracking-[0.15em] text-[var(--paper)] transition-colors hover:bg-transparent hover:text-[var(--ink)]"
+            className="border-2 border-[var(--ink)] bg-[var(--ink)] px-7 py-3.5 text-[13px] font-bold uppercase tracking-[0.06em] text-[var(--bg)] transition-colors hover:border-[var(--accent)] hover:bg-[var(--accent)]"
           >
             Browse grants
           </Link>
           <Link
             href="/contact/submit"
-            className="border-2 border-[var(--ink)] px-7 py-3.5 text-xs font-bold uppercase tracking-[0.15em] transition-colors hover:bg-[var(--ink)] hover:text-[var(--paper)]"
+            className="border-2 border-[var(--ink)] px-7 py-3.5 text-[13px] font-bold uppercase tracking-[0.06em] transition-colors hover:bg-[var(--ink)] hover:text-[var(--bg)]"
           >
             List an opportunity
           </Link>

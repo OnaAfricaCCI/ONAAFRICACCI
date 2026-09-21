@@ -179,18 +179,17 @@ export default function GrantsPage() {
   ).length
 
   const selectClass =
-    'control-h w-full truncate border-2 border-[var(--ink)] bg-[var(--paper)] pl-4 pr-9 text-sm font-medium ' +
-    'cursor-pointer transition-colors hover:bg-[var(--paper-deep)] focus:outline-none ' +
-    'focus:bg-[var(--paper-deep)]'
+    'control-h w-full truncate border-2 border-[var(--border-md)] bg-[var(--bg)] pl-[14px] pr-9 text-sm font-medium ' +
+    'cursor-pointer transition-colors hover:border-[var(--ink)] focus:border-[var(--ink)] focus:outline-none'
 
   return (
     <main className="mx-auto max-w-6xl px-5">
       {/* Masthead */}
       <section className="border-b border-[var(--line)] py-12 sm:py-16">
-        <p className="text-xs font-semibold uppercase tracking-[0.25em] text-[var(--terracotta)]">
+        <p className="text-[11px] font-bold uppercase tracking-[0.12em] text-[var(--ink-2)]">
           The grants database
         </p>
-        <h1 className="mt-3 max-w-3xl font-[family-name:var(--font-display)] text-4xl font-semibold leading-[1.05] sm:text-6xl">
+        <h1 className="mt-3 max-w-3xl font-[family-name:var(--font-display)] text-[38px] leading-[1.05] sm:text-[56px]">
           Funding for Africa&rsquo;s creative and cultural industries.
         </h1>
         <p className="mt-5 max-w-xl text-base leading-relaxed text-[var(--ink-soft)]">
@@ -201,7 +200,7 @@ export default function GrantsPage() {
       </section>
 
       {/* Filter bar */}
-      <section className="sticky top-[66px] z-10 -mx-5 border-b border-[var(--line)] bg-[var(--paper)]/95 px-5 py-4 backdrop-blur-sm">
+      <section className="sticky top-[92px] sm:top-[66px] z-10 -mx-5 border-b border-[var(--line)] bg-[var(--paper)]/95 px-5 py-4 backdrop-blur-sm">
         {/* Row 1: search (8 cols) + sort (2 cols) — same 10-col track as the filters */}
         <div className="mb-3 grid grid-cols-1 gap-3 sm:grid-cols-10">
           <div className="relative sm:col-span-8">
@@ -222,13 +221,13 @@ export default function GrantsPage() {
               onChange={(e) => setSearch(e.target.value)}
               placeholder="Search grants by name, funder, sector, country…"
               aria-label="Search grants"
-              className="control-h w-full border-2 border-[var(--ink)] bg-[var(--paper)] pl-11 pr-10 text-sm font-medium placeholder:font-normal placeholder:text-[var(--ink-soft)] focus:bg-white focus:outline-none"
+              className="control-h w-full border-2 border-[var(--border-md)] bg-[var(--bg)] pl-11 pr-10 text-sm font-medium placeholder:font-normal placeholder:text-[var(--ink-3)] focus:border-[var(--ink)] focus:outline-none"
             />
             {search && (
               <button
                 onClick={() => setSearch('')}
                 aria-label="Clear search"
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-lg leading-none text-[var(--ink-soft)] hover:text-[var(--terracotta)]"
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-lg leading-none text-[var(--ink-soft)] hover:text-[var(--accent)]"
               >
                 ×
               </button>
@@ -316,7 +315,7 @@ export default function GrantsPage() {
       {/* Results */}
       <section className="py-8">
         {error && (
-          <p className="border-2 border-[var(--terracotta)] bg-[var(--terracotta-soft)] p-5 text-sm">
+          <p className="border-2 border-[var(--error)] bg-[#fef2f2] p-5 text-sm">
             Failed to load: {error}
           </p>
         )}
@@ -382,7 +381,7 @@ export default function GrantsPage() {
                           href={o.application_link}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="decoration-[var(--terracotta)] decoration-2 underline-offset-4 group-hover:underline"
+                          className="decoration-[var(--ink)] decoration-2 underline-offset-4 group-hover:underline"
                         >
                           {o.name}
                         </a>
@@ -396,7 +395,7 @@ export default function GrantsPage() {
                     )}
 
                     {o.description && (
-                      <p className="mt-3 max-w-2xl text-[15px] leading-relaxed text-[var(--ink)]/80">
+                      <p className="mt-3 max-w-2xl text-[15px] leading-relaxed text-[var(--ink-2)]">
                         {o.description}
                       </p>
                     )}
@@ -433,13 +432,13 @@ export default function GrantsPage() {
                         </p>
                         <p
                           className={`font-[family-name:var(--font-display)] text-lg font-semibold ${
-                            urgent ? 'text-[var(--terracotta)]' : ''
+                            urgent ? 'text-[var(--accent)]' : ''
                           }`}
                         >
                           {formatDeadline(o.deadline, o.deadline_type)}
                         </p>
                         {urgent && (
-                          <p className="text-[10px] font-bold uppercase tracking-[0.15em] text-[var(--terracotta)]">
+                          <p className="text-[10px] font-bold uppercase tracking-[0.15em] text-[var(--accent)]">
                             {dl === 0 ? 'Closes today' : dl === 1 ? '1 day left' : `${dl} days left`}
                           </p>
                         )}
@@ -455,7 +454,7 @@ export default function GrantsPage() {
                         href={o.application_link}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="mt-auto block w-full border-2 border-[var(--ink)] px-4 py-2 text-center text-xs font-bold uppercase tracking-[0.15em] transition-colors hover:bg-[var(--ink)] hover:text-[var(--paper)] sm:w-auto"
+                        className="mt-auto block w-full border-2 border-[var(--ink)] px-4 py-2 text-[13px] font-bold uppercase tracking-[0.06em] transition-colors hover:bg-[var(--ink)] hover:text-[var(--bg)] sm:w-auto"
                       >
                         Apply →
                       </a>

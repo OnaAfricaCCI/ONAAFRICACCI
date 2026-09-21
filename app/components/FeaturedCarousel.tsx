@@ -103,12 +103,12 @@ export default function FeaturedCarousel({
 
   const arrowClass =
     'flex h-9 w-9 items-center justify-center border-2 border-[var(--paper)] text-[var(--paper)] transition-colors ' +
-    'hover:bg-[var(--paper)] hover:text-[var(--terracotta)] disabled:cursor-not-allowed ' +
+    'hover:bg-[var(--bg)] hover:text-[var(--ink)] disabled:cursor-not-allowed ' +
     'disabled:opacity-35 disabled:hover:bg-transparent disabled:hover:text-[var(--paper)]'
 
   return (
     <section
-      className="bg-[var(--terracotta)] py-12 text-[var(--paper)] sm:py-14"
+      className="bg-[var(--ink)] py-12 text-[var(--bg)] sm:py-14"
       aria-labelledby="featured-heading"
     >
       <div className="mx-auto max-w-6xl px-5">
@@ -116,11 +116,11 @@ export default function FeaturedCarousel({
         <div>
           <h2
             id="featured-heading"
-            className="font-[family-name:var(--font-display)] text-2xl font-semibold sm:text-3xl"
+            className="font-[family-name:var(--font-display)] text-2xl leading-[1.2]"
           >
             {heading}
           </h2>
-          <p className="mt-1 text-sm text-[var(--paper)]/85">
+          <p className="mt-1 text-sm text-[var(--ink-3)]">
             A few from the database, picked fresh each visit.
           </p>
         </div>
@@ -171,9 +171,9 @@ export default function FeaturedCarousel({
                 href={g.href}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="group flex h-full flex-col border border-[var(--line)] bg-[var(--paper)] p-5 transition-colors hover:border-[var(--ink)] hover:bg-[var(--paper-deep)]"
+                className="group flex h-full flex-col border-2 border-[var(--bg)] bg-[var(--bg)] p-6 transition-colors hover:border-[var(--accent)]"
               >
-                <h3 className="line-clamp-2 font-[family-name:var(--font-display)] text-xl font-semibold leading-snug decoration-[var(--terracotta)] decoration-2 underline-offset-4 group-hover:underline">
+                <h3 className="line-clamp-2 font-[family-name:var(--font-display)] text-xl font-semibold leading-snug decoration-[var(--ink)] decoration-2 underline-offset-4 group-hover:underline">
                   {g.name}
                 </h3>
 
@@ -190,7 +190,7 @@ export default function FeaturedCarousel({
                 <div className="mt-auto flex flex-wrap items-center gap-2 pt-4">
                   <span
                     className={`text-[11px] font-bold uppercase tracking-[0.12em] ${
-                      g.urgent ? 'text-[var(--terracotta)]' : 'text-[var(--ink-soft)]'
+                      g.urgent ? 'text-[var(--accent)]' : 'text-[var(--ink-soft)]'
                     }`}
                   >
                     {g.deadlineText}
@@ -200,7 +200,7 @@ export default function FeaturedCarousel({
                       {g.tag}
                     </span>
                   )}
-                  <span className="ml-auto text-[var(--ink-soft)] transition-colors group-hover:text-[var(--terracotta)]" aria-hidden="true">
+                  <span className="ml-auto text-[var(--ink-soft)] transition-colors group-hover:text-[var(--accent)]" aria-hidden="true">
                     ↗
                   </span>
                 </div>

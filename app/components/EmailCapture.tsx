@@ -61,13 +61,13 @@ export default function EmailCapture({
 
   const wrapper =
     variant === 'band'
-      ? 'border-2 border-[var(--ink)] bg-[var(--paper-deep)] p-7 sm:p-9'
+      ? 'border-2 border-[var(--border)] border-t-4 border-t-[var(--accent)] bg-[var(--bg)] p-7 sm:p-9'
       : 'border-t border-[var(--line)] py-10'
 
   if (status === 'done') {
     return (
       <section className={wrapper}>
-        <p className="font-[family-name:var(--font-display)] text-2xl font-semibold">
+        <p className="font-[family-name:var(--font-display)] text-2xl leading-[1.2]">
           You&rsquo;re on the list.
         </p>
         <p className="mt-2 text-sm leading-relaxed text-[var(--ink-soft)]">
@@ -80,7 +80,7 @@ export default function EmailCapture({
 
   return (
     <section className={wrapper}>
-      <h2 className="font-[family-name:var(--font-display)] text-2xl font-semibold sm:text-3xl">
+      <h2 className="font-[family-name:var(--font-display)] text-2xl leading-[1.2]">
         {heading}
       </h2>
       <p className="mt-2 max-w-lg text-sm leading-relaxed text-[var(--ink-soft)]">{blurb}</p>
@@ -106,12 +106,12 @@ export default function EmailCapture({
             onChange={(e) => setEmail(e.target.value)}
             placeholder="you@example.com"
             aria-label="Your email address"
-            className="control-h w-full border-2 border-[var(--ink)] bg-[var(--paper)] px-4 text-sm font-medium placeholder:font-normal placeholder:text-[var(--ink-soft)] focus:bg-white focus:outline-none sm:max-w-sm"
+            className="control-h w-full border-2 border-[var(--border-md)] bg-[var(--bg)] px-[14px] text-sm placeholder:text-[var(--ink-3)] focus:border-[var(--ink)] focus:outline-none sm:max-w-sm"
           />
           <button
             type="submit"
             disabled={status === 'sending'}
-            className="control-h border-2 border-[var(--ink)] bg-[var(--ink)] px-7 text-xs font-bold uppercase tracking-[0.15em] text-[var(--paper)] transition-colors hover:bg-transparent hover:text-[var(--ink)] disabled:opacity-50"
+            className="control-h border-2 border-[var(--ink)] bg-[var(--ink)] px-7 text-[13px] font-bold uppercase tracking-[0.06em] text-[var(--bg)] transition-colors hover:border-[var(--accent)] hover:bg-[var(--accent)] disabled:cursor-not-allowed disabled:opacity-35"
           >
             {status === 'sending' ? 'Signing up…' : 'Subscribe'}
           </button>
@@ -124,7 +124,7 @@ export default function EmailCapture({
                 value={sector}
                 onChange={(e) => setSector(e.target.value)}
                 aria-label="Sector you care about (optional)"
-                className="control-h w-full truncate border-2 border-[var(--ink)] bg-[var(--paper)] pl-4 pr-9 text-sm font-medium sm:max-w-52"
+                className="control-h w-full truncate border-2 border-[var(--border-md)] bg-[var(--bg)] pl-[14px] pr-9 text-sm hover:border-[var(--ink)] focus:border-[var(--ink)] focus:outline-none sm:max-w-52"
               >
                 <option value="">Any sector (optional)</option>
                 {sectors.map((s) => (
@@ -137,7 +137,7 @@ export default function EmailCapture({
                 value={country}
                 onChange={(e) => setCountry(e.target.value)}
                 aria-label="Country you care about (optional)"
-                className="control-h w-full truncate border-2 border-[var(--ink)] bg-[var(--paper)] pl-4 pr-9 text-sm font-medium sm:max-w-52"
+                className="control-h w-full truncate border-2 border-[var(--border-md)] bg-[var(--bg)] pl-[14px] pr-9 text-sm hover:border-[var(--ink)] focus:border-[var(--ink)] focus:outline-none sm:max-w-52"
               >
                 <option value="">Any country (optional)</option>
                 {countries.map((c) => (
@@ -149,7 +149,7 @@ export default function EmailCapture({
         )}
 
         {status === 'error' && (
-          <p className="mt-3 text-sm font-medium text-[var(--terracotta)]">{message}</p>
+          <p className="mt-3 text-sm font-medium text-[var(--error)]">{message}</p>
         )}
       </form>
     </section>

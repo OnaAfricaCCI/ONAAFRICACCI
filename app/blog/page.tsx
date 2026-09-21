@@ -78,7 +78,7 @@ function Thumb({ post }: { post: Post }) {
         style={{ background: 'var(--paper-deep)' }}
       >
         <span
-          className="font-[family-name:var(--font-display)] text-4xl font-semibold opacity-25"
+          className="font-[family-name:var(--font-display)] text-[38px] leading-[1.1] opacity-25"
           style={{ color: TYPE_COLOR[post.post_type] }}
         >
           {post.title.charAt(0)}
@@ -138,19 +138,19 @@ export default function BlogPage() {
   const shown = filtered.slice(0, visible)
 
   const tabClass = (active: boolean) =>
-    `border-2 px-4 py-2 text-xs font-bold uppercase tracking-[0.15em] transition-colors ${
+    `border-2 px-[14px] py-1 text-xs font-bold uppercase tracking-[0.04em] transition-colors ${
       active
-        ? 'border-[var(--ink)] bg-[var(--ink)] text-[var(--paper)]'
-        : 'border-[var(--ink)] bg-transparent hover:bg-[var(--paper-deep)]'
+        ? 'border-[var(--ink)] bg-[var(--ink)] text-[var(--bg)]'
+        : 'border-[var(--border-md)] text-[var(--ink-2)] hover:border-[var(--ink)] hover:text-[var(--ink)]'
     }`
 
   return (
     <main className="mx-auto max-w-6xl px-5">
       <section className="border-b border-[var(--line)] py-12 sm:py-16">
-        <p className="text-xs font-semibold uppercase tracking-[0.25em] text-[var(--terracotta)]">
+        <p className="text-[11px] font-bold uppercase tracking-[0.12em] text-[var(--ink-2)]">
           The blog
         </p>
-        <h1 className="mt-3 max-w-3xl font-[family-name:var(--font-display)] text-4xl font-semibold leading-[1.05] sm:text-6xl">
+        <h1 className="mt-3 max-w-3xl font-[family-name:var(--font-display)] text-[38px] leading-[1.05] sm:text-[56px]">
           News from the ecosystem.
         </h1>
         <p className="mt-5 max-w-xl text-base leading-relaxed text-[var(--ink-soft)]">
@@ -160,7 +160,7 @@ export default function BlogPage() {
       </section>
 
       {/* Type tabs */}
-      <section className="sticky top-[66px] z-10 -mx-5 border-b border-[var(--line)] bg-[var(--paper)]/95 px-5 py-4 backdrop-blur-sm">
+      <section className="sticky top-[92px] sm:top-[66px] z-10 -mx-5 border-b border-[var(--line)] bg-[var(--paper)]/95 px-5 py-4 backdrop-blur-sm">
         <div className="flex flex-wrap items-center gap-3">
           {(['all', 'article', 'image', 'video'] as const).map((t) => (
             <button
@@ -181,7 +181,7 @@ export default function BlogPage() {
       </section>
 
       {error && (
-        <p className="mt-8 border-2 border-[var(--terracotta)] bg-[var(--terracotta-soft)] p-5 text-sm">
+        <p className="mt-8 border-2 border-[var(--error)] bg-[#fef2f2] p-5 text-sm">
           Failed to load posts: {error}
         </p>
       )}
@@ -241,11 +241,11 @@ export default function BlogPage() {
                       </>
                     )}
                   </div>
-                  <h2 className="mt-2 font-[family-name:var(--font-display)] text-xl font-semibold leading-snug decoration-[var(--terracotta)] decoration-2 underline-offset-4 group-hover:underline">
+                  <h2 className="mt-2 font-[family-name:var(--font-display)] text-xl font-semibold leading-snug decoration-[var(--ink)] decoration-2 underline-offset-4 group-hover:underline">
                     {p.title}
                   </h2>
                   {p.excerpt && (
-                    <p className="mt-2 line-clamp-3 text-sm leading-relaxed text-[var(--ink)]/75">
+                    <p className="mt-2 line-clamp-3 text-sm leading-relaxed text-[var(--ink-2)]">
                       {p.excerpt}
                     </p>
                   )}
@@ -266,7 +266,7 @@ export default function BlogPage() {
         <div className="mb-16 text-center">
           <button
             onClick={() => setVisible((v) => v + PER_PAGE)}
-            className="border-2 border-[var(--ink)] px-8 py-3 text-xs font-bold uppercase tracking-[0.15em] transition-colors hover:bg-[var(--ink)] hover:text-[var(--paper)]"
+            className="border-2 border-[var(--ink)] px-8 py-3 text-[13px] font-bold uppercase tracking-[0.06em] transition-colors hover:bg-[var(--ink)] hover:text-[var(--bg)]"
           >
             Load more ({filtered.length - visible} remaining)
           </button>

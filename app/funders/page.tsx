@@ -92,17 +92,16 @@ export default function FundersPage() {
   const activeFilters = [type, region, sector, support].filter((f) => f !== 'all').length
 
   const selectClass =
-    'control-h w-full truncate border-2 border-[var(--ink)] bg-[var(--paper)] pl-4 pr-9 text-sm font-medium ' +
-    'cursor-pointer transition-colors hover:bg-[var(--paper-deep)] focus:outline-none ' +
-    'focus:bg-[var(--paper-deep)]'
+    'control-h w-full truncate border-2 border-[var(--border-md)] bg-[var(--bg)] pl-[14px] pr-9 text-sm font-medium ' +
+    'cursor-pointer transition-colors hover:border-[var(--ink)] focus:border-[var(--ink)] focus:outline-none'
 
   return (
     <main className="mx-auto max-w-6xl px-5">
       <section className="border-b border-[var(--line)] py-12 sm:py-16">
-        <p className="text-xs font-semibold uppercase tracking-[0.25em] text-[var(--terracotta)]">
+        <p className="text-[11px] font-bold uppercase tracking-[0.12em] text-[var(--ink-2)]">
           The funders directory
         </p>
-        <h1 className="mt-3 max-w-3xl font-[family-name:var(--font-display)] text-4xl font-semibold leading-[1.05] sm:text-6xl">
+        <h1 className="mt-3 max-w-3xl font-[family-name:var(--font-display)] text-[38px] leading-[1.05] sm:text-[56px]">
           Who funds the culture.
         </h1>
         <p className="mt-5 max-w-xl text-base leading-relaxed text-[var(--ink-soft)]">
@@ -112,7 +111,7 @@ export default function FundersPage() {
       </section>
 
       {/* Filter bar */}
-      <section className="sticky top-[66px] z-10 -mx-5 border-b border-[var(--line)] bg-[var(--paper)]/95 px-5 py-4 backdrop-blur-sm">
+      <section className="sticky top-[92px] sm:top-[66px] z-10 -mx-5 border-b border-[var(--line)] bg-[var(--paper)]/95 px-5 py-4 backdrop-blur-sm">
         {/* Row 1: search across the full track */}
         <div className="relative mb-3">
           <svg
@@ -132,13 +131,13 @@ export default function FundersPage() {
             aria-label="Search funders"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className="control-h w-full border-2 border-[var(--ink)] bg-[var(--paper)] pl-11 pr-10 text-sm font-medium placeholder:font-normal placeholder:text-[var(--ink-soft)] focus:bg-white focus:outline-none"
+            className="control-h w-full border-2 border-[var(--border-md)] bg-[var(--bg)] pl-11 pr-10 text-sm font-medium placeholder:font-normal placeholder:text-[var(--ink-3)] focus:border-[var(--ink)] focus:outline-none"
           />
           {search && (
             <button
               onClick={() => setSearch('')}
               aria-label="Clear search"
-              className="absolute right-3 top-1/2 -translate-y-1/2 text-lg leading-none text-[var(--ink-soft)] hover:text-[var(--terracotta)]"
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-lg leading-none text-[var(--ink-soft)] hover:text-[var(--accent)]"
             >
               ×
             </button>
@@ -193,7 +192,7 @@ export default function FundersPage() {
       </section>
 
       {error && (
-        <p className="mt-8 border-2 border-[var(--terracotta)] bg-[var(--terracotta-soft)] p-5 text-sm">
+        <p className="mt-8 border-2 border-[var(--error)] bg-[#fef2f2] p-5 text-sm">
           Failed to load funders: {error}
         </p>
       )}
@@ -226,11 +225,11 @@ export default function FundersPage() {
                     {f.funder_type}
                   </span>
                 </div>
-                <h2 className="mt-4 font-[family-name:var(--font-display)] text-xl font-semibold leading-snug decoration-[var(--terracotta)] decoration-2 underline-offset-4 group-hover:underline">
+                <h2 className="mt-4 font-[family-name:var(--font-display)] text-xl font-semibold leading-snug decoration-[var(--ink)] decoration-2 underline-offset-4 group-hover:underline">
                   {f.name}
                 </h2>
                 {f.description && (
-                  <p className="mt-2 line-clamp-3 text-sm leading-relaxed text-[var(--ink)]/75">
+                  <p className="mt-2 line-clamp-3 text-sm leading-relaxed text-[var(--ink-2)]">
                     {f.description}
                   </p>
                 )}

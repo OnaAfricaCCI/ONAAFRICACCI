@@ -4,8 +4,8 @@ import Link from 'next/link'
 import { useState } from 'react'
 
 const inputClass =
-  'w-full border-2 border-[var(--ink)] bg-[var(--paper)] px-4 py-3 text-sm ' +
-  'placeholder:text-[var(--ink-soft)] focus:bg-white focus:outline-none transition-colors'
+  'control-h w-full border-2 border-[var(--border-md)] bg-[var(--bg)] px-[14px] text-sm ' +
+  'placeholder:text-[var(--ink-3)] focus:border-[var(--ink)] focus:outline-none transition-colors'
 
 function Label({
   children,
@@ -76,7 +76,7 @@ export default function SubmitOpportunityPage() {
     return (
       <main className="mx-auto max-w-2xl px-5 py-24 text-center">
         <p className="font-[family-name:var(--font-display)] text-5xl">✓</p>
-        <h1 className="mt-4 font-[family-name:var(--font-display)] text-4xl font-semibold">
+        <h1 className="mt-4 font-[family-name:var(--font-display)] text-[38px] leading-[1.1]">
           Thanks, we&rsquo;ve got it.
         </h1>
         <p className="mt-4 text-[var(--ink-soft)]">
@@ -85,7 +85,7 @@ export default function SubmitOpportunityPage() {
         </p>
         <Link
           href="/grants"
-          className="mt-10 inline-block border-2 border-[var(--ink)] px-6 py-3 text-xs font-bold uppercase tracking-[0.15em] transition-colors hover:bg-[var(--ink)] hover:text-[var(--paper)]"
+          className="mt-10 inline-block border-2 border-[var(--ink)] px-6 py-3 text-[13px] font-bold uppercase tracking-[0.06em] transition-colors hover:bg-[var(--ink)] hover:text-[var(--bg)]"
         >
           Browse the grants database
         </Link>
@@ -103,10 +103,10 @@ export default function SubmitOpportunityPage() {
       </Link>
 
       <header className="mt-6">
-        <p className="text-xs font-semibold uppercase tracking-[0.25em] text-[var(--terracotta)]">
+        <p className="text-[11px] font-bold uppercase tracking-[0.12em] text-[var(--ink-2)]">
           For funders
         </p>
-        <h1 className="mt-2 font-[family-name:var(--font-display)] text-4xl font-semibold leading-tight">
+        <h1 className="mt-2 font-[family-name:var(--font-display)] text-[34px] leading-[1.1] sm:text-[44px]">
           Submit an opportunity.
         </h1>
         <p className="mt-3 text-sm leading-relaxed text-[var(--ink-soft)]">
@@ -212,7 +212,7 @@ export default function SubmitOpportunityPage() {
         <div>
           <Label optional>Notes</Label>
           <textarea
-            className={inputClass}
+            className={`${inputClass} h-auto py-3`}
             rows={4}
             placeholder="Anything else worth knowing — sectors, application process, restrictions…"
             value={form.notes}
@@ -221,13 +221,13 @@ export default function SubmitOpportunityPage() {
         </div>
 
         {status === 'error' && (
-          <p className="text-sm font-medium text-[var(--terracotta)]">{errorMsg}</p>
+          <p className="text-sm font-medium text-[var(--error)]">{errorMsg}</p>
         )}
 
         <button
           type="submit"
           disabled={status === 'sending'}
-          className="w-full border-2 border-[var(--ink)] bg-[var(--terracotta)] px-6 py-4 text-xs font-bold uppercase tracking-[0.15em] text-[var(--paper)] transition-colors hover:bg-[var(--ink)] disabled:opacity-50 sm:w-auto"
+          className="w-full border-2 border-[var(--ink)] bg-[var(--ink)] px-6 py-4 text-[13px] font-bold uppercase tracking-[0.06em] text-[var(--bg)] transition-colors hover:border-[var(--accent)] hover:bg-[var(--accent)] disabled:opacity-50 sm:w-auto"
         >
           {status === 'sending' ? 'Submitting…' : 'Submit opportunity'}
         </button>
