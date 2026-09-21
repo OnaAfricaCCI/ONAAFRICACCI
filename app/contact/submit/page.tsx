@@ -85,7 +85,7 @@ export default function SubmitOpportunityPage() {
         </p>
         <Link
           href="/grants"
-          className="mt-10 inline-block border-2 border-[var(--ink)] px-6 py-3 text-[13px] font-bold uppercase tracking-[0.06em] transition-colors hover:bg-[var(--ink)] hover:text-[var(--bg)]"
+          className="mt-10 inline-block border-2 border-[var(--ink)] px-6 py-3 text-[13px] font-bold uppercase tracking-[0.06em] transition-colors hover:border-[var(--accent)] hover:bg-[var(--accent)] hover:text-[var(--bg)]"
         >
           Browse the grants database
         </Link>
@@ -227,7 +227,7 @@ export default function SubmitOpportunityPage() {
         <button
           type="submit"
           disabled={status === 'sending'}
-          className="w-full border-2 border-[var(--ink)] bg-[var(--ink)] px-6 py-4 text-[13px] font-bold uppercase tracking-[0.06em] text-[var(--bg)] transition-colors hover:border-[var(--accent)] hover:bg-[var(--accent)] disabled:opacity-50 sm:w-auto"
+          className="w-full border-2 border-[var(--ink)] bg-[var(--ink)] px-6 py-4 text-[13px] font-bold uppercase tracking-[0.06em] text-[var(--bg)] transition-colors hover:border-[var(--accent)] hover:bg-[var(--accent)] hover:text-[var(--bg)] disabled:opacity-50 sm:w-auto"
         >
           {status === 'sending' ? 'Submitting…' : 'Submit opportunity'}
         </button>

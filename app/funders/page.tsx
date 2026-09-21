@@ -93,7 +93,7 @@ export default function FundersPage() {
 
   const selectClass =
     'control-h w-full truncate border-2 border-[var(--border-md)] bg-[var(--bg)] pl-[14px] pr-9 text-sm font-medium ' +
-    'cursor-pointer transition-colors hover:border-[var(--ink)] focus:border-[var(--ink)] focus:outline-none'
+    'cursor-pointer transition-colors hover:border-[var(--accent)] focus:border-[var(--ink)] focus:outline-none'
 
   return (
     <main className="mx-auto max-w-6xl px-5">
@@ -183,7 +183,7 @@ export default function FundersPage() {
               onClick={() => {
                 setType('all'); setRegion('all'); setSector('all'); setSupport('all'); setSearch('')
               }}
-              className="text-xs font-semibold uppercase tracking-[0.15em] text-[var(--terracotta)] underline underline-offset-4 hover:no-underline"
+              className="text-xs font-semibold uppercase tracking-[0.15em] text-[var(--terracotta)] underline underline-offset-4 hover:text-[var(--accent)]"
             >
               Clear all{activeFilters > 0 ? ` (${activeFilters})` : ''}
             </button>
@@ -217,7 +217,7 @@ export default function FundersPage() {
             <li key={f.id} className="rise-in bg-[var(--paper)]" style={{ animationDelay: `${Math.min(i, 11) * 40}ms` }}>
               <Link
                 href={`/funders/${f.slug ?? f.id}`}
-                className="group flex h-full flex-col p-6 transition-colors hover:bg-[var(--paper-deep)]"
+                className="group flex h-full flex-col p-6 transition-colors hover:border-[var(--accent)]"
               >
                 <div className="flex items-start justify-between gap-3">
                   <FunderLogo funder={f} />
@@ -225,7 +225,7 @@ export default function FundersPage() {
                     {f.funder_type}
                   </span>
                 </div>
-                <h2 className="mt-4 font-[family-name:var(--font-display)] text-xl font-semibold leading-snug decoration-[var(--ink)] decoration-2 underline-offset-4 group-hover:underline">
+                <h2 className="mt-4 font-[family-name:var(--font-display)] text-xl font-semibold leading-snug transition-colors group-hover:text-[var(--accent)]">
                   {f.name}
                 </h2>
                 {f.description && (
@@ -260,7 +260,7 @@ export default function FundersPage() {
             </p>
             <Link
               href="/contact/submit"
-              className="text-xs font-semibold uppercase tracking-[0.15em] text-[var(--terracotta)] underline underline-offset-4 hover:no-underline"
+              className="text-xs font-semibold uppercase tracking-[0.15em] text-[var(--terracotta)] underline underline-offset-4 hover:text-[var(--accent)]"
             >
               List your opportunity →
             </Link>

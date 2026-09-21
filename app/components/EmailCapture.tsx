@@ -111,7 +111,7 @@ export default function EmailCapture({
           <button
             type="submit"
             disabled={status === 'sending'}
-            className="control-h border-2 border-[var(--ink)] bg-[var(--ink)] px-7 text-[13px] font-bold uppercase tracking-[0.06em] text-[var(--bg)] transition-colors hover:border-[var(--accent)] hover:bg-[var(--accent)] disabled:cursor-not-allowed disabled:opacity-35"
+            className="control-h border-2 border-[var(--ink)] bg-[var(--ink)] px-7 text-[13px] font-bold uppercase tracking-[0.06em] text-[var(--bg)] transition-colors hover:border-[var(--accent)] hover:bg-[var(--accent)] hover:text-[var(--bg)] disabled:cursor-not-allowed disabled:opacity-35"
           >
             {status === 'sending' ? 'Signing up…' : 'Subscribe'}
           </button>

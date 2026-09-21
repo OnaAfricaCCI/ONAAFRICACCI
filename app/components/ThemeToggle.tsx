@@ -62,7 +62,7 @@ export default function ThemeToggle() {
       aria-label={isDark ? 'Switch to light mode' : 'Switch to dark mode'}
       aria-pressed={isDark}
       title={isDark ? 'Light mode' : 'Dark mode'}
-      className="flex h-9 w-9 shrink-0 items-center justify-center border-2 border-[var(--ink)] text-[var(--ink)] transition-colors hover:bg-[var(--ink)] hover:text-[var(--bg)]"
+      className="flex h-9 w-9 shrink-0 items-center justify-center border-2 border-[var(--ink)] text-[var(--ink)] transition-colors hover:border-[var(--accent)] hover:bg-[var(--accent)] hover:text-[var(--bg)]"
     >
       {theme === null ? (
         <span className="block h-4 w-4" />

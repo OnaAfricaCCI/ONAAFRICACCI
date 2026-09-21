@@ -95,13 +95,13 @@ export default async function Home() {
         <div className="mt-9 flex flex-wrap gap-3">
           <Link
             href="/grants"
-            className="border-2 border-[var(--ink)] bg-[var(--ink)] px-7 py-3.5 text-[13px] font-bold uppercase tracking-[0.06em] text-[var(--bg)] transition-colors hover:border-[var(--accent)] hover:bg-[var(--accent)]"
+            className="border-2 border-[var(--ink)] bg-[var(--ink)] px-7 py-3.5 text-[13px] font-bold uppercase tracking-[0.06em] text-[var(--bg)] transition-colors hover:border-[var(--accent)] hover:bg-[var(--accent)] hover:text-[var(--bg)]"
           >
             Browse grants
           </Link>
           <Link
             href="/contact/submit"
-            className="border-2 border-[var(--ink)] px-7 py-3.5 text-[13px] font-bold uppercase tracking-[0.06em] transition-colors hover:bg-[var(--ink)] hover:text-[var(--bg)]"
+            className="border-2 border-[var(--ink)] px-7 py-3.5 text-[13px] font-bold uppercase tracking-[0.06em] transition-colors hover:border-[var(--accent)] hover:bg-[var(--accent)] hover:text-[var(--bg)]"
           >
             List an opportunity
           </Link>
@@ -129,7 +129,7 @@ export default async function Home() {
           </div>
           <Link
             href="/contact"
-            className="text-xs font-semibold uppercase tracking-[0.15em] text-[var(--terracotta)] underline underline-offset-4 hover:no-underline"
+            className="text-xs font-semibold uppercase tracking-[0.15em] text-[var(--terracotta)] underline underline-offset-4 hover:text-[var(--accent)]"
           >
             Get in touch →
           </Link>

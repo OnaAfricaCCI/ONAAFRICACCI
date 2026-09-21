@@ -103,7 +103,7 @@ export default function FeaturedCarousel({
 
   const arrowClass =
     'flex h-9 w-9 items-center justify-center border-2 border-[var(--paper)] text-[var(--paper)] transition-colors ' +
-    'hover:bg-[var(--bg)] hover:text-[var(--ink)] disabled:cursor-not-allowed ' +
+    'hover:border-[var(--accent)] hover:bg-[var(--accent)] hover:text-[var(--bg)] disabled:cursor-not-allowed ' +
     'disabled:opacity-35 disabled:hover:bg-transparent disabled:hover:text-[var(--paper)]'
 
   return (
@@ -173,7 +173,7 @@ export default function FeaturedCarousel({
                 rel="noopener noreferrer"
                 className="group flex h-full flex-col border-2 border-[var(--bg)] bg-[var(--bg)] p-6 transition-colors hover:border-[var(--accent)]"
               >
-                <h3 className="line-clamp-2 font-[family-name:var(--font-display)] text-xl font-semibold leading-snug decoration-[var(--ink)] decoration-2 underline-offset-4 group-hover:underline">
+                <h3 className="line-clamp-2 font-[family-name:var(--font-display)] text-xl font-semibold leading-snug transition-colors group-hover:text-[var(--accent)]">
                   {g.name}
                 </h3>
 

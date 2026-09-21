@@ -31,7 +31,7 @@ export default async function PostPage({
     <main className="mx-auto max-w-3xl px-5 py-12">
       <Link
         href="/blog"
-        className="text-xs font-semibold uppercase tracking-[0.15em] text-[var(--terracotta)] underline-offset-4 hover:underline"
+        className="text-xs font-semibold uppercase tracking-[0.15em] text-[var(--terracotta)] underline-offset-4 hover:text-[var(--accent)] hover:underline"
       >
         ← All posts
       </Link>

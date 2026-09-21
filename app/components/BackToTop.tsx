@@ -41,7 +41,7 @@ export default function BackToTop() {
             : 'smooth',
         })
       }
-      className={`fixed bottom-6 right-6 z-20 flex h-11 w-11 items-center justify-center border border-[var(--line)] bg-[var(--paper)]/85 text-[var(--ink-soft)] shadow-sm backdrop-blur-sm transition-all duration-300 hover:border-[var(--ink)] hover:text-[var(--ink)] ${
+      className={`fixed bottom-6 right-6 z-20 flex h-11 w-11 items-center justify-center border border-[var(--line)] bg-[var(--paper)]/85 text-[var(--ink-soft)] shadow-sm backdrop-blur-sm transition-all duration-300 hover:border-[var(--accent)] hover:text-[var(--accent)] ${
         show ? 'pointer-events-auto opacity-60 hover:opacity-100' : 'pointer-events-none translate-y-2 opacity-0'
       }`}
     >

@@ -216,6 +216,14 @@ input[type='checkbox']:disabled {
   cursor: not-allowed;
 }
 
+/* ---- Hover = red, site-wide -------------------------------------------------
+   Every link and button answers a hover with the accent. Filled buttons set
+   their own hover text colour via utility classes (which outrank this rule),
+   so only plain text links and un-filled controls pick this up. */
+a:hover {
+  color: var(--accent);
+}
+
 /* ---- Editorial accents ----------------------------------------------------- */
 
 /* Red underline: featured items and the active nav link. */

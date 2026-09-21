@@ -100,7 +100,7 @@ export default function ContactPage() {
               <button
                 type="submit"
                 disabled={status === 'sending'}
-                className="border-2 border-[var(--ink)] bg-[var(--ink)] px-6 py-3 text-[13px] font-bold uppercase tracking-[0.06em] text-[var(--bg)] transition-colors hover:border-[var(--accent)] hover:bg-[var(--accent)] disabled:opacity-50"
+                className="border-2 border-[var(--ink)] bg-[var(--ink)] px-6 py-3 text-[13px] font-bold uppercase tracking-[0.06em] text-[var(--bg)] transition-colors hover:border-[var(--accent)] hover:bg-[var(--accent)] hover:text-[var(--bg)] disabled:opacity-50"
               >
                 {status === 'sending' ? 'Sending…' : 'Send message'}
               </button>
@@ -140,7 +140,7 @@ export default function ContactPage() {
           <div className="mt-auto pt-10">
             <Link
               href="/contact/submit"
-              className="inline-block border-2 border-[var(--ink)] bg-[var(--ink)] px-6 py-3 text-[13px] font-bold uppercase tracking-[0.06em] text-[var(--bg)] transition-colors hover:border-[var(--accent)] hover:bg-[var(--accent)]"
+              className="inline-block border-2 border-[var(--ink)] bg-[var(--ink)] px-6 py-3 text-[13px] font-bold uppercase tracking-[0.06em] text-[var(--bg)] transition-colors hover:border-[var(--accent)] hover:bg-[var(--accent)] hover:text-[var(--bg)]"
             >
               Submit an opportunity →
             </Link>

@@ -141,7 +141,7 @@ export default function BlogPage() {
     `border-2 px-[14px] py-1 text-xs font-bold uppercase tracking-[0.04em] transition-colors ${
       active
         ? 'border-[var(--ink)] bg-[var(--ink)] text-[var(--bg)]'
-        : 'border-[var(--border-md)] text-[var(--ink-2)] hover:border-[var(--ink)] hover:text-[var(--ink)]'
+        : 'border-[var(--border-md)] text-[var(--ink-2)] hover:border-[var(--accent)] hover:text-[var(--accent)]'
     }`
 
   return (
@@ -220,7 +220,7 @@ export default function BlogPage() {
             return (
             <li
               key={p.id}
-              className={`rise-in border border-[var(--line)] bg-[var(--paper)] transition-colors hover:border-[var(--ink)] ${
+              className={`rise-in border border-[var(--line)] bg-[var(--paper)] transition-colors hover:border-[var(--accent)] ${
                 usingPlaceholders ? 'opacity-70' : ''
               }`}
               style={{ animationDelay: `${Math.min(i, 11) * 40}ms` }}
@@ -241,7 +241,7 @@ export default function BlogPage() {
                       </>
                     )}
                   </div>
-                  <h2 className="mt-2 font-[family-name:var(--font-display)] text-xl font-semibold leading-snug decoration-[var(--ink)] decoration-2 underline-offset-4 group-hover:underline">
+                  <h2 className="mt-2 font-[family-name:var(--font-display)] text-xl font-semibold leading-snug transition-colors group-hover:text-[var(--accent)]">
                     {p.title}
                   </h2>
                   {p.excerpt && (
@@ -266,7 +266,7 @@ export default function BlogPage() {
         <div className="mb-16 text-center">
           <button
             onClick={() => setVisible((v) => v + PER_PAGE)}
-            className="border-2 border-[var(--ink)] px-8 py-3 text-[13px] font-bold uppercase tracking-[0.06em] transition-colors hover:bg-[var(--ink)] hover:text-[var(--bg)]"
+            className="border-2 border-[var(--ink)] px-8 py-3 text-[13px] font-bold uppercase tracking-[0.06em] transition-colors hover:border-[var(--accent)] hover:bg-[var(--accent)] hover:text-[var(--bg)]"
           >
             Load more ({filtered.length - visible} remaining)
           </button>

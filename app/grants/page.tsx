@@ -180,7 +180,7 @@ export default function GrantsPage() {
 
   const selectClass =
     'control-h w-full truncate border-2 border-[var(--border-md)] bg-[var(--bg)] pl-[14px] pr-9 text-sm font-medium ' +
-    'cursor-pointer transition-colors hover:border-[var(--ink)] focus:border-[var(--ink)] focus:outline-none'
+    'cursor-pointer transition-colors hover:border-[var(--accent)] focus:border-[var(--ink)] focus:outline-none'
 
   return (
     <main className="mx-auto max-w-6xl px-5">
@@ -304,7 +304,7 @@ export default function GrantsPage() {
                 setSector('all'); setCountry('all'); setFundingType('all')
                 setDeadlineType('all'); setAmountBand('all'); setSearch('')
               }}
-              className="text-xs font-semibold uppercase tracking-[0.15em] text-[var(--terracotta)] underline underline-offset-4 hover:no-underline"
+              className="text-xs font-semibold uppercase tracking-[0.15em] text-[var(--terracotta)] underline underline-offset-4 hover:text-[var(--accent)]"
             >
               Clear all{activeFilters > 0 ? ` (${activeFilters})` : ''}
             </button>
@@ -381,7 +381,7 @@ export default function GrantsPage() {
                           href={o.application_link}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="decoration-[var(--ink)] decoration-2 underline-offset-4 group-hover:underline"
+                          className="transition-colors group-hover:text-[var(--accent)]"
                         >
                           {o.name}
                         </a>
@@ -454,7 +454,7 @@ export default function GrantsPage() {
                         href={o.application_link}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="mt-auto block w-full border-2 border-[var(--ink)] px-4 py-2 text-[13px] font-bold uppercase tracking-[0.06em] transition-colors hover:bg-[var(--ink)] hover:text-[var(--bg)] sm:w-auto"
+                        className="mt-auto block w-full border-2 border-[var(--ink)] px-4 py-2 text-[13px] font-bold uppercase tracking-[0.06em] transition-colors hover:border-[var(--accent)] hover:bg-[var(--accent)] hover:text-[var(--bg)] sm:w-auto"
                       >
                         Apply →
                       </a>
