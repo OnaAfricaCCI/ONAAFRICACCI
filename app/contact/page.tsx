@@ -12,6 +12,7 @@ export default function ContactPage() {
   const [name, setName] = useState('')
   const [email, setEmail] = useState('')
   const [message, setMessage] = useState('')
+  const [company, setCompany] = useState('') // honeypot
   const [status, setStatus] = useState<'idle' | 'sending' | 'sent' | 'error'>('idle')
   const [errorMsg, setErrorMsg] = useState('')
 
@@ -22,7 +23,7 @@ export default function ContactPage() {
       const res = await fetch('/api/contact', {
         method: 'POST',
         headers: { 'content-type': 'application/json' },
-        body: JSON.stringify({ name, email, message }),
+        body: JSON.stringify({ name, email, message, company }),
       })
       const data = await res.json()
       if (!res.ok) throw new Error(data.error ?? 'Failed')
@@ -72,7 +73,18 @@ export default function ContactPage() {
               </p>
             </div>
           ) : (
-            <form onSubmit={submit} className="mt-8 space-y-4">
+            <form onSubmit={submit} className="relative mt-8 space-y-4">
+              {/* Honeypot: hidden from people, tempting to bots */}
+              <input
+                type="text"
+                name="company"
+                value={company}
+                onChange={(e) => setCompany(e.target.value)}
+                tabIndex={-1}
+                autoComplete="off"
+                aria-hidden="true"
+                className="absolute left-[-9999px] h-0 w-0 opacity-0"
+              />
               <input
                 className={inputClass}
                 placeholder="Your name"

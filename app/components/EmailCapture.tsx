@@ -153,6 +153,10 @@ export default function EmailCapture({
         {status === 'error' && (
           <p className="mt-3 text-sm font-medium text-[var(--error)]">{message}</p>
         )}
+        <p className="mt-3 text-xs text-[var(--ink-3)]">
+          Just your email, only for the digest. See our{' '}
+          <a href="/privacy" className="underline underline-offset-2">privacy page</a>.
+        </p>
       </form>
     </section>
   )

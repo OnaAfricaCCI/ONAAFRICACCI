@@ -1,9 +1,13 @@
 import { NextResponse } from 'next/server'
 import { supabaseAdmin } from '@/lib/supabase-admin'
+import { isBot, rateLimited, readJson, tooLarge, tooMany } from '@/lib/guard'
 
 export async function POST(req: Request) {
+  if (rateLimited(req, 5)) return tooMany()
   try {
-    const body = await req.json()
+    const body = await readJson(req)
+    if (body === null) return tooLarge()
+    if (isBot(body)) return NextResponse.json({ ok: true })
     const name = String(body.name ?? '').trim()
     const organization = String(body.organization ?? '').trim()
     const amount = String(body.amount ?? '').trim()

@@ -43,6 +43,7 @@ export default function SubmitOpportunityPage() {
     link: '',
     contact_email: '',
     notes: '',
+    company: '', // honeypot
   })
   const [status, setStatus] = useState<'idle' | 'sending' | 'sent' | 'error'>('idle')
   const [errorMsg, setErrorMsg] = useState('')
@@ -117,7 +118,18 @@ export default function SubmitOpportunityPage() {
         </p>
       </header>
 
-      <form onSubmit={submit} className="mt-10 space-y-6">
+      <form onSubmit={submit} className="relative mt-10 space-y-6">
+        {/* Honeypot: hidden from people, tempting to bots */}
+        <input
+          type="text"
+          name="company"
+          value={form.company}
+          onChange={(e) => set('company', e.target.value)}
+          tabIndex={-1}
+          autoComplete="off"
+          aria-hidden="true"
+          className="absolute left-[-9999px] h-0 w-0 opacity-0"
+        />
         <div>
           <Label>Name of grant or opportunity</Label>
           <input

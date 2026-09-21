@@ -1,11 +1,14 @@
 import { NextResponse } from 'next/server'
 import { supabaseAdmin } from '@/lib/supabase-admin'
+import { rateLimited, readJson, tooLarge, tooMany } from '@/lib/guard'
 
 const EMAIL_RE = /^[^@\s]+@[^@\s]+\.[^@\s]+$/
 
 export async function POST(req: Request) {
+  if (rateLimited(req, 10)) return tooMany()
   try {
-    const body = await req.json()
+    const body = await readJson(req)
+    if (body === null) return tooLarge()
 
     // Honeypot: a filled "company" field means a bot. Return success so the
     // bot sees no signal, but write nothing.

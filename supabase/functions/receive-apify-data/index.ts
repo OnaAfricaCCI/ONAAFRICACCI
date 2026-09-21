@@ -15,6 +15,7 @@ import { checkLink } from '../_shared/check-link.ts'
 const ANTHROPIC_API_KEY = Deno.env.get('ANTHROPIC_API_KEY')!
 const SUPABASE_URL = Deno.env.get('SUPABASE_URL')!
 const SERVICE_ROLE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
+const DIGEST_SECRET = Deno.env.get('DIGEST_SECRET')
 
 const supabase = createClient(SUPABASE_URL, SERVICE_ROLE_KEY)
 
@@ -207,6 +208,16 @@ function itemText(item: Record<string, unknown>): string | undefined {
 }
 
 Deno.serve(async (req) => {
+  // Shared-secret guard: the public anon key is visible to every visitor, so it
+  // must not be enough to trigger AI extraction and inserts. Apify sends this
+  // header; nothing else should.
+  if (DIGEST_SECRET && req.headers.get('x-digest-secret') !== DIGEST_SECRET) {
+    return new Response(JSON.stringify({ error: 'Unauthorized' }), {
+      status: 401,
+      headers: { 'content-type': 'application/json' },
+    })
+  }
+
   if (req.method !== 'POST') {
     return new Response(JSON.stringify({ error: 'Method not allowed' }), {
       status: 405,
