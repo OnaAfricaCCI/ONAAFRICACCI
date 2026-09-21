@@ -167,6 +167,14 @@ Deno.serve(async (req) => {
       })
     }
 
+    // Retention, as promised in the privacy policy: messages and submissions
+    // are kept no longer than 24 months. Runs alongside the weekly send.
+    const cutoff = new Date(Date.now() - 24 * 30.44 * 864e5).toISOString()
+    for (const table of ['contact_messages', 'opportunity_submissions']) {
+      const { error } = await supabase.from(table).delete().lt('created_at', cutoff)
+      if (error) console.error(`retention sweep failed for ${table}:`, error.message)
+    }
+
     const url = new URL(req.url)
     const dryRun = url.searchParams.get('dry') === '1'
     const onlyTo = url.searchParams.get('to')
