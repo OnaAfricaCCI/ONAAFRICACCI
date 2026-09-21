@@ -48,6 +48,7 @@ export const metadata: Metadata = {
     url: SITE_URL,
   },
   robots: { index: true, follow: true },
+  verification: { google: "3d_p8pZxx2dyrU9GRkbaKQdWqYhNK2gDdlpwac7TpJQ" },
   twitter: {
     card: "summary",
     title: SITE_TITLE,
