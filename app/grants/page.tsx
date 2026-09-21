@@ -1,10 +1,11 @@
 'use client'
 
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import EmailCapture from '@/app/components/EmailCapture'
 import { supabase } from '@/lib/supabase'
 import { parseAmount } from '@/lib/amount'
 import { isPublishableGrant } from '@/lib/quality'
+import { track } from '@/lib/analytics'
 
 type Opportunity = {
   id: string
@@ -174,6 +175,16 @@ export default function GrantsPage() {
     })
   }, [opportunities, sector, country, fundingType, deadlineType, amountBand, showExpired, search, sortBy])
 
+  // Record a search once typing settles, with how many results it produced.
+  const resultCount = useRef(0)
+  resultCount.current = filtered.length
+  useEffect(() => {
+    const q = search.trim()
+    if (!q) return
+    const t = setTimeout(() => track({ name: 'grant_search', query: q, results: resultCount.current }), 900)
+    return () => clearTimeout(t)
+  }, [search])
+
   const activeFilters = [sector, country, fundingType, deadlineType, amountBand].filter(
     (f) => f !== 'all',
   ).length
@@ -236,7 +247,7 @@ export default function GrantsPage() {
           <select
             className={`${selectClass} sm:col-span-2`}
             value={sortBy}
-            onChange={(e) => setSortBy(e.target.value as SortKey)}
+            onChange={(e) => { setSortBy(e.target.value as SortKey); track({ name: 'grant_sort', sort: e.target.value }) }}
             aria-label="Sort grants"
           >
             {SORT_OPTIONS.map((s) => (
@@ -251,25 +262,25 @@ export default function GrantsPage() {
           aria-label="Filter grants"
           className="grid grid-cols-2 gap-3 sm:grid-cols-10 [&>select]:sm:col-span-2"
         >
-          <select className={selectClass} value={sector} onChange={(e) => setSector(e.target.value)}>
+          <select className={selectClass} value={sector} onChange={(e) => { setSector(e.target.value); track({ name: 'grant_filter', filter: 'sector', value: e.target.value, results: -1 }) }}>
             <option value="all">All sectors</option>
             {sectors.map((s) => (
               <option key={s} value={s}>{s}</option>
             ))}
           </select>
-          <select className={selectClass} value={country} onChange={(e) => setCountry(e.target.value)}>
+          <select className={selectClass} value={country} onChange={(e) => { setCountry(e.target.value); track({ name: 'grant_filter', filter: 'country', value: e.target.value, results: -1 }) }}>
             <option value="all">All countries</option>
             {countries.map((c) => (
               <option key={c} value={c}>{c}</option>
             ))}
           </select>
-          <select className={selectClass} value={fundingType} onChange={(e) => setFundingType(e.target.value)}>
+          <select className={selectClass} value={fundingType} onChange={(e) => { setFundingType(e.target.value); track({ name: 'grant_filter', filter: 'funding_type', value: e.target.value, results: -1 }) }}>
             <option value="all">All types</option>
             {fundingTypes.map((t) => (
               <option key={t} value={t}>{t}</option>
             ))}
           </select>
-          <select className={selectClass} value={deadlineType} onChange={(e) => setDeadlineType(e.target.value)}>
+          <select className={selectClass} value={deadlineType} onChange={(e) => { setDeadlineType(e.target.value); track({ name: 'grant_filter', filter: 'deadline_type', value: e.target.value, results: -1 }) }}>
             <option value="all">All deadlines</option>
             {deadlineTypes.map((t) => (
               <option key={t} value={t}>{t}</option>
@@ -278,7 +289,7 @@ export default function GrantsPage() {
           <select
             className={selectClass}
             value={amountBand}
-            onChange={(e) => setAmountBand(e.target.value as AmountBand)}
+            onChange={(e) => { setAmountBand(e.target.value as AmountBand); track({ name: 'grant_filter', filter: 'amount', value: e.target.value, results: -1 }) }}
           >
             <option value="all">Any amount</option>
             {AMOUNT_BANDS.map((b) => (
@@ -293,7 +304,7 @@ export default function GrantsPage() {
             <input
               type="checkbox"
               checked={showExpired}
-              onChange={(e) => setShowExpired(e.target.checked)}
+              onChange={(e) => { setShowExpired(e.target.checked); track({ name: 'show_expired_toggle', on: e.target.checked }) }}
               className="h-4 w-4 accent-[var(--terracotta)]"
             />
             Show expired
@@ -379,6 +390,7 @@ export default function GrantsPage() {
                       {o.application_link ? (
                         <a
                           href={o.application_link}
+                          onClick={() => track({ name: 'grant_apply_click', grant: o.name, funder: o.funder, from: 'list' })}
                           target="_blank"
                           rel="noopener noreferrer"
                           className="transition-colors group-hover:text-[var(--accent)]"
@@ -452,6 +464,7 @@ export default function GrantsPage() {
                     {o.application_link && (
                       <a
                         href={o.application_link}
+                          onClick={() => track({ name: 'grant_apply_click', grant: o.name, funder: o.funder, from: 'list' })}
                         target="_blank"
                         rel="noopener noreferrer"
                         className="mt-auto block w-full border-2 border-[var(--ink)] px-4 py-2 text-[13px] font-bold uppercase tracking-[0.06em] transition-colors hover:border-[var(--accent)] hover:bg-[var(--accent)] hover:text-[var(--bg)] sm:w-auto"

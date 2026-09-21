@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import { track } from '@/lib/analytics'
 
 type Props = {
   /** Optional dropdown choices. When omitted, only the email field is shown. */
@@ -53,6 +54,7 @@ export default function EmailCapture({
       const data = await res.json()
       if (!res.ok) throw new Error(data.error ?? 'Something went wrong.')
       setStatus('done')
+      track({ name: 'subscribe', placement: hasPrefs ? 'grants' : 'home', with_preferences: Boolean(sector || country) })
     } catch (err) {
       setMessage(err instanceof Error ? err.message : 'Something went wrong.')
       setStatus('error')

@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
+import { track } from '@/lib/analytics'
 
 type Theme = 'light' | 'dark'
 const KEY = 'ona-theme'
@@ -49,6 +50,7 @@ export default function ThemeToggle() {
       /* private mode etc. — the choice just won't persist */
     }
     setTheme(next)
+    track({ name: 'theme_toggle', to: next })
   }
 
   // Until mounted we don't know the theme; render a neutral placeholder so the

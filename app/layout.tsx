@@ -1,9 +1,11 @@
 import type { Metadata } from "next";
 import { Archivo_Black, Work_Sans, Space_Mono } from "next/font/google";
 import Link from "next/link";
+import Analytics from "./components/Analytics";
 import BackToTop from "./components/BackToTop";
 import NavLinks from "./components/NavLinks";
 import ThemeToggle, { THEME_INIT_SCRIPT } from "./components/ThemeToggle";
+import { SITE_URL, SITE_NAME, SITE_TITLE, SITE_DESCRIPTION, SITE_DEFINITION } from "@/lib/site";
 import "./globals.css";
 
 // TODO: replace with the real Ona profile URLs
@@ -29,13 +31,9 @@ const mono = Space_Mono({
   subsets: ["latin"],
 });
 
-const SITE_TITLE = "Ona — Funding for Africa's creative industries";
-const SITE_DESCRIPTION =
-  "Find grants, prizes, residencies and fellowships for African creatives. Checked, filterable and current, for the continent and the diaspora.";
-const SITE_DEFINITION =
-  "Ona is a public record of the funding open to Africa's cultural and creative industries.";
-
 export const metadata: Metadata = {
+  metadataBase: new URL(SITE_URL),
+  alternates: { canonical: "/" },
   title: {
     default: SITE_TITLE,
     template: "%s — Ona",
@@ -44,10 +42,12 @@ export const metadata: Metadata = {
   openGraph: {
     title: SITE_TITLE,
     description: SITE_DEFINITION,
-    siteName: "Ona",
+    siteName: SITE_NAME,
     type: "website",
     locale: "en_GB",
+    url: SITE_URL,
   },
+  robots: { index: true, follow: true },
   twitter: {
     card: "summary",
     title: SITE_TITLE,
@@ -73,6 +73,33 @@ export default function RootLayout({
         className="min-h-full flex flex-col bg-[var(--bg)] text-[var(--ink)] font-[family-name:var(--font-body)]"
       >
         <script dangerouslySetInnerHTML={{ __html: THEME_INIT_SCRIPT }} />
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{
+            __html: JSON.stringify({
+              "@context": "https://schema.org",
+              "@graph": [
+                {
+                  "@type": "Organization",
+                  "@id": `${SITE_URL}/#org`,
+                  name: SITE_NAME,
+                  url: SITE_URL,
+                  description: SITE_DEFINITION,
+                  areaServed: "Africa",
+                },
+                {
+                  "@type": "WebSite",
+                  "@id": `${SITE_URL}/#site`,
+                  url: SITE_URL,
+                  name: SITE_TITLE,
+                  description: SITE_DESCRIPTION,
+                  publisher: { "@id": `${SITE_URL}/#org` },
+                  inLanguage: "en",
+                },
+              ],
+            }),
+          }}
+        />
         <header className="sticky top-0 z-30 border-b-2 border-[var(--ink)] bg-[var(--bg)]">
           <div className="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-x-6 gap-y-2 px-5 py-3 sm:h-16 sm:flex-nowrap sm:py-0">
             <Link
@@ -140,6 +167,7 @@ export default function RootLayout({
         </footer>
 
         <BackToTop />
+        <Analytics />
       </body>
     </html>
   );

@@ -2,6 +2,7 @@
 
 import Link from 'next/link'
 import { useState } from 'react'
+import { track } from '@/lib/analytics'
 
 const inputClass =
   'control-h w-full border-2 border-[var(--border-md)] bg-[var(--bg)] px-[14px] text-sm ' +
@@ -62,6 +63,7 @@ export default function SubmitOpportunityPage() {
       const data = await res.json()
       if (!res.ok) throw new Error(data.error ?? 'Failed')
       setStatus('sent')
+      track({ name: 'opportunity_submitted' })
     } catch (err) {
       setErrorMsg(
         err instanceof Error && err.message !== 'Failed'

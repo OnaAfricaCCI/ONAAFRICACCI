@@ -1,6 +1,7 @@
 'use client'
 
 import { useCallback, useEffect, useRef, useState } from 'react'
+import { track } from '@/lib/analytics'
 
 export type FeaturedGrant = {
   id: string
@@ -129,7 +130,7 @@ export default function FeaturedCarousel({
         <div className="hidden shrink-0 gap-2 sm:flex">
           <button
             type="button"
-            onClick={() => { pause(); step(-1); resumeSoon() }}
+            onClick={() => { pause(); step(-1); resumeSoon(); track({ name: 'carousel_arrow', direction: 'prev' }) }}
             disabled={!canPrev}
             aria-label="Scroll to previous grant"
             aria-controls="featured-scroller"
@@ -141,7 +142,7 @@ export default function FeaturedCarousel({
           </button>
           <button
             type="button"
-            onClick={() => { pause(); step(1); resumeSoon() }}
+            onClick={() => { pause(); step(1); resumeSoon(); track({ name: 'carousel_arrow', direction: 'next' }) }}
             aria-label={canNext ? 'Scroll to next grant' : 'Back to first grant'}
             aria-controls="featured-scroller"
             className={arrowClass}
@@ -171,6 +172,7 @@ export default function FeaturedCarousel({
                 href={g.href}
                 target="_blank"
                 rel="noopener noreferrer"
+                onClick={() => track({ name: 'grant_apply_click', grant: g.name, funder: g.funder, from: 'carousel' })}
                 className="group flex h-full flex-col border-2 border-[var(--bg)] bg-[var(--bg)] p-6 transition-colors hover:border-[var(--accent)]"
               >
                 <h3 className="line-clamp-2 font-[family-name:var(--font-display)] text-xl font-semibold leading-snug transition-colors group-hover:text-[var(--accent)]">

@@ -1,10 +1,11 @@
 'use client'
 
 import Link from 'next/link'
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { supabase } from '@/lib/supabase'
 import type { Funder } from '@/lib/types'
 import { isPublishableInstitution } from '@/lib/quality'
+import { track } from '@/lib/analytics'
 
 function FunderLogo({ funder, size = 44 }: { funder: Funder; size?: number }) {
   const [failed, setFailed] = useState(false)
@@ -89,6 +90,15 @@ export default function FundersPage() {
     })
   }, [funders, search, type, region, sector, support])
 
+  const resultCount = useRef(0)
+  resultCount.current = filtered.length
+  useEffect(() => {
+    const q = search.trim()
+    if (!q) return
+    const t = setTimeout(() => track({ name: 'funder_search', query: q, results: resultCount.current }), 900)
+    return () => clearTimeout(t)
+  }, [search])
+
   const activeFilters = [type, region, sector, support].filter((f) => f !== 'all').length
 
   const selectClass =
@@ -150,25 +160,25 @@ export default function FundersPage() {
           aria-label="Filter funders"
           className="grid grid-cols-2 gap-3 sm:grid-cols-4"
         >
-          <select className={selectClass} value={type} onChange={(e) => setType(e.target.value)}>
+          <select className={selectClass} value={type} onChange={(e) => { setType(e.target.value); track({ name: 'funder_filter', filter: 'type', value: e.target.value, results: -1 }) }}>
             <option value="all">All types</option>
             {types.map((t) => (
               <option key={t} value={t}>{t}</option>
             ))}
           </select>
-          <select className={selectClass} value={region} onChange={(e) => setRegion(e.target.value)}>
+          <select className={selectClass} value={region} onChange={(e) => { setRegion(e.target.value); track({ name: 'funder_filter', filter: 'region', value: e.target.value, results: -1 }) }}>
             <option value="all">All regions</option>
             {regions.map((r) => (
               <option key={r} value={r}>{r}</option>
             ))}
           </select>
-          <select className={selectClass} value={sector} onChange={(e) => setSector(e.target.value)}>
+          <select className={selectClass} value={sector} onChange={(e) => { setSector(e.target.value); track({ name: 'funder_filter', filter: 'sector', value: e.target.value, results: -1 }) }}>
             <option value="all">All sectors</option>
             {sectors.map((s) => (
               <option key={s} value={s}>{s}</option>
             ))}
           </select>
-          <select className={selectClass} value={support} onChange={(e) => setSupport(e.target.value)}>
+          <select className={selectClass} value={support} onChange={(e) => { setSupport(e.target.value); track({ name: 'funder_filter', filter: 'support', value: e.target.value, results: -1 }) }}>
             <option value="all">All support types</option>
             {supports.map((s) => (
               <option key={s} value={s}>{s}</option>

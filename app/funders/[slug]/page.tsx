@@ -1,9 +1,11 @@
 import Link from 'next/link'
+import type { Metadata } from 'next'
 import { notFound } from 'next/navigation'
 import { supabase } from '@/lib/supabase'
 import { formatDate } from '@/lib/media'
 import type { Funder } from '@/lib/types'
 import { isPublishableInstitution } from '@/lib/quality'
+import TrackedLink from '@/app/components/TrackedLink'
 
 export const dynamic = 'force-dynamic'
 
@@ -64,6 +66,27 @@ function Pills({ items, tone }: { items: string[]; tone: 'forest' | 'ochre' }) {
   )
 }
 
+/** Per-profile title, description and canonical URL for search and sharing. */
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ slug: string }>
+}): Promise<Metadata> {
+  const { slug } = await params
+  const q = supabase.from('funders').select('name, slug, description')
+  const { data } = UUID.test(slug)
+    ? await q.eq('id', slug).maybeSingle()
+    : await q.eq('slug', slug).maybeSingle()
+  if (!data || !isPublishableInstitution(data as Funder)) return { title: 'Funder not found' }
+  const desc = (data.description ?? '').slice(0, 155).replace(/\s+\S*$/, '') + '…'
+  return {
+    title: data.name,
+    description: desc,
+    alternates: { canonical: `/funders/${data.slug ?? slug}` },
+    openGraph: { title: `${data.name} — Ona`, description: desc, url: `/funders/${data.slug ?? slug}`, type: 'profile' },
+  }
+}
+
 export default async function FunderProfilePage({
   params,
 }: {
@@ -88,8 +111,8 @@ export default async function FunderProfilePage({
   const grantees = f.notable_grantees ?? []
 
   const links = [
-    { label: 'Official website', href: f.website },
-    { label: 'Grants / opportunities page', href: f.grants_page_url },
+    { label: 'Official website', href: f.website, kind: 'website' as const },
+    { label: 'Grants / opportunities page', href: f.grants_page_url, kind: 'grants_page' as const },
   ].filter((l) => l.href)
 
   const hasContact = f.contact_person || f.contact_email
@@ -226,7 +249,8 @@ export default async function FunderProfilePage({
         <ul className="space-y-2">
           {links.map((l) => (
             <li key={l.href}>
-              <a
+              <TrackedLink
+                event={{ name: 'funder_link_click', funder: f.name, link: l.kind }}
                 href={l.href!}
                 target="_blank"
                 rel="noopener noreferrer"
@@ -238,7 +262,7 @@ export default async function FunderProfilePage({
                 <span className="underline decoration-[var(--ink)] decoration-2 underline-offset-4 group-hover:text-[var(--accent)]">
                   {l.href!.replace(/^https?:\/\//, '').replace(/\/$/, '')} ↗
                 </span>
-              </a>
+              </TrackedLink>
             </li>
           ))}
           {f.contact_person && (
@@ -254,12 +278,13 @@ export default async function FunderProfilePage({
               <span className="text-[10px] font-semibold uppercase tracking-[0.15em] text-[var(--ink-soft)]">
                 Email
               </span>{' '}
-              <a
+              <TrackedLink
+                event={{ name: 'funder_link_click', funder: f.name, link: 'email' }}
                 href={`mailto:${f.contact_email}`}
                 className="underline decoration-[var(--ink)] decoration-2 underline-offset-4 hover:text-[var(--accent)]"
               >
                 {f.contact_email}
-              </a>
+              </TrackedLink>
             </li>
           )}
         </ul>
