@@ -174,7 +174,11 @@ export default function GrantsPage() {
     }
   }, [sector, fundingType, deadlineType, amountBand, showExpired, search])
 
-  /** How many grants each place option would return right now. */
+  /**
+   * How many grants each place option would return, given the other filters.
+   * Not shown to anyone — it's only used to leave out options that would lead
+   * to an empty page.
+   */
   const scopeCounts = useMemo(() => {
     const counts = new Map<string, number>()
     for (const o of opportunities) {
@@ -324,7 +328,7 @@ export default function GrantsPage() {
             aria-label="Where you’re based"
           >
             <option value="all">Anywhere</option>
-            {(['scope', 'region', 'country'] as ScopeGroup[]).map((group) => {
+            {(['region', 'country'] as ScopeGroup[]).map((group) => {
               const options = SCOPE_OPTIONS.filter(
                 // Hide options that would return nothing — but never hide the
                 // one that's currently selected, or the box would go blank.
@@ -335,14 +339,7 @@ export default function GrantsPage() {
                 <optgroup key={group} label={SCOPE_GROUP_LABELS[group]}>
                   {options.map((o) => (
                     <option key={o.value} value={o.value}>
-                      {/*
-                        A count only appears on the two continent-wide options,
-                        where it means what it says. On a region or country it
-                        would read as "105 Kenyan grants" when most of those are
-                        pan-African funds a Kenyan can apply for — true, but
-                        misleading at a glance.
-                      */}
-                      {o.group === 'scope' ? `${o.label} (${scopeCounts.get(o.value)})` : o.label}
+                      {o.label}
                     </option>
                   ))}
                 </optgroup>

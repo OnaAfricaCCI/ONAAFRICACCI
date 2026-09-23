@@ -26,7 +26,7 @@
  *      grant they can actually apply to.
  */
 
-export type ScopeGroup = 'scope' | 'region' | 'country'
+export type ScopeGroup = 'region' | 'country'
 
 export type ScopeOption = {
   /** Stable value stored in filter state and analytics. */
@@ -157,15 +157,19 @@ const GLOBAL_PATTERNS = [
 ]
 
 /** The dropdown, in the order it is shown. */
+/**
+ * The dropdown, in the order it is shown: two groups only. The two
+ * continent-or-wider scopes head the region list, since that is how someone
+ * reads them — the widest reach first, then narrowing.
+ */
 export const SCOPE_OPTIONS: ScopeOption[] = [
-  { value: AFRICA, label: 'All of Africa', group: 'scope' },
-  { value: GLOBAL, label: 'Worldwide', group: 'scope' },
+  { value: AFRICA, label: 'All of Africa', group: 'region' },
+  { value: GLOBAL, label: 'Worldwide', group: 'region' },
   ...REGIONS.map((r) => ({ value: r.value, label: r.label, group: 'region' as const })),
   ...COUNTRIES.map((c) => ({ value: c.value, label: c.label, group: 'country' as const })),
 ]
 
 export const SCOPE_GROUP_LABELS: Record<ScopeGroup, string> = {
-  scope: 'Open to everyone',
   region: 'By region',
   country: 'By country',
 }
