@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 import { supabaseAdmin } from '@/lib/supabase-admin'
 import { isBot, rateLimited, readJson, tooLarge, tooMany } from '@/lib/guard'
+import { notify } from '@/lib/email'
 
 export async function POST(req: Request) {
   if (rateLimited(req, 5)) return tooMany()
@@ -41,6 +42,21 @@ export async function POST(req: Request) {
       status: 'pending',
     })
     if (error) throw new Error(error.message)
+
+    await notify({
+      subject: `Opportunity submitted: ${name}`,
+      lines: [
+        ['Opportunity', name],
+        ['Organisation', organization],
+        ['Amount', amount],
+        ['Who it\'s for', forWho],
+        ['Deadline', rolling ? 'Rolling / no fixed deadline' : deadline],
+        ['Link', link],
+        ['Notes', notes],
+        ['Submitted by', contactEmail],
+      ],
+      replyTo: contactEmail,
+    })
 
     return NextResponse.json({ ok: true })
   } catch (err) {

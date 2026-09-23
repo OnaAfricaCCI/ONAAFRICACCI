@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 import { supabaseAdmin } from '@/lib/supabase-admin'
 import { isBot, rateLimited, readJson, tooLarge, tooMany } from '@/lib/guard'
+import { notify } from '@/lib/email'
 
 export async function POST(req: Request) {
   if (rateLimited(req, 5)) return tooMany()
@@ -25,6 +26,13 @@ export async function POST(req: Request) {
       message: message.slice(0, 5000),
     })
     if (error) throw new Error(error.message)
+
+    // Tell us someone wrote in; replying goes straight back to them.
+    await notify({
+      subject: `New message from ${name}`,
+      lines: [['From', name], ['Email', email], ['Message', message]],
+      replyTo: email,
+    })
 
     return NextResponse.json({ ok: true })
   } catch (err) {

@@ -239,9 +239,14 @@ export default function PrivacyPage() {
 
         <H2 id="contact">14. How to contact us</H2>
         <p className="mt-4">
-          For anything about your information, email{' '}
+          For anything about your information — a request to see, correct or delete it, or
+          a question about this policy — email{' '}
           <a href={`mailto:${CONTACT}`} className="underline underline-offset-4">
             {CONTACT}
+          </a>
+          . For anything else, write to{' '}
+          <a href="mailto:hello@onafunds.com" className="underline underline-offset-4">
+            hello@onafunds.com
           </a>{' '}
           or use the{' '}
           <Link href="/contact" className="underline underline-offset-4">
