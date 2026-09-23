@@ -44,7 +44,7 @@ Deno.serve(async (req) => {
 
     const { data, error } = await supabase
       .from('opportunities')
-      .select('id, name, application_link')
+      .select('id, name, application_link, link_fail_streak')
       .not('application_link', 'is', null)
       .order('link_checked_at', { ascending: true, nullsFirst: true })
       .limit(limit)
@@ -53,29 +53,69 @@ Deno.serve(async (req) => {
     const rows = (data ?? []).filter((r) => (r.application_link ?? '').trim() !== '')
 
     const checkedAt = new Date().toISOString()
+
     const results = await mapLimit(rows, CONCURRENCY, async (r) => {
       const res = await checkLink(r.application_link!.trim())
+      const previousStreak = Number(r.link_fail_streak ?? 0)
+
+      /*
+       * Two strikes before anything is called dead.
+       *
+       * A single sweep is one machine's opinion on one night. Servers hiccup,
+       * CDNs serve transient 404s, our own network has bad moments. Requiring
+       * two consecutive failures costs a day of delay and buys us not telling
+       * a visitor that a live fund is broken.
+       *
+       * 'unreachable' and 'blocked' never become 'dead' however often they
+       * repeat: we still have no evidence about the page, only about our own
+       * access to it. Those stay 'unverified' — shown plainly, flagged to
+       * nobody — and land in the report below for a human to look at.
+       */
+      const streak = res.verdict === 'ok' ? 0 : previousStreak + 1
+      const state =
+        res.verdict === 'ok' ? 'ok' : res.verdict === 'gone' && streak >= 2 ? 'dead' : 'unverified'
+
       const { error: upErr } = await supabase
         .from('opportunities')
         .update({
-          link_ok: res.ok,
+          link_state: state,
+          link_fail_streak: streak,
+          link_ok: state === 'ok',
           link_status: res.status,
           link_error: res.error,
           link_checked_at: checkedAt,
         })
         .eq('id', r.id)
       if (upErr) console.error('update failed', r.id, upErr.message)
-      return { name: r.name, ...res }
+      return { name: r.name, state, streak, ...res }
     })
 
-    const dead = results.filter((r) => !r.ok)
+    const by = (s: string) => results.filter((r) => r.state === s)
     const summary = {
       checked: results.length,
-      ok: results.length - dead.length,
-      dead: dead.length,
-      deadLinks: dead.map((d) => ({ name: d.name, status: d.status, error: d.error })),
+      ok: by('ok').length,
+      dead: by('dead').length,
+      unverified: by('unverified').length,
+      // Confirmed broken — worth chasing a replacement URL for.
+      deadLinks: by('dead').map((d) => ({ name: d.name, status: d.status, error: d.error })),
+      // We could not reach these. Not necessarily broken — often a site that
+      // refuses automated traffic. Listed so they can be eyeballed, not flagged.
+      unverifiedLinks: by('unverified').map((d) => ({
+        name: d.name,
+        status: d.status,
+        error: d.error,
+        failedSweeps: d.streak,
+      })),
     }
-    console.log('check-links:', JSON.stringify({ checked: summary.checked, ok: summary.ok, dead: summary.dead }))
+    console.log(
+      'check-links:',
+      JSON.stringify({
+        checked: summary.checked,
+        ok: summary.ok,
+        dead: summary.dead,
+        unverified: summary.unverified,
+      }),
+    )
 
     return new Response(JSON.stringify(summary, null, 2), {
       status: 200,

@@ -162,7 +162,16 @@ async function processOne(rawText: string, payloadUrl?: string): Promise<Process
       raw_text: rawText,
       source: 'apify',
     }
+    /*
+     * A brand-new grant is never condemned on first sight. One check is one
+     * opinion: if it doesn't answer, the grant arrives 'unverified' with a
+     * strike against it, and the nightly sweep decides. The only thing that
+     * matters immediately is that nothing unverified reaches the homepage,
+     * which link_ok already guarantees.
+     */
     const linkColumns = {
+      link_state: linkCheck ? (linkCheck.verdict === 'ok' ? 'ok' : 'unverified') : 'unverified',
+      link_fail_streak: linkCheck && linkCheck.verdict !== 'ok' ? 1 : 0,
       link_ok: linkCheck?.ok ?? null,
       link_status: linkCheck?.status ?? null,
       link_error: linkCheck?.error ?? null,

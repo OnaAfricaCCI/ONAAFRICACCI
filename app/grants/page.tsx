@@ -28,8 +28,12 @@ type Opportunity = {
   application_link: string | null
   description: string | null
   created_at: string
-  /** false when check-links last found the application link unreachable */
-  link_ok: boolean | null
+  /**
+   * 'ok' | 'unverified' | 'dead'. Only 'dead' means the server actually told
+   * us the page is gone; 'unverified' means we could not reach it, which is
+   * usually a site refusing automated traffic rather than a broken link.
+   */
+  link_state: string | null
   link_checked_at: string | null
 }
 
@@ -42,7 +46,7 @@ type Opportunity = {
  */
 const COLUMNS =
   'id,name,funder,deadline,amount,eligible_countries,cci_sector,funding_type,' +
-  'deadline_type,application_link,description,created_at,link_ok,link_checked_at'
+  'deadline_type,application_link,description,created_at,link_state,link_checked_at'
 
 /**
  * A ceiling on what one request can pull back.
@@ -591,7 +595,7 @@ export default function GrantsPage() {
                       instead of sending someone to a 404 — the listing stays,
                       but the click is no longer a silent dead end.
                     */}
-                    {o.application_link && o.link_ok === false && (
+                    {o.application_link && o.link_state === 'dead' && (
                       <p className="text-[10px] font-semibold uppercase leading-relaxed tracking-[0.12em] text-[var(--ink-soft)] sm:text-right">
                         ⚠ Link didn&rsquo;t respond
                         {o.link_checked_at ? ` on ${formatCheckedAt(o.link_checked_at)}` : ''}
@@ -611,12 +615,12 @@ export default function GrantsPage() {
                         target="_blank"
                         rel="noopener noreferrer"
                         className={
-                          o.link_ok === false
+                          o.link_state === 'dead'
                             ? 'mt-auto block w-full border-2 border-dashed border-[var(--line)] px-4 py-2 text-[13px] font-bold uppercase tracking-[0.06em] text-[var(--ink-soft)] transition-colors hover:border-[var(--accent)] hover:text-[var(--accent)] sm:w-auto'
                             : 'mt-auto block w-full border-2 border-[var(--ink)] px-4 py-2 text-[13px] font-bold uppercase tracking-[0.06em] transition-colors hover:border-[var(--accent)] hover:bg-[var(--accent)] hover:text-[var(--bg)] sm:w-auto'
                         }
                       >
-                        {o.link_ok === false ? 'Try the link →' : 'Apply →'}
+                        {o.link_state === 'dead' ? 'Try the link →' : 'Apply →'}
                       </a>
                     )}
                   </div>

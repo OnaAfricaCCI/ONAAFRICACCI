@@ -1,0 +1,21 @@
+# Supabase project configuration.
+#
+# The reason this file exists: Edge Functions are deployed with Supabase's own
+# JWT check switched ON unless told otherwise, and that setting is reapplied on
+# every deploy. The two scheduled functions are called by pg_cron from inside
+# the database, which sends no JWT — it authenticates with the x-digest-secret
+# header that each function checks for itself. Without this file, the next
+# `functions deploy` silently puts the JWT wall back up and both scheduled jobs
+# start failing with 401, with nothing on the site to show it.
+#
+# receive-apify-data is deliberately left at the default: Apify's webhook does
+# send an authorization header, so its JWT check stays on — belt as well as
+# braces, since it also checks the digest secret.
+
+project_id = "fperytyukppkkjjfkwgl"
+
+[functions.check-links]
+verify_jwt = false
+
+[functions.weekly-digest]
+verify_jwt = false
