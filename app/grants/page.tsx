@@ -6,6 +6,14 @@ import { supabase } from '@/lib/supabase'
 import { parseAmount } from '@/lib/amount'
 import { isPublishableGrant } from '@/lib/quality'
 import { track } from '@/lib/analytics'
+import {
+  SCOPE_GROUP_LABELS,
+  SCOPE_OPTIONS,
+  matchesScope,
+  scopeRank,
+  scopesFor,
+  type ScopeGroup,
+} from '@/lib/eligibility'
 
 type Opportunity = {
   id: string
@@ -103,10 +111,21 @@ export default function GrantsPage() {
     () => [...new Set(opportunities.map((o) => o.cci_sector).filter(Boolean))].sort() as string[],
     [opportunities],
   )
+  /** Raw wording, still used for the digest sign-up's country preferences. */
   const countries = useMemo(
     () => [...new Set(opportunities.flatMap((o) => o.eligible_countries ?? []))].sort(),
     [opportunities],
   )
+  /**
+   * The same wording read as scopes — continent, region, country — so the
+   * filter can offer 20 sensible options instead of 95 literal ones. Nothing
+   * about the grant itself changes; the cards still show the funder's words.
+   */
+  const scopeIndex = useMemo(() => {
+    const m = new Map<string, Set<string>>()
+    for (const o of opportunities) m.set(o.id, scopesFor(o.eligible_countries))
+    return m
+  }, [opportunities])
   const fundingTypes = useMemo(
     () => [...new Set(opportunities.map((o) => o.funding_type).filter(Boolean))].sort() as string[],
     [opportunities],
@@ -116,15 +135,18 @@ export default function GrantsPage() {
     [opportunities],
   )
 
-  const filtered = useMemo(() => {
+  /**
+   * Every filter except the place one. Kept separate so the place dropdown can
+   * show how many grants each option would return, given everything else.
+   */
+  const passesOthers = useMemo(() => {
     const terms = search.trim().toLowerCase().split(/\s+/).filter(Boolean)
 
-    const matches = opportunities.filter((o) => {
+    return (o: Opportunity) => {
       // Hide grants whose fixed deadline has already passed (unless toggled on)
       const dl = daysLeft(o.deadline)
       if (!showExpired && dl !== null && dl < 0) return false
       if (sector !== 'all' && o.cci_sector !== sector) return false
-      if (country !== 'all' && !(o.eligible_countries ?? []).includes(country)) return false
       if (fundingType !== 'all' && o.funding_type !== fundingType) return false
       if (deadlineType !== 'all' && o.deadline_type !== deadlineType) return false
       if (amountBand !== 'all') {
@@ -149,12 +171,43 @@ export default function GrantsPage() {
         if (!terms.every((t) => haystack.includes(t))) return false
       }
       return true
-    })
+    }
+  }, [sector, fundingType, deadlineType, amountBand, showExpired, search])
+
+  /**
+   * How many grants each place option would return, given the other filters.
+   * Not shown to anyone — it's only used to leave out options that would lead
+   * to an empty page.
+   */
+  const scopeCounts = useMemo(() => {
+    const counts = new Map<string, number>()
+    for (const o of opportunities) {
+      if (!passesOthers(o)) continue
+      const scopes = scopeIndex.get(o.id) ?? new Set<string>()
+      for (const opt of SCOPE_OPTIONS) {
+        if (matchesScope(opt.value, scopes)) counts.set(opt.value, (counts.get(opt.value) ?? 0) + 1)
+      }
+    }
+    return counts
+  }, [opportunities, scopeIndex, passesOthers])
+
+  const filtered = useMemo(() => {
+    const matches = opportunities.filter(
+      (o) => passesOthers(o) && matchesScope(country, scopeIndex.get(o.id) ?? new Set<string>()),
+    )
 
     const byName = (a: Opportunity, b: Opportunity) =>
       a.name.localeCompare(b.name, undefined, { sensitivity: 'base', numeric: true })
 
+    // With a place chosen, grants naming that place come before the
+    // continent-wide and global ones that also include it.
+    const byPlace = (a: Opportunity, b: Opportunity) =>
+      scopeRank(country, scopeIndex.get(a.id) ?? new Set<string>()) -
+      scopeRank(country, scopeIndex.get(b.id) ?? new Set<string>())
+
     return [...matches].sort((a, b) => {
+      const place = byPlace(a, b)
+      if (place !== 0) return place
       switch (sortBy) {
         case 'az':
           return byName(a, b)
@@ -173,7 +226,7 @@ export default function GrantsPage() {
         }
       }
     })
-  }, [opportunities, sector, country, fundingType, deadlineType, amountBand, showExpired, search, sortBy])
+  }, [opportunities, scopeIndex, passesOthers, country, sortBy])
 
   // Record a search once typing settles, with how many results it produced.
   const resultCount = useRef(0)
@@ -268,11 +321,30 @@ export default function GrantsPage() {
               <option key={s} value={s}>{s}</option>
             ))}
           </select>
-          <select className={selectClass} value={country} onChange={(e) => { setCountry(e.target.value); track({ name: 'grant_filter', filter: 'country', value: e.target.value, results: -1 }) }}>
-            <option value="all">All countries</option>
-            {countries.map((c) => (
-              <option key={c} value={c}>{c}</option>
-            ))}
+          <select
+            className={selectClass}
+            value={country}
+            onChange={(e) => { setCountry(e.target.value); track({ name: 'grant_filter', filter: 'country', value: e.target.value, results: -1 }) }}
+            aria-label="Where you’re based"
+          >
+            <option value="all">Anywhere</option>
+            {(['region', 'country'] as ScopeGroup[]).map((group) => {
+              const options = SCOPE_OPTIONS.filter(
+                // Hide options that would return nothing — but never hide the
+                // one that's currently selected, or the box would go blank.
+                (o) => o.group === group && ((scopeCounts.get(o.value) ?? 0) > 0 || o.value === country),
+              )
+              if (!options.length) return null
+              return (
+                <optgroup key={group} label={SCOPE_GROUP_LABELS[group]}>
+                  {options.map((o) => (
+                    <option key={o.value} value={o.value}>
+                      {o.label}
+                    </option>
+                  ))}
+                </optgroup>
+              )
+            })}
           </select>
           <select className={selectClass} value={fundingType} onChange={(e) => { setFundingType(e.target.value); track({ name: 'grant_filter', filter: 'funding_type', value: e.target.value, results: -1 }) }}>
             <option value="all">All types</option>
