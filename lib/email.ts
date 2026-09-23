@@ -44,9 +44,22 @@ export async function notify({
       <table cellpadding="0" cellspacing="0">${rows}</table>
     </div></body></html>`
 
+  /*
+   * Hard timeout on the outbound call.
+   *
+   * Without it, a slow or unresponsive Resend holds the visitor's form POST
+   * open until the serverless function is killed — they see "Something went
+   * wrong" and submit again, even though their message was already saved.
+   * Duplicate messages, and a visitor who thinks the site is broken. The
+   * notification is a convenience; it must never outrank the submission.
+   */
+  const abort = new AbortController()
+  const timer = setTimeout(() => abort.abort(), 5000)
+
   try {
     const res = await fetch('https://api.resend.com/emails', {
       method: 'POST',
+      signal: abort.signal,
       headers: { authorization: `Bearer ${API_KEY}`, 'content-type': 'application/json' },
       body: JSON.stringify({
         from: FROM,
@@ -60,6 +73,12 @@ export async function notify({
     if (!res.ok) console.error('notify failed:', res.status, await res.text())
   } catch (err) {
     // Never let a notification failure break the visitor's submission
-    console.error('notify error:', err)
+    if (err instanceof Error && err.name === 'AbortError') {
+      console.error('notify timed out after 5s — submission was still saved')
+    } else {
+      console.error('notify error:', err)
+    }
+  } finally {
+    clearTimeout(timer)
   }
 }

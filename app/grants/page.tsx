@@ -28,7 +28,30 @@ type Opportunity = {
   application_link: string | null
   description: string | null
   created_at: string
+  /** false when check-links last found the application link unreachable */
+  link_ok: boolean | null
+  link_checked_at: string | null
 }
+
+/**
+ * Exactly the columns this page renders — nothing more.
+ *
+ * `select('*')` also shipped `raw_text` (the entire scraped page for every
+ * grant), `source_url`, `link_error` and the internal foreign keys: 65 KB of
+ * the 184 KB payload, sent to every phone on every visit, and read by nothing.
+ */
+const COLUMNS =
+  'id,name,funder,deadline,amount,eligible_countries,cci_sector,funding_type,' +
+  'deadline_type,application_link,description,created_at,link_ok,link_checked_at'
+
+/**
+ * A ceiling on what one request can pull back.
+ *
+ * Without it the page asks for the whole table forever: 142 grants today is
+ * fine, 3,000 is a multi-megabyte download onto a phone. When the cap is hit
+ * the page says so rather than quietly showing a truncated database.
+ */
+const MAX_ROWS = 500
 
 type AmountBand = 'all' | 'under-10k' | '10k-50k' | '50k-250k' | 'over-250k'
 
@@ -73,6 +96,12 @@ function formatDeadline(deadline: string | null, deadlineType: string | null): s
   return d.toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })
 }
 
+function formatCheckedAt(iso: string): string {
+  const d = new Date(iso)
+  if (isNaN(d.getTime())) return ''
+  return d.toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })
+}
+
 function daysLeft(deadline: string | null): number | null {
   if (!deadline) return null
   const d = new Date(deadline)
@@ -94,17 +123,34 @@ export default function GrantsPage() {
   const [search, setSearch] = useState('')
   const [sortBy, setSortBy] = useState<SortKey>('az')
 
+  const [truncated, setTruncated] = useState(false)
+
   useEffect(() => {
+    // Abort if the visitor navigates away mid-request, so a slow connection
+    // can't resolve into an unmounted component.
+    const controller = new AbortController()
+
     supabase
       .from('opportunities')
-      .select('*')
+      .select(COLUMNS)
       .not('description', 'is', null)
       .order('created_at', { ascending: false })
+      .limit(MAX_ROWS)
+      .abortSignal(controller.signal)
       .then(({ data, error }) => {
-        if (error) setError(error.message)
-        else setOpportunities(((data as Opportunity[]) ?? []).filter(isPublishableGrant))
+        if (controller.signal.aborted) return
+        if (error) {
+          console.error('grants load failed:', error)
+          setError(error.message)
+        } else {
+          const rows = (data as unknown as Opportunity[]) ?? []
+          setTruncated(rows.length >= MAX_ROWS)
+          setOpportunities(rows.filter(isPublishableGrant))
+        }
         setLoading(false)
       })
+
+    return () => controller.abort()
   }, [])
 
   const sectors = useMemo(
@@ -407,6 +453,12 @@ export default function GrantsPage() {
             Finding opportunities…
           </p>
         )}
+        {truncated && (
+          <p className="mb-6 border-2 border-[var(--line)] p-4 text-sm text-[var(--ink-2)]">
+            Showing the {MAX_ROWS} most recently added opportunities. Use search and
+            the filters to narrow down — older entries are still here.
+          </p>
+        )}
 
         {!loading && !error && filtered.length === 0 && (
           <div className="border-2 border-dashed border-[var(--line)] p-16 text-center">
@@ -533,15 +585,38 @@ export default function GrantsPage() {
                         )}
                       </div>
                     )}
+                    {/*
+                      The site's promise is "we check each one". When the daily
+                      link check found the funder's page unreachable, say so
+                      instead of sending someone to a 404 — the listing stays,
+                      but the click is no longer a silent dead end.
+                    */}
+                    {o.application_link && o.link_ok === false && (
+                      <p className="text-[10px] font-semibold uppercase leading-relaxed tracking-[0.12em] text-[var(--ink-soft)] sm:text-right">
+                        ⚠ Link didn&rsquo;t respond
+                        {o.link_checked_at ? ` on ${formatCheckedAt(o.link_checked_at)}` : ''}
+                      </p>
+                    )}
                     {o.application_link && (
                       <a
                         href={o.application_link}
-                          onClick={() => track({ name: 'grant_apply_click', grant: o.name, funder: o.funder, from: 'list' })}
+                        onClick={() =>
+                          track({
+                            name: 'grant_apply_click',
+                            grant: o.name,
+                            funder: o.funder,
+                            from: 'list',
+                          })
+                        }
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="mt-auto block w-full border-2 border-[var(--ink)] px-4 py-2 text-[13px] font-bold uppercase tracking-[0.06em] transition-colors hover:border-[var(--accent)] hover:bg-[var(--accent)] hover:text-[var(--bg)] sm:w-auto"
+                        className={
+                          o.link_ok === false
+                            ? 'mt-auto block w-full border-2 border-dashed border-[var(--line)] px-4 py-2 text-[13px] font-bold uppercase tracking-[0.06em] text-[var(--ink-soft)] transition-colors hover:border-[var(--accent)] hover:text-[var(--accent)] sm:w-auto'
+                            : 'mt-auto block w-full border-2 border-[var(--ink)] px-4 py-2 text-[13px] font-bold uppercase tracking-[0.06em] transition-colors hover:border-[var(--accent)] hover:bg-[var(--accent)] hover:text-[var(--bg)] sm:w-auto'
+                        }
                       >
-                        Apply →
+                        {o.link_ok === false ? 'Try the link →' : 'Apply →'}
                       </a>
                     )}
                   </div>

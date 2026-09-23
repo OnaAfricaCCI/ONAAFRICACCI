@@ -50,9 +50,17 @@ async function featured(): Promise<FeaturedGrant[]> {
     .eq('link_ok', true)
     .not('description', 'is', null)
 
-  // If the link columns don't exist yet the query errors; hiding the strip is
-  // the safe outcome — nothing unverified gets featured.
-  if (error || !data) return []
+  // Hiding the strip is the safe outcome — nothing unverified gets featured —
+  // but it must not be silent. A vanished carousel used to look like a design
+  // choice; now the reason is in the Vercel logs where it can be found.
+  if (error) {
+    console.error('featured grants query failed:', error.message)
+    return []
+  }
+  if (!data || data.length === 0) {
+    console.warn('featured grants: no live, link-checked grants available')
+    return []
+  }
 
   const linked = (data as Row[]).filter((r) => (r.application_link ?? '').trim() !== '')
 
