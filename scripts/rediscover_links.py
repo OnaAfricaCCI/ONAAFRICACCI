@@ -385,6 +385,16 @@ def main():
         print('No grants with a dead link. Nothing to do.')
         return
 
+    # An example key pasted verbatim is a real thing that happens, and it fails
+    # much later and much more confusingly than it should.
+    if ANTHROPIC_KEY and not ANTHROPIC_KEY.startswith('sk-ant-api'):
+        print('The ANTHROPIC_API_KEY in .env.local does not look like a real key.\n')
+        print(f'  It starts: {ANTHROPIC_KEY[:12]}…')
+        print('  A real one starts sk-ant-api and is about 100 characters long.\n')
+        print('If you pasted the example text, replace that line with your own key')
+        print('from console.anthropic.com.')
+        sys.exit(1)
+
     if not ANTHROPIC_KEY:
         print('ANTHROPIC_API_KEY is not in .env.local.\n')
         print('The crawl can run without it, but nothing can judge whether a page')
