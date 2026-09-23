@@ -42,8 +42,8 @@ const REGIONS: { value: string; label: string; patterns: RegExp[] }[] = [
   { value: 'west-africa', label: 'West Africa', patterns: [/west(ern)?[\s-]afric/] },
   { value: 'southern-africa', label: 'Southern Africa', patterns: [/southern[\s-]afric/] },
   { value: 'north-africa', label: 'North Africa', patterns: [/north(ern)?[\s-]afric/, /\bmena\b/, /arab league/] },
-  { value: 'francophone-africa', label: 'Francophone Africa', patterns: [/francophone/] },
-  { value: 'sub-saharan', label: 'Sub-Saharan Africa', patterns: [/sub[\s-]?saharan/] },
+  { value: 'francophone-africa', label: 'Francophone', patterns: [/francophone/] },
+  { value: 'sub-saharan', label: 'Sub-Saharan', patterns: [/sub[\s-]?saharan/] },
 ]
 
 /**
@@ -80,14 +80,15 @@ const GLOBAL_PATTERNS = [
 
 /** The dropdown, in the order it is shown. */
 export const SCOPE_OPTIONS: ScopeOption[] = [
-  { value: AFRICA, label: 'Open across Africa', group: 'scope' },
-  { value: GLOBAL, label: 'Global — Africa eligible', group: 'scope' },
+  // Kept short: these show inside a narrow select box, with a count appended.
+  { value: AFRICA, label: 'All of Africa', group: 'scope' },
+  { value: GLOBAL, label: 'Worldwide', group: 'scope' },
   ...REGIONS.map((r) => ({ value: r.value, label: r.label, group: 'region' as const })),
   ...COUNTRIES.map((c) => ({ value: c.value, label: c.label, group: 'country' as const })),
 ]
 
 export const SCOPE_GROUP_LABELS: Record<ScopeGroup, string> = {
-  scope: 'Across the continent',
+  scope: 'Open to everyone',
   region: 'By region',
   country: 'By country',
 }
@@ -149,8 +150,8 @@ export function scopesFor(raw: string[] | null | undefined): Set<string> {
  * Does a grant with these scopes belong under the chosen filter?
  *
  * Choosing a country or region includes continent-wide and global funds,
- * because someone in that place is eligible for those too. Choosing "Open
- * across Africa" or "Global" is literal — it returns only funds of that reach.
+ * because someone in that place is eligible for those too. Choosing "All of
+ * Africa" or "Worldwide" is literal — it returns only funds of that reach.
  */
 export function matchesScope(selected: string, scopes: Set<string>): boolean {
   if (selected === 'all') return true
