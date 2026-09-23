@@ -42,8 +42,8 @@ const REGIONS: { value: string; label: string; patterns: RegExp[] }[] = [
   { value: 'west-africa', label: 'West Africa', patterns: [/west(ern)?[\s-]afric/] },
   { value: 'southern-africa', label: 'Southern Africa', patterns: [/southern[\s-]afric/] },
   { value: 'north-africa', label: 'North Africa', patterns: [/north(ern)?[\s-]afric/, /\bmena\b/, /arab league/] },
-  { value: 'francophone-africa', label: 'Francophone', patterns: [/francophone/] },
-  { value: 'sub-saharan', label: 'Sub-Saharan', patterns: [/sub[\s-]?saharan/] },
+  { value: 'francophone-africa', label: 'Francophone Africa', patterns: [/francophone/] },
+  { value: 'sub-saharan', label: 'Sub-Saharan Africa', patterns: [/sub[\s-]?saharan/] },
 ]
 
 /**
@@ -80,7 +80,7 @@ const GLOBAL_PATTERNS = [
 
 /** The dropdown, in the order it is shown. */
 export const SCOPE_OPTIONS: ScopeOption[] = [
-  // Kept short: these show inside a narrow select box, with a count appended.
+  // Kept short: these two carry a count in the dropdown.
   { value: AFRICA, label: 'All of Africa', group: 'scope' },
   { value: GLOBAL, label: 'Worldwide', group: 'scope' },
   ...REGIONS.map((r) => ({ value: r.value, label: r.label, group: 'region' as const })),

@@ -335,7 +335,14 @@ export default function GrantsPage() {
                 <optgroup key={group} label={SCOPE_GROUP_LABELS[group]}>
                   {options.map((o) => (
                     <option key={o.value} value={o.value}>
-                      {o.label} ({scopeCounts.get(o.value)})
+                      {/*
+                        A count only appears on the two continent-wide options,
+                        where it means what it says. On a region or country it
+                        would read as "105 Kenyan grants" when most of those are
+                        pan-African funds a Kenyan can apply for — true, but
+                        misleading at a glance.
+                      */}
+                      {o.group === 'scope' ? `${o.label} (${scopeCounts.get(o.value)})` : o.label}
                     </option>
                   ))}
                 </optgroup>
