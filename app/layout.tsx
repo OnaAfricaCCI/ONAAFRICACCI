@@ -8,11 +8,14 @@ import ThemeToggle, { THEME_INIT_SCRIPT } from "./components/ThemeToggle";
 import { SITE_URL, SITE_NAME, SITE_TITLE, SITE_DESCRIPTION, SITE_DEFINITION } from "@/lib/site";
 import "./globals.css";
 
-// TODO: replace with the real Ona profile URLs
+// Real Ona profile URLs. Leave a value empty ("") and that icon is hidden
+// rather than sending people to a platform's homepage.
 const SOCIAL = {
-  instagram: "https://www.instagram.com/",
-  linkedin: "https://www.linkedin.com/",
+  instagram: "",
+  linkedin: "",
 };
+
+const CONTACT_EMAIL = "hello@onafunds.com";
 
 const display = Archivo_Black({
   variable: "--font-display",
@@ -132,6 +135,12 @@ export default function RootLayout({
                 <Link href="/contact" className="transition-colors hover:text-[var(--accent)]">
                   Contact
                 </Link>
+                <a
+                  href={`mailto:${CONTACT_EMAIL}`}
+                  className="transition-colors hover:text-[var(--accent)]"
+                >
+                  {CONTACT_EMAIL}
+                </a>
                 <Link href="/privacy" className="transition-colors hover:text-[var(--accent)]">
                   Privacy
                 </Link>
@@ -139,9 +148,12 @@ export default function RootLayout({
             </div>
 
             <div className="flex items-center gap-3">
-              <span className="mr-1 hidden text-[11px] font-bold uppercase tracking-[0.12em] text-[var(--ink-3)] sm:inline">
-                Follow
-              </span>
+              {(SOCIAL.instagram || SOCIAL.linkedin) && (
+                <span className="mr-1 hidden text-[11px] font-bold uppercase tracking-[0.12em] text-[var(--ink-3)] sm:inline">
+                  Follow
+                </span>
+              )}
+              {SOCIAL.instagram && (
               <a
                 href={SOCIAL.instagram}
                 target="_blank"
@@ -155,6 +167,8 @@ export default function RootLayout({
                   <circle cx="17.1" cy="6.9" r="1.15" />
                 </svg>
               </a>
+              )}
+              {SOCIAL.linkedin && (
               <a
                 href={SOCIAL.linkedin}
                 target="_blank"
@@ -166,6 +180,7 @@ export default function RootLayout({
                   <path d="M4.98 3.5a2.5 2.5 0 11-.02 5 2.5 2.5 0 01.02-5zM3 9h4v12H3zM10 9h3.8v1.65h.05c.53-1 1.83-2.05 3.75-2.05C21.3 8.6 22 10.9 22 14.05V21h-4v-6.2c0-1.48-.03-3.38-2.05-3.38-2.06 0-2.37 1.6-2.37 3.27V21h-4z" />
                 </svg>
               </a>
+              )}
             </div>
           </div>
         </footer>

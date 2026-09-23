@@ -45,7 +45,15 @@ export default function ContactPage() {
           Talk to us.
         </h1>
         <p className="mt-5 max-w-xl text-base leading-relaxed text-[var(--ink-soft)]">
-          Looking for funding, or offering it? Start here.
+          Looking for funding, or offering it? Start here. If you&rsquo;d rather email,
+          write to{' '}
+          <a
+            href="mailto:hello@onafunds.com"
+            className="underline underline-offset-4 hover:text-[var(--accent)]"
+          >
+            hello@onafunds.com
+          </a>
+          .
         </p>
       </section>
 
