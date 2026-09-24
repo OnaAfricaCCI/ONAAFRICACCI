@@ -280,7 +280,9 @@ export default function GrantsPage() {
 
   // Record a search once typing settles, with how many results it produced.
   const resultCount = useRef(0)
-  resultCount.current = filtered.length
+  useEffect(() => {
+    resultCount.current = filtered.length
+  }, [filtered.length])
   useEffect(() => {
     const q = search.trim()
     if (!q) return
@@ -460,7 +462,7 @@ export default function GrantsPage() {
         {truncated && (
           <p className="mb-6 border-2 border-[var(--line)] p-4 text-sm text-[var(--ink-2)]">
             Showing the {MAX_ROWS} most recently added opportunities. Use search and
-            the filters to narrow down — older entries are still here.
+            the filters to narrow down. Older entries are still here.
           </p>
         )}
 

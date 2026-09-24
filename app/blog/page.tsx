@@ -195,7 +195,7 @@ export default function BlogPage() {
         <p className="mt-8 border-l-4 border-[var(--ochre)] bg-[var(--ochre-soft)] px-5 py-3 text-sm">
           <strong className="font-semibold">Placeholder posts.</strong>{' '}
           <span className="text-[var(--ink-soft)]">
-            These are examples of how the blog will look — they disappear as soon as
+            These are examples of how the blog will look. They disappear as soon as
             a real post is published.
           </span>
         </p>

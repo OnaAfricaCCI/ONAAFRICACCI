@@ -4,20 +4,27 @@ import type { Metadata } from 'next'
 export const metadata: Metadata = {
   title: 'About',
   description:
-    'Ona is a public record of the funding open to Africa’s cultural and creative industries.',
+    'Ona Funds is a public record of the funding open to Africa’s cultural and creative industries.',
   openGraph: {
-    title: 'About Ona',
+    title: 'About Ona Funds',
     description:
-      'Ona is a public record of the funding open to Africa’s cultural and creative industries.',
+      'Ona Funds is a public record of the funding open to Africa’s cultural and creative industries.',
     type: 'website',
   },
 }
 
-/** Drop a square photo at public/founder.jpg; a monogram shows until then. */
-const FOUNDER = {
+/**
+ * To use a photograph, drop a square image into public/ and set `photo` to its
+ * path. Until then this stays null and the monogram shows.
+ *
+ * It is null rather than a hopeful path: pointing at a file that does not exist
+ * fired a 404 on every visit, because Next prefetches /about from the homepage
+ * nav. A missing photograph should cost nothing.
+ */
+const FOUNDER: { name: string; role: string; photo: string | null; bio: string[] } = {
   name: 'David Amira',
   role: 'Founder',
-  photo: '/founder.jpg',
+  photo: null,
   bio: [
     'David Amira is a communications strategist based in Nairobi. His background is in pan-African communications and advocacy, spanning media, campaigns and stakeholder work for organisations across the continent.',
     'Over more than a decade working across the continent, he kept noticing the same thing. Opportunity travels through networks, and the people outside those networks tend to hear about it too late, if they hear at all. Ona is his attempt to change who gets to see what.',
@@ -53,13 +60,13 @@ export default function AboutPage() {
       {/* Mission */}
       <section className="border-b border-[var(--line)] py-12 sm:py-16">
         <p className="text-[11px] font-bold uppercase tracking-[0.12em] text-[var(--ink-2)]">
-          About Ona
+          About Ona Funds
         </p>
         <h1 className="mt-3 font-[family-name:var(--font-display)] text-[38px] leading-[1.05] sm:text-[56px]">
           We put the funding where everyone can see it.
         </h1>
         <p className="mt-6 text-lg leading-relaxed text-[var(--ink-2)]">
-          Ona is a public record of the funding open to Africa&rsquo;s cultural and
+          Ona Funds is a public record of the funding open to Africa&rsquo;s cultural and
           creative industries. We gather the grants, prizes, residencies and fellowships
           scattered across hundreds of websites, put them in one place, and keep them
           current. Whether you&rsquo;re in Kisumu or Dakar, you see what someone with a
@@ -140,12 +147,14 @@ export default function AboutPage() {
             <span className="absolute inset-0 flex items-center justify-center font-[family-name:var(--font-display)] text-[38px] leading-[1.1] text-[var(--ink)]/25">
               {FOUNDER.name.charAt(0)}
             </span>
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img
-              src={FOUNDER.photo}
-              alt={FOUNDER.name}
-              className="relative h-full w-full object-cover"
-            />
+            {FOUNDER.photo && (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img
+                src={FOUNDER.photo}
+                alt={`${FOUNDER.name}, ${FOUNDER.role} of Ona Funds`}
+                className="relative h-full w-full object-cover"
+              />
+            )}
           </div>
 
           <div className="min-w-0">

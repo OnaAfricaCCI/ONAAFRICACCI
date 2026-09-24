@@ -91,7 +91,9 @@ export default function FundersPage() {
   }, [funders, search, type, region, sector, support])
 
   const resultCount = useRef(0)
-  resultCount.current = filtered.length
+  useEffect(() => {
+    resultCount.current = filtered.length
+  }, [filtered.length])
   useEffect(() => {
     const q = search.trim()
     if (!q) return

@@ -36,6 +36,9 @@ export default function ThemeToggle() {
   const [theme, setTheme] = useState<Theme | null>(null)
 
   useEffect(() => {
+    // Deliberate: the stored choice lives in localStorage, which the server
+    // cannot read, so it is applied after mount rather than during render.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setTheme(current())
   }, [])
 
@@ -64,13 +67,14 @@ export default function ThemeToggle() {
       aria-label={isDark ? 'Switch to light mode' : 'Switch to dark mode'}
       aria-pressed={isDark}
       title={isDark ? 'Light mode' : 'Dark mode'}
-      className="flex h-9 w-9 shrink-0 items-center justify-center border-2 border-[var(--ink)] text-[var(--ink)] transition-colors hover:border-[var(--accent)] hover:bg-[var(--accent)] hover:text-[var(--bg)]"
+      // Sits on the ink header, so its colours are fixed rather than themed.
+      className="flex h-9 w-9 shrink-0 items-center justify-center border-2 border-[#f6f4ec] text-[#f6f4ec] transition-colors hover:border-[var(--accent)] hover:bg-[var(--accent)] hover:text-[#121412]"
     >
       {theme === null ? (
         <span className="block h-4 w-4" />
       ) : isDark ? (
         /* sun */
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" className="h-4 w-4">
+        <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" className="h-4 w-4">
           <circle cx="12" cy="12" r="4" />
           <path
             strokeLinecap="round"
@@ -79,7 +83,7 @@ export default function ThemeToggle() {
         </svg>
       ) : (
         /* moon */
-        <svg viewBox="0 0 24 24" fill="currentColor" className="h-4 w-4">
+        <svg aria-hidden="true" viewBox="0 0 24 24" fill="currentColor" className="h-4 w-4">
           <path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z" />
         </svg>
       )}

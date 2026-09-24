@@ -1,6 +1,7 @@
 import Link from 'next/link'
 import EmailCapture from '@/app/components/EmailCapture'
 import FeaturedCarousel, { type FeaturedGrant } from '@/app/components/FeaturedCarousel'
+import { Aperture, FindStrip, TheFind } from '@/app/components/Motif'
 import { supabase } from '@/lib/supabase'
 import { daysUntil, deadlineLabel } from '@/lib/amount'
 
@@ -14,8 +15,10 @@ type Row = {
   deadline: string | null
   deadline_type: string | null
   cci_sector: string | null
+  funding_type: string | null
   eligible_countries: string[] | null
   application_link: string | null
+  link_checked_at: string | null
 }
 
 const FEATURED_COUNT = 6
@@ -33,38 +36,56 @@ function shuffle<T>(items: T[]): T[] {
 /**
  * Featured strip: a random handful of live grants, re-drawn on every request.
  *
- * Only grants whose application link has been verified as working
- * (link_ok = true, set by the check-links function) qualify, so a visitor
- * is never sent to a dead page. "Live" means the deadline has not passed —
- * the same rule /grants uses to hide expired calls.
+ * Only grants whose application link has been verified as working qualify, so
+ * a visitor is never sent to a dead page. "Live" means the deadline has not
+ * passed, the same rule /grants uses to hide closed calls.
+ *
+ * Returns the count alongside the cards so the page can state how many
+ * opportunities are tracked without running a second query.
  */
-async function featured(): Promise<FeaturedGrant[]> {
+async function featured(): Promise<{ grants: FeaturedGrant[]; liveCount: number }> {
   const today = new Date().toISOString().slice(0, 10)
 
   const { data, error } = await supabase
     .from('opportunities')
     .select(
-      'id,name,funder,amount,deadline,deadline_type,cci_sector,eligible_countries,application_link',
+      'id,name,funder,amount,deadline,deadline_type,cci_sector,funding_type,eligible_countries,application_link,link_checked_at',
     )
     .or(`deadline.is.null,deadline.gte.${today}`)
     .eq('link_ok', true)
     .not('description', 'is', null)
 
-  // Hiding the strip is the safe outcome — nothing unverified gets featured —
-  // but it must not be silent. A vanished carousel used to look like a design
-  // choice; now the reason is in the Vercel logs where it can be found.
+  // Hiding the strip is the safe outcome, since nothing unverified gets
+  // featured, but it must not be silent. A vanished carousel used to look like
+  // a design choice. Now the reason is in the logs where it can be found.
   if (error) {
     console.error('featured grants query failed:', error.message)
-    return []
+    return { grants: [], liveCount: 0 }
   }
   if (!data || data.length === 0) {
     console.warn('featured grants: no live, link-checked grants available')
-    return []
+    return { grants: [], liveCount: 0 }
   }
 
-  const linked = (data as Row[]).filter((r) => (r.application_link ?? '').trim() !== '')
+  const rows = data as Row[]
+  const linked = rows.filter((r) => (r.application_link ?? '').trim() !== '')
 
-  return shuffle(linked)
+  /*
+   * Dated calls first, then a random draw.
+   *
+   * Most listings carry no fixed deadline, so a purely random six almost never
+   * included one, and the Sightline had nothing to mark. Leading with the
+   * soonest dated calls fixes that and surfaces the genuinely urgent ones,
+   * while the random tail keeps the strip different on every visit.
+   */
+  const dated = linked
+    .filter((r) => r.deadline)
+    .sort((a, b) => (a.deadline ?? '').localeCompare(b.deadline ?? ''))
+    .slice(0, 2)
+  const datedIds = new Set(dated.map((r) => r.id))
+  const rest = shuffle(linked.filter((r) => !datedIds.has(r.id)))
+
+  const grants = [...dated, ...rest]
     .slice(0, FEATURED_COUNT)
     .map((r) => {
       const days = daysUntil(r.deadline)
@@ -75,74 +96,111 @@ async function featured(): Promise<FeaturedGrant[]> {
         amount: r.amount,
         deadlineText: deadlineLabel(r.deadline, r.deadline_type),
         urgent: days !== null && days >= 0 && days <= 30,
-        tag: r.cci_sector ?? r.eligible_countries?.[0] ?? null,
+        daysLeft: days,
+        kicker: [r.funding_type, r.cci_sector].filter(Boolean).join(' · ') || null,
+        who: r.eligible_countries?.slice(0, 3).join(' · ') ?? null,
+        checkedAt: r.link_checked_at,
         href: r.application_link!.trim(),
       }
     })
+
+  return { grants, liveCount: rows.length }
 }
 
 export default async function Home() {
-  const featuredGrants = await featured()
+  const { grants, liveCount } = await featured()
 
   return (
     <main>
-      {/* Hero */}
-      <section className="mx-auto max-w-6xl px-5 py-16 sm:py-24">
-        <p className="text-[11px] font-bold uppercase tracking-[0.12em] text-[var(--ink-2)]">
-          Ona — Cultural &amp; Creative Industries
-        </p>
-        <h1 className="mt-4 max-w-4xl font-[family-name:var(--font-display)] text-[40px] leading-[1.05] sm:text-[64px]">
-          The funding is out there.
-          <br className="hidden sm:block" /> We help you find it.
-        </h1>
-        <p className="mt-6 max-w-xl text-lg leading-relaxed text-[var(--ink-soft)]">
-          We gather the grants, prizes, residencies and fellowships open to African
-          creatives, check they&rsquo;re real, and let you filter to what fits. On the
-          continent or in the diaspora, this is one place to look.
-        </p>
-        <div className="mt-9 flex flex-wrap gap-3">
-          <Link
-            href="/grants"
-            className="border-2 border-[var(--ink)] bg-[var(--ink)] px-7 py-3.5 text-[13px] font-bold uppercase tracking-[0.06em] text-[var(--bg)] transition-colors hover:border-[var(--accent)] hover:bg-[var(--accent)] hover:text-[var(--bg)]"
-          >
-            Browse grants
-          </Link>
-          <Link
-            href="/contact/submit"
-            className="border-2 border-[var(--ink)] px-7 py-3.5 text-[13px] font-bold uppercase tracking-[0.06em] transition-colors hover:border-[var(--accent)] hover:bg-[var(--accent)] hover:text-[var(--bg)]"
-          >
-            List an opportunity
-          </Link>
+      {/* ---- Hero. The Find, overlaid in clear space beside the words. ---- */}
+      <section className="bg-[#121412] text-[#f6f4ec]">
+        <div className="mx-auto grid max-w-6xl gap-10 px-5 py-16 sm:py-24 lg:grid-cols-[minmax(0,1fr)_auto] lg:items-center">
+          <div className="flex flex-col gap-7">
+            <p className="label text-[#8fa487]">Grants, prizes, residencies, fellowships</p>
+            <h1 className="max-w-3xl font-[family-name:var(--font-display)] text-[44px] leading-[0.95] sm:text-[68px]">
+              The funding is out there.{' '}
+              <span className="text-[var(--accent)]">We help you find it.</span>
+            </h1>
+            <p className="max-w-xl text-lg leading-relaxed text-[#dce3d5]">
+              A checked, searchable record of the funding open to African creatives, on the
+              continent and in the diaspora.
+            </p>
+            <div className="flex flex-wrap gap-3">
+              <Link
+                href="/grants"
+                className="bg-[var(--accent)] px-7 py-3.5 text-[14px] font-bold text-[#121412] transition-colors hover:bg-[#f6f4ec]"
+              >
+                Browse the grants
+              </Link>
+              <Link
+                href="/contact/submit"
+                className="border-2 border-[#f6f4ec] px-7 py-3.5 text-[14px] font-bold text-[#f6f4ec] transition-colors hover:border-[var(--accent)] hover:bg-[var(--accent)] hover:text-[#121412]"
+              >
+                List an opportunity
+              </Link>
+            </div>
+          </div>
+
+          {/* One motif per section, and never behind the text: it sits beside
+              the words in its own column, and drops away on small screens. */}
+          <TheFind
+            tone="ivory"
+            cols={3}
+            rows={7}
+            coral={{ col: 1, row: 4 }}
+            className="hidden h-[280px] w-[120px] justify-self-end lg:block"
+          />
         </div>
       </section>
 
-      {/* Featured grants — full-bleed terracotta band */}
-      <FeaturedCarousel grants={featuredGrants} />
+      {/* ---- The Find strip: the count, stated plainly. ---- */}
+      {liveCount > 0 && (
+        <section className="border-b border-[var(--ink)]">
+          <div className="mx-auto grid max-w-6xl grid-cols-[auto_minmax(0,1fr)] items-center gap-8 px-5 py-7">
+            <div className="flex flex-col gap-1">
+              <span className="font-[family-name:var(--font-display)] text-[44px] leading-none">
+                {liveCount}
+              </span>
+              <span className="label text-[var(--sage-deep)]">
+                Open opportunities tracked
+              </span>
+            </div>
+            <FindStrip className="hidden h-14 w-full sm:block" />
+          </div>
+        </section>
+      )}
 
-      {/* Email capture */}
-      <div className="mx-auto max-w-6xl px-5 py-12">
+      <FeaturedCarousel grants={grants} />
+
+      {/* ---- Funders band: Aperture on sage. ---- */}
+      <section className="relative overflow-hidden bg-[var(--sage-deep)] text-[#f6f4ec]">
+        <div className="mx-auto grid max-w-6xl gap-8 px-5 py-16 sm:py-20 lg:grid-cols-2 lg:items-center">
+          <div className="relative z-10 flex flex-col gap-5">
+            <p className="label text-[#dce3d5]">For funders</p>
+            <h2 className="font-[family-name:var(--font-display)] text-[32px] leading-[1.05] sm:text-[48px]">
+              See who funds African creative work, and how to reach them.
+            </h2>
+            <p className="max-w-lg text-[17px] leading-relaxed text-[#eef1e9]">
+              Every organisation putting money into the sector, with what they fund, who can
+              apply and where to start.
+            </p>
+            <Link
+              href="/funders"
+              className="self-start border-2 border-[#f6f4ec] px-6 py-3 text-[14px] font-bold transition-colors hover:border-[var(--accent)] hover:bg-[var(--accent)] hover:text-[#121412]"
+            >
+              Open the funders directory
+            </Link>
+          </div>
+          <div aria-hidden="true" className="pointer-events-none relative min-h-[220px]">
+            <Aperture className="absolute inset-0 h-full w-full" />
+          </div>
+        </div>
+      </section>
+
+      {/* ---- Digest ---- */}
+      <div id="digest" className="mx-auto max-w-6xl scroll-mt-24 px-5 py-14">
         <EmailCapture />
       </div>
-
-      {/* Closing note */}
-      <section className="mx-auto mb-8 max-w-6xl border-t border-[var(--line)] px-5 py-12">
-        <div className="flex flex-wrap items-end justify-between gap-6">
-          <div className="max-w-xl">
-            <p className="font-[family-name:var(--font-display)] text-2xl leading-snug sm:text-3xl">
-              Funding the culture shouldn&rsquo;t depend on knowing the right people.
-            </p>
-            <p className="mt-3 text-base leading-relaxed text-[var(--ink-soft)]">
-              We don&rsquo;t hand out money. We show you who does, and help you reach them.
-            </p>
-          </div>
-          <Link
-            href="/contact"
-            className="text-xs font-semibold uppercase tracking-[0.15em] text-[var(--terracotta)] underline underline-offset-4 hover:text-[var(--accent)]"
-          >
-            Get in touch →
-          </Link>
-        </div>
-      </section>
     </main>
   )
 }

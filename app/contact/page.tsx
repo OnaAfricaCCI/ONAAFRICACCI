@@ -77,7 +77,7 @@ export default function ContactPage() {
                 Message sent.
               </p>
               <p className="mt-1 text-sm text-[var(--ink-soft)]">
-                Thank you — we&rsquo;ll get back to you at {email}.
+                Thank you. We&rsquo;ll get back to you at {email}.
               </p>
             </div>
           ) : (
