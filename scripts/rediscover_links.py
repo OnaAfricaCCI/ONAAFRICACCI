@@ -57,9 +57,16 @@ CANDIDATE_PATHS = [
     '/apply', '/programmes', '/programs', '/what-we-do', '/our-work', '/support',
 ]
 
-# Words that mark a link as worth considering at all.
+# Words that mark a link as funding-related and so worth ranking highly.
+#
+# French matters here as much as English: a great many funders of African
+# creative work publish in French, and 'appels-a-projets' is the single most
+# common way an open call appears in a URL. Leaving French out cost us the
+# African Culture Fund's current calls page on the first run.
 FUNDING_WORDS = re.compile(
-    r'grant|fund|prize|award|fellow|residen|call|apply|application|programme|program|opportunit',
+    r'grant|fund|prize|award|fellow|residen|call|apply|application|programme|program|opportunit'
+    r'|appel|projet|bourse|subvention|financement|candidature|soutien'
+    r'|premio|bolsa|edital',  # Portuguese, for Lusophone Africa
     re.I,
 )
 
@@ -151,6 +158,20 @@ def try_wayback(dead_url):
     return {'snapshot': snap['url'], 'timestamp': snap.get('timestamp', ''), 'title': page_title(html)}
 
 
+def brand_stem(netloc):
+    """
+    The organisation's name as it appears in its own domain.
+
+    'www.princeclausfund.org' -> 'princeclausfund'. Used to recognise the same
+    organisation on a different domain, which is a move we have to follow: the
+    Prince Claus Fund's .org homepage links entirely to princeclausfund.nl, and
+    a crawl that refuses to leave the original domain finds nothing at all.
+    """
+    host = netloc.lower().split(':')[0]
+    parts = [p for p in host.split('.') if p not in ('www', 'com', 'org', 'net', 'eu', 'co', 'uk')]
+    return max(parts, key=len) if parts else host
+
+
 def crawl_site(dead_url, grant_name, budget=8):
     """
     Walk the organisation's own site looking for the programme.
@@ -161,9 +182,31 @@ def crawl_site(dead_url, grant_name, budget=8):
     """
     parts = urllib.parse.urlparse(dead_url)
     origin = f'{parts.scheme}://{parts.netloc}'
+    stem = brand_stem(parts.netloc)
     seen, found = set(), []
 
-    name_words = {w for w in re.findall(r'[a-z]{4,}', grant_name.lower())}
+    # Words that identify THIS programme. Matched as substrings, because a
+    # funder's URLs run words together — 'artmovesafrica.org' contains 'africa'
+    # but tokenises as one word, so exact matching found nothing on the one
+    # site whose name is the grant's name.
+    name_words = [w for w in re.findall(r'[a-z]{4,}', grant_name.lower())]
+
+    def rank(href, text):
+        """
+        How promising this link looks. Nothing is excluded outright — an
+        earlier version filtered links out and threw away the right answer
+        twice. Everything on the organisation's own site is collected, ranked,
+        and the best 25 go to Claude, which is far better at judging than any
+        rule here could be.
+        """
+        p = urllib.parse.urlparse(href)
+        blob = f'{p.path} {p.query} {text}'.lower()
+        depth = len([seg for seg in p.path.split('/') if seg])
+        return (
+            2 * sum(1 for w in name_words if w in blob)      # names this programme
+            + (2 if FUNDING_WORDS.search(blob) else 0)        # is about funding
+            + (1 if depth <= 2 else 0)                        # top-level nav page
+        )
 
     for path in CANDIDATE_PATHS[:budget]:
         status, final, html = fetch(origin + path, timeout=12)
@@ -171,23 +214,48 @@ def crawl_site(dead_url, grant_name, budget=8):
             continue
         if final not in seen:
             seen.add(final)
-            found.append({'url': final, 'text': page_title(html), 'method': 'crawl'})
+            found.append({'url': final, 'text': page_title(html), 'method': 'crawl', '_score': 0})
 
         for href, text in links_on(html, final):
-            if urllib.parse.urlparse(href).netloc != parts.netloc:
-                continue  # stay on the organisation's own site
-            if href in seen or len(found) > 60:
+            host = urllib.parse.urlparse(href).netloc
+            # Same site, or the same organisation on a domain it has moved to.
+            if host != parts.netloc and stem not in host.lower():
                 continue
-            blob = f'{href} {text}'.lower()
-            overlap = len({w for w in re.findall(r'[a-z]{4,}', blob)} & name_words)
-            if overlap >= 1 or FUNDING_WORDS.search(blob):
-                seen.add(href)
-                found.append({'url': href, 'text': text, 'method': 'crawl',
-                              '_score': overlap})
+            if href in seen or len(found) > 150:
+                continue
+            seen.add(href)
+            found.append({'url': href, 'text': text, 'method': 'crawl',
+                          '_score': rank(href, text)})
 
-    # Strongest name overlap first, so the shortlist we send to Claude is short.
     found.sort(key=lambda c: -c.get('_score', 0))
-    return found[:25]
+
+    # One hop deeper, down the most promising few.
+    #
+    # Programme pages are often two clicks from the homepage: an 'Awards and
+    # programmes' index, then the programme. One level of crawling finds the
+    # index and stops, and Claude — correctly — refuses to call an index page
+    # the programme. This follows the best handful of leads one step further,
+    # which is also how the Prince Claus Fund's move from .org to .nl gets
+    # picked up: the new domain is reached through a link, not a guess.
+    for lead in [c for c in found if c.get('_score', 0) >= 3][:6]:
+        status, final, html = fetch(lead['url'], timeout=12)
+        if not status or status >= 400 or not html:
+            continue
+        for href, text in links_on(html, final):
+            host = urllib.parse.urlparse(href).netloc
+            if host != parts.netloc and stem not in host.lower():
+                continue
+            if href in seen or len(found) > 150:
+                continue
+            score = rank(href, text)
+            if score >= 2:  # deeper pages must earn their place
+                seen.add(href)
+                found.append({'url': href, 'text': text, 'method': 'crawl', '_score': score})
+
+    found.sort(key=lambda c: -c.get('_score', 0))
+    # 35, not 25: the deeper crawl finds more, and a 25-place shortlist started
+    # crowding out the right answer. Haiku reads the longer list comfortably.
+    return found[:35]
 
 
 # ---------------------------------------------------------------------------
@@ -333,13 +401,29 @@ def rediscover(grant):
 
     # 4. Claude judges
     verdict = ask_claude(grant, candidates, wayback)
-    if not verdict or not verdict.get('url'):
+
+    # A model asked for "a URL or null" sometimes answers with the *word*
+    # null, and sometimes with the word in the number field. Both are the
+    # answer "none of these", and neither should crash the run.
+    def as_url(v):
+        if not isinstance(v, str):
+            return None
+        v = v.strip()
+        return None if v.lower() in ('', 'null', 'none', 'n/a') else v
+
+    def as_number(v):
+        try:
+            return float(v)
+        except (TypeError, ValueError):
+            return 0.0
+
+    if not verdict or not as_url(verdict.get('url')):
         why = (verdict or {}).get('reasoning', 'no judgement returned')
         say(f'  ✗ no confident match — {why[:90]}')
         return None, log
 
-    chosen = verdict['url']
-    confidence = float(verdict.get('confidence') or 0)
+    chosen = as_url(verdict['url'])
+    confidence = as_number(verdict.get('confidence'))
     if confidence < 0.5:
         say(f'  ✗ match too weak ({confidence:.2f}) — not proposing')
         return None, log
