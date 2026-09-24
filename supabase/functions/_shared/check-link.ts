@@ -6,8 +6,8 @@
 // "what did the server do when we knocked?"
 //
 //   ok           2xx, 3xx, or 403 — the site is up (403 = it just refuses bots)
-//   gone         404, 410, or DNS says no such host — a real, definite "no"
-//   unreachable  timeout, refused connection, TLS failure, 5xx — no answer
+//   gone         404 or 410 — the server answered, and said no such page
+//   unreachable  timeout, DNS failure, refused connection, TLS failure, 5xx
 //   blocked      401, 429 — an answer, but not about the page
 //
 // The distinction that matters: "gone" is evidence, "unreachable" and
@@ -29,7 +29,21 @@ export type LinkResult = {
   error: string | null
 }
 
-/** Deno surfaces a failed name lookup inside the fetch TypeError message. */
+/**
+ * Deno surfaces a failed name lookup inside the fetch TypeError message, but
+ * it does not say WHICH kind of failure it was, and the difference decides
+ * whether a grant gets branded broken:
+ *
+ *   NXDOMAIN  the domain genuinely does not exist   → really gone
+ *   SERVFAIL  the resolver could not answer         → tells us nothing
+ *
+ * acp-ue-culture.eu is the case that taught us this. It returns SERVFAIL — a
+ * broken DNS configuration somewhere upstream — while the site itself is alive
+ * and indexed. We read that as "no such host" and flagged two live EU culture
+ * funds as dead. Without a real DNS resolver we cannot tell the two apart, so
+ * a name-lookup failure is now 'unreachable': shown plainly, flagged to
+ * nobody, and listed in the sweep report for a person to look at.
+ */
 function isDnsFailure(message: string): boolean {
   return /dns error|failed to lookup|name not resolved|nodename nor servname|getaddrinfo/i.test(
     message,
@@ -93,7 +107,7 @@ export async function checkLink(url: string): Promise<LinkResult> {
       return { verdict: 'unreachable', ok: false, status: null, error: 'timeout' }
     }
     if (isDnsFailure(msg)) {
-      return { verdict: 'gone', ok: false, status: null, error: 'no such host (DNS)' }
+      return { verdict: 'unreachable', ok: false, status: null, error: 'DNS lookup failed' }
     }
     return { verdict: 'unreachable', ok: false, status: null, error: msg.slice(0, 120) }
   }
