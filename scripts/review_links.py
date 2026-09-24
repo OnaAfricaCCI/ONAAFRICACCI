@@ -4,7 +4,14 @@ Review proposed replacements for dead grant links.
 rediscover_links.py finds candidates; nothing it finds reaches the site until
 you approve it here. Same shape as review_submissions.py.
 
-  python3 scripts/review_links.py                  # what's waiting
+  python3 scripts/review_links.py --go             # walk through them one by one
+  python3 scripts/review_links.py                  # just list what's waiting
+
+The --go walkthrough is the easy way: it opens each proposal in your browser,
+asks yes or no, and moves to the next. No ids to copy.
+
+For handling a single one directly:
+
   python3 scripts/review_links.py --approve <id>   # publish it
   python3 scripts/review_links.py --reject  <id>   # discard it
   python3 scripts/review_links.py --open    <id>   # open both URLs in a browser
@@ -153,10 +160,64 @@ def open_both(cid):
     print('Opened in your browser. Compare, then approve or reject.')
 
 
+def walkthrough():
+    """
+    One at a time, no ids.
+
+    Copying UUIDs out of a list is where this went wrong in practice: it is
+    easy to re-run a spent command from scrollback and hard to tell what is
+    left. This holds the list itself and asks a question per item.
+    """
+    rows = pending()
+    if not rows:
+        show(rows)
+        return
+
+    print(f'{len(rows)} to review. Each one opens in your browser.')
+    print("a = approve   r = reject   s = skip for now   q = stop\n")
+
+    done = 0
+    for i, r in enumerate(rows, 1):
+        grant = r.get('opportunities') or {}
+        print('-' * 66)
+        print(f"[{i} of {len(rows)}]  {grant.get('name', '(unknown grant)')}")
+        print(f"  confidence  {float(r['confidence'] or 0):.2f}  (found by: {r['method']})")
+        print(f"  was         {(r.get('previous_url') or '')[:88]}")
+        print(f"  proposed    {r['candidate_url'][:88]}")
+        if r.get('page_title'):
+            print(f"  page title  {r['page_title'][:88]}")
+        if r.get('reasoning'):
+            print(f"  why         {r['reasoning'][:88]}")
+
+        for u in (r['candidate_url'], r.get('previous_url')):
+            if u:
+                subprocess.run(['open', u], check=False)
+
+        while True:
+            choice = input('\n  Is the proposed page the right grant? [a/r/s/q] ').strip().lower()
+            if choice in ('a', 'r', 's', 'q'):
+                break
+            print('  Please answer a, r, s or q.')
+
+        if choice == 'q':
+            print(f'\nStopped. {done} handled, {len(rows) - i + 1} still waiting.')
+            return
+        if choice == 's':
+            print('  Skipped — it stays in the queue.')
+            continue
+        print()
+        (approve if choice == 'a' else reject)(r['id'])
+        done += 1
+
+    print(f'\n{"=" * 66}\nAll done. {done} handled.')
+
+
 if __name__ == '__main__':
     args = sys.argv[1:]
     if not args:
         show(pending())
+    elif args[0] == '--go':
+        walkthrough()
     elif args[0] == '--approve' and len(args) > 1:
         approve(args[1])
     elif args[0] == '--reject' and len(args) > 1:
