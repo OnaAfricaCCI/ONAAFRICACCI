@@ -623,6 +623,22 @@ export default function GrantsPage() {
                         {o.link_state === 'dead' ? 'Try the link →' : 'Apply →'}
                       </a>
                     )}
+                    {/*
+                      Show our working.
+
+                      The site claims "we check each one and keep it current".
+                      A claim like that is worth more when it is dated: it lets
+                      a visitor judge for themselves how current this is, and
+                      it quietly demonstrates, every day, that someone is
+                      minding the database. Only shown for links we actually
+                      reached — a dead one already says when it failed, and an
+                      unverified one has nothing honest to report.
+                    */}
+                    {o.link_state === 'ok' && o.link_checked_at && (
+                      <p className="text-[10px] uppercase tracking-[0.12em] text-[var(--ink-3)] sm:text-right">
+                        Link checked {formatCheckedAt(o.link_checked_at)}
+                      </p>
+                    )}
                   </div>
                 </div>
               </li>
