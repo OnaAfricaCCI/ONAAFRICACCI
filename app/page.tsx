@@ -111,7 +111,13 @@ export default async function Home() {
       <section className="bg-[#121412] text-[#f6f4ec]">
         <div className="mx-auto grid max-w-6xl gap-10 px-5 py-16 sm:py-24 lg:grid-cols-[minmax(0,1fr)_auto] lg:items-center">
           <div className="flex flex-col gap-7">
-            <p className="label text-[#8fa487]">Grants, prizes, residencies, fellowships</p>
+            {/* Instruments, named rather than gathered under "funding". Investment
+                earns its place: three listings are equity or growth capital
+                (Sony Innovation Fund, IFC–Sony, HEVA Fund), and it tells a
+                creative business the site is for them too. */}
+            <p className="label text-[#8fa487]">
+              Grants, prizes, residencies, fellowships, investment
+            </p>
             <h1 className="max-w-3xl font-[family-name:var(--font-display)] text-[44px] leading-[0.95] sm:text-[68px]">
               The funding is out there.{' '}
               <span className="text-[var(--accent)]">We help you find it.</span>
