@@ -5,7 +5,7 @@ import { supabaseAdmin } from '@/lib/supabase-admin'
 export const dynamic = 'force-dynamic'
 
 export const metadata: Metadata = {
-  title: 'Unsubscribe — Ona',
+  title: 'Unsubscribe · Ona Funds',
   robots: { index: false, follow: false },
 }
 
@@ -37,7 +37,7 @@ export default async function UnsubscribePage({
             You&rsquo;re unsubscribed.
           </h1>
           <p className="mt-4 text-[var(--ink-soft)]">
-            You won&rsquo;t receive the weekly digest any more. No hard feelings — the
+            You won&rsquo;t receive the weekly digest any more. No hard feelings. The
             grants database stays open to everyone.
           </p>
         </>

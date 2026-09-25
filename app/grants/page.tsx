@@ -6,6 +6,7 @@ import { supabase } from '@/lib/supabase'
 import { parseAmount } from '@/lib/amount'
 import { isPublishableGrant } from '@/lib/quality'
 import { track } from '@/lib/analytics'
+import { FindStrip } from '@/app/components/Motif'
 import {
   SCOPE_GROUP_LABELS,
   SCOPE_OPTIONS,
@@ -280,7 +281,9 @@ export default function GrantsPage() {
 
   // Record a search once typing settles, with how many results it produced.
   const resultCount = useRef(0)
-  resultCount.current = filtered.length
+  useEffect(() => {
+    resultCount.current = filtered.length
+  }, [filtered.length])
   useEffect(() => {
     const q = search.trim()
     if (!q) return
@@ -299,7 +302,7 @@ export default function GrantsPage() {
   return (
     <main className="mx-auto max-w-6xl px-5">
       {/* Masthead */}
-      <section className="border-b border-[var(--line)] py-12 sm:py-16">
+      <section className="pt-12 sm:pt-16">
         <p className="text-[11px] font-bold uppercase tracking-[0.12em] text-[var(--ink-2)]">
           The grants database
         </p>
@@ -311,6 +314,11 @@ export default function GrantsPage() {
           check each one and keep it current, so your time goes into making the work,
           not chasing the money.
         </p>
+        {/* The Find as a band. A rule with a single ring on it reads as a
+            slider and invites dragging, so the divider is a field of rings
+            instead: no track, nothing to grab, and it is the expression that
+            says "one of these fits you", which is what this page is for. */}
+        <FindStrip className="mt-10 block h-7 w-full" />
       </section>
 
       {/* Filter bar */}
@@ -460,7 +468,7 @@ export default function GrantsPage() {
         {truncated && (
           <p className="mb-6 border-2 border-[var(--line)] p-4 text-sm text-[var(--ink-2)]">
             Showing the {MAX_ROWS} most recently added opportunities. Use search and
-            the filters to narrow down — older entries are still here.
+            the filters to narrow down. Older entries are still here.
           </p>
         )}
 

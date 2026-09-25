@@ -228,7 +228,7 @@ export default function SubmitOpportunityPage() {
           <textarea
             className={`${inputClass} h-auto py-3`}
             rows={4}
-            placeholder="Anything else worth knowing — sectors, application process, restrictions…"
+            placeholder="Anything else worth knowing: sectors, application process, restrictions…"
             value={form.notes}
             onChange={(e) => set('notes', e.target.value)}
           />

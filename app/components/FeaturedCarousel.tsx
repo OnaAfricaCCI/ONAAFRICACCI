@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { track } from '@/lib/analytics'
+import { Sightline } from './Motif'
 
 export type FeaturedGrant = {
   id: string
@@ -10,9 +11,37 @@ export type FeaturedGrant = {
   amount: string | null
   deadlineText: string
   urgent: boolean
-  tag: string | null
-  /** The grant's own page — always external. */
+  /** Days until the deadline, or null when there is no fixed date. */
+  daysLeft: number | null
+  /** Instrument and sector, e.g. "grant · film". */
+  kicker: string | null
+  /** Who it is open to, in the funder's own words. */
+  who: string | null
+  /** When the link was last checked, for the card's footer. */
+  checkedAt: string | null
+  /** The grant's own page, always external. */
   href: string
+}
+
+/**
+ * Where the eye sits on the Sightline.
+ *
+ * The bar covers the next 90 days. The thick segment fills as the deadline
+ * approaches, so a call closing this week reads as nearly full and one three
+ * months out reads as barely started. A grant with no fixed date gets no
+ * sightline: drawing one would imply a deadline we do not have.
+ */
+function sightlineProgress(daysLeft: number | null): number | null {
+  if (daysLeft === null || daysLeft < 0) return null
+  const WINDOW = 90
+  return 1 - Math.min(daysLeft, WINDOW) / WINDOW
+}
+
+function verifiedLabel(iso: string | null): string | null {
+  if (!iso) return null
+  const d = new Date(iso)
+  if (isNaN(d.getTime())) return null
+  return d.toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })
 }
 
 export default function FeaturedCarousel({
@@ -103,13 +132,13 @@ export default function FeaturedCarousel({
   if (grants.length === 0) return null
 
   const arrowClass =
-    'flex h-9 w-9 items-center justify-center border-2 border-[var(--paper)] text-[var(--paper)] transition-colors ' +
-    'hover:border-[var(--accent)] hover:bg-[var(--accent)] hover:text-[var(--bg)] disabled:cursor-not-allowed ' +
-    'disabled:opacity-35 disabled:hover:bg-transparent disabled:hover:text-[var(--paper)]'
+    'flex h-9 w-9 items-center justify-center border-2 border-[var(--ink)] text-[var(--ink)] transition-colors ' +
+    'hover:border-[var(--accent)] hover:bg-[var(--accent)] hover:text-[#121412] disabled:cursor-not-allowed ' +
+    'disabled:opacity-35 disabled:hover:bg-transparent disabled:hover:text-[var(--ink)]'
 
   return (
     <section
-      className="bg-[var(--ink)] py-12 text-[var(--bg)] sm:py-14"
+      className="py-14 sm:py-16"
       aria-labelledby="featured-heading"
     >
       <div className="mx-auto max-w-6xl px-5">
@@ -117,11 +146,11 @@ export default function FeaturedCarousel({
         <div>
           <h2
             id="featured-heading"
-            className="font-[family-name:var(--font-display)] text-2xl leading-[1.2]"
+            className="font-[family-name:var(--font-display)] text-[32px] leading-[1.1] sm:text-[44px]"
           >
             {heading}
           </h2>
-          <p className="mt-1 text-sm text-[var(--ink-3)]">
+          <p className="mt-1 text-sm text-[var(--ink-2)]">
             A few from the database, picked fresh each visit.
           </p>
         </div>
@@ -136,7 +165,7 @@ export default function FeaturedCarousel({
             aria-controls="featured-scroller"
             className={arrowClass}
           >
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="h-4 w-4">
+            <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="h-4 w-4">
               <path d="M15 19l-7-7 7-7" strokeLinecap="round" strokeLinejoin="round" />
             </svg>
           </button>
@@ -147,7 +176,7 @@ export default function FeaturedCarousel({
             aria-controls="featured-scroller"
             className={arrowClass}
           >
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="h-4 w-4">
+            <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="h-4 w-4">
               <path d="M9 5l7 7-7 7" strokeLinecap="round" strokeLinejoin="round" />
             </svg>
           </button>
@@ -161,54 +190,70 @@ export default function FeaturedCarousel({
         tabIndex={0}
         role="region"
         aria-label="Featured grants, horizontally scrollable"
-        className="mt-6 -mx-5 flex snap-x snap-mandatory scroll-pl-5 gap-4 overflow-x-auto px-5 pb-2 text-[var(--ink)] focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--paper)] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+        className="mt-6 -mx-5 flex snap-x snap-mandatory scroll-pl-5 gap-4 overflow-x-auto px-5 pb-3 pt-1 text-[var(--ink)] focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--ink)] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
       >
-        {grants.map((g) => (
-            <li
-              key={g.id}
-              className="w-[19rem] shrink-0 snap-start sm:w-[21rem]"
-            >
+        {grants.map((g) => {
+          const progress = sightlineProgress(g.daysLeft)
+          const verified = verifiedLabel(g.checkedAt)
+          return (
+            <li key={g.id} className="w-[19rem] shrink-0 snap-start sm:w-[21rem]">
               <a
                 href={g.href}
                 target="_blank"
                 rel="noopener noreferrer"
-                onClick={() => track({ name: 'grant_apply_click', grant: g.name, funder: g.funder, from: 'carousel' })}
-                className="group flex h-full flex-col border-2 border-[var(--bg)] bg-[var(--bg)] p-6 transition-colors hover:border-[var(--accent)]"
+                onClick={() =>
+                  track({ name: 'grant_apply_click', grant: g.name, funder: g.funder, from: 'carousel' })
+                }
+                className="card-ona group flex h-full flex-col border border-[var(--ink)] bg-[var(--bg)] text-[var(--ink)]"
               >
-                <h3 className="line-clamp-2 font-[family-name:var(--font-display)] text-xl font-semibold leading-snug transition-colors group-hover:text-[var(--accent)]">
-                  {g.name}
-                </h3>
-
-                {g.funder && (
-                  <p className="mt-1 line-clamp-1 text-sm text-[var(--ink-soft)]">{g.funder}</p>
-                )}
-
-                {g.amount && (
-                  <p className="mt-3 line-clamp-2 font-[family-name:var(--font-display)] text-lg font-semibold leading-snug text-[var(--forest)]">
-                    {g.amount}
-                  </p>
-                )}
-
-                <div className="mt-auto flex flex-wrap items-center gap-2 pt-4">
+                {/* Type on the left, the deadline on the right, in Coral Deep
+                    because it sits under 24px on ivory. */}
+                <div className="flex items-center justify-between gap-3 border-b border-[var(--ink)] px-4 py-3">
+                  <span className="label truncate text-[11px]">{g.kicker ?? 'Opportunity'}</span>
                   <span
-                    className={`text-[11px] font-bold uppercase tracking-[0.12em] ${
-                      g.urgent ? 'text-[var(--accent)]' : 'text-[var(--ink-soft)]'
+                    className={`label shrink-0 text-[11px] ${
+                      g.urgent ? 'text-[var(--accent-deep)]' : 'text-[var(--ink-2)]'
                     }`}
                   >
                     {g.deadlineText}
                   </span>
-                  {g.tag && (
-                    <span className="bg-[var(--ochre-soft)] px-2 py-0.5 text-[10px] font-semibold uppercase tracking-[0.1em]">
-                      {g.tag}
-                    </span>
+                </div>
+
+                <div className="flex flex-1 flex-col gap-2.5 px-4 py-4">
+                  <h3 className="line-clamp-2 text-[19px] font-bold leading-[1.3] transition-colors group-hover:text-[var(--accent-deep)]">
+                    {g.name}
+                  </h3>
+                  {g.amount && (
+                    <p className="line-clamp-2 font-[family-name:var(--font-display)] text-[24px] font-bold leading-[1.15]">
+                      {g.amount}
+                    </p>
                   )}
-                  <span className="ml-auto text-[var(--ink-soft)] transition-colors group-hover:text-[var(--accent)]" aria-hidden="true">
-                    ↗
-                  </span>
+                  {g.funder && (
+                    <p className="line-clamp-1 text-sm text-[var(--ink-2)]">{g.funder}</p>
+                  )}
+                  {g.who && (
+                    <p className="line-clamp-2 text-sm leading-[1.5] text-[var(--ink-2)]">{g.who}</p>
+                  )}
+                </div>
+
+                {/* Sightline: only where there is a real date to mark. */}
+                {progress !== null && (
+                  <div className="px-4 pb-1">
+                    <Sightline
+                      progress={progress}
+                      className="block h-9 w-full"
+                      label={`Closes ${g.deadlineText}`}
+                    />
+                  </div>
+                )}
+
+                <div className="bg-[var(--sage-mist)] px-4 py-2.5 text-xs text-[var(--ink-2)]">
+                  {verified ? `Link checked ${verified}` : 'Link checked before listing'}
                 </div>
               </a>
             </li>
-        ))}
+          )
+        })}
       </ul>
       </div>
     </section>

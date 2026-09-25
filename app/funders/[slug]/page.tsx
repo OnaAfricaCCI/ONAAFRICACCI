@@ -83,7 +83,7 @@ export async function generateMetadata({
     title: data.name,
     description: desc,
     alternates: { canonical: `/funders/${data.slug ?? slug}` },
-    openGraph: { title: `${data.name} — Ona`, description: desc, url: `/funders/${data.slug ?? slug}`, type: 'profile' },
+    openGraph: { title: `${data.name} · Ona Funds`, description: desc, url: `/funders/${data.slug ?? slug}`, type: 'profile' },
   }
 }
 
@@ -232,7 +232,7 @@ export default async function FunderProfilePage({
         <ul className="grid gap-x-8 gap-y-2 sm:grid-cols-2">
           {grantees.map((g) => (
             <li key={g} className="flex gap-2 text-[15px]">
-              <span className="text-[var(--terracotta)]">—</span>
+              <span className="text-[var(--ink-3)]">Not stated</span>
               {g}
             </li>
           ))}

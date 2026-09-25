@@ -1,86 +1,107 @@
 @import "tailwindcss";
 
 /* ============================================================================
-   VoiceBox design system — bold, flat, editorial.
-   Black-on-white foundations, thick borders, one red accent used sparingly.
+   Ona Funds design system (brand guidelines v1.3, September 2026)
+
+   Ink, ivory, sage. One coral spark.
+
+   Proportion in any layout: Ivory 50, Ink 28, Sage 14, Coral 8. Coral marks
+   where attention should land, so it appears once per view and never as a
+   decorative wash.
+
+   Shape: radius 0 everywhere. The only circles are the logo and the motif
+   rings. No soft shadows. A card answers hover with a hard offset shadow.
    ============================================================================ */
 
 :root {
   color-scheme: light;
 
-  /* Brand */
-  --ink: #0a0a0a;            /* Primary — headings, primary UI */
-  --accent: #ef4444;         /* Secondary — the one red. Use like a scalpel. */
-  --accent-active: #dc2626;
-  --bg: #fafafa;             /* Tertiary — page background, inverse text */
+  /* ---- Brand ------------------------------------------------------------ */
+  --ink: #121412;            /* Type, the logo ring, dark sections */
+  --bg: #f6f4ec;             /* Ivory. Warmer than white. */
+  --accent: #ff6a4d;         /* Ona Coral. The eye. 24px and above, or on ink. */
+  --accent-deep: #d6432a;    /* Coral for text under 24px on ivory */
+  --accent-soft: #ffc9b8;    /* Blush. Badges, hover tint. */
+  --accent-active: #d6432a;
 
-  /* Surfaces */
-  --surface: #f5f5f5;        /* cards, aside blocks */
-  --surface-raised: #e5e5e5; /* hover backgrounds, pull-quote blocks */
+  /* ---- Sage: calm and credibility, the funder surfaces ------------------ */
+  --sage-deep: #5f7359;      /* Labels, funder and data surfaces */
+  --sage: #8fa487;           /* Charts, dividers */
+  --sage-mist: #dce3d5;      /* Panels, table rows */
+  --graphite: #4a5249;       /* Muted text */
 
-  /* Content */
-  --ink-2: #525252;          /* bylines, secondary prose */
-  --ink-3: #a3a3a3;          /* placeholders, disabled */
+  /* ---- Surfaces --------------------------------------------------------- */
+  --surface: #dce3d5;
+  --surface-raised: #ffc9b8;
 
-  /* Borders */
-  --border: #e5e5e5;         /* subtle */
-  --border-md: #d4d4d4;      /* medium */
-  --border-strong: #0a0a0a;
+  /* ---- Content ---------------------------------------------------------- */
+  --ink-2: #4a5249;
+  --ink-3: #7e8a79;          /* Derived: graphite lifted towards sage, for placeholders */
 
-  /* Semantic */
-  --success: #16a34a;
-  --warning: #ca8a04;
-  --error: #ef4444;
-  --error-soft: #fef2f2;
+  /* ---- Borders ---------------------------------------------------------- */
+  --border: #dce3d5;
+  --border-md: #8fa487;
+  --border-strong: #121412;
+
+  /* ---- Semantic --------------------------------------------------------- */
+  --success: #5f7359;
+  --warning: #d6432a;
+  --error: #d6432a;
+  --error-soft: #ffc9b8;
 
   /* Chevron for <select>, in the current ink colour */
-  --select-arrow: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%230a0a0a'/%3E%3C/svg%3E");
+  --select-arrow: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%23121412'/%3E%3C/svg%3E");
 }
 
-/* ---- Dark theme ----------------------------------------------------------
-   The same system, inverted: near-black page, off-white ink, greys stepped
-   the other way. Red stays red. Applied when the visitor has chosen dark, or
-   when they've made no choice and their device prefers dark. */
+/* ---- Dark theme ------------------------------------------------------------
+   The brand is built on ink and ivory, so dark mode swaps the two rather than
+   inventing a second palette. Coral holds its value: it already passes on ink,
+   which is why the guidelines allow it at any size there. */
 :root[data-theme='dark'],
 :root:not([data-theme='light']):not([data-theme='dark']).system-dark {
   color-scheme: dark;
 
-  --ink: #fafafa;
-  --bg: #0a0a0a;
+  --ink: #f6f4ec;
+  --bg: #121412;
 
-  --surface: #171717;
-  --surface-raised: #262626;
+  --accent-deep: #ff6a4d;    /* On ink, full coral passes at every size */
+  --accent-soft: #3a2621;
 
-  --ink-2: #a3a3a3;
-  --ink-3: #737373;
+  --sage-mist: #222722;
+  --surface: #1c201b;
+  --surface-raised: #2a2f28;
 
-  --border: #262626;
-  --border-md: #404040;
-  --border-strong: #fafafa;
+  --ink-2: #b9c2b3;
+  --ink-3: #8fa487;
 
-  --success: #22c55e;
-  --warning: #eab308;
-  --error-soft: #2a1414;
+  --border: #2a2f28;
+  --border-md: #4a5249;
+  --border-strong: #f6f4ec;
 
-  --select-arrow: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%23fafafa'/%3E%3C/svg%3E");
+  --success: #8fa487;
+  --error-soft: #3a2621;
+
+  --select-arrow: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%23f6f4ec'/%3E%3C/svg%3E");
 }
 
 /* ---- Legacy aliases --------------------------------------------------------
-   Components were built against the previous palette. Map those names onto
-   VoiceBox so everything converts at once. They reference the theme tokens
-   via var(), so they follow light/dark automatically. Note --terracotta
-   deliberately becomes BLACK: red is reintroduced only via --accent. */
+   Components across the site were built against earlier palette names. Mapping
+   them onto the Ona tokens converts everything at once, and they follow
+   light and dark automatically because they resolve through var().
+
+   --terracotta becomes Coral Deep rather than full coral: it is used for small
+   uppercase links, and the guidelines require Coral Deep below 24px on ivory. */
 :root {
   --paper: var(--bg);
   --paper-deep: var(--surface);
   --line: var(--border);
   --ink-soft: var(--ink-2);
-  --terracotta: var(--ink);
-  --terracotta-soft: var(--surface);
-  --forest: var(--ink);
-  --forest-soft: var(--surface);
-  --ochre: var(--border-md);
-  --ochre-soft: var(--surface);
+  --terracotta: var(--accent-deep);
+  --terracotta-soft: var(--accent-soft);
+  --forest: var(--sage-deep);
+  --forest-soft: var(--sage-mist);
+  --ochre: var(--sage);
+  --ochre-soft: var(--sage-mist);
 }
 
 @theme inline {
@@ -88,10 +109,9 @@
   --color-ink: var(--ink);
   --color-accent: var(--accent);
   --font-sans: var(--font-body);
-  --font-mono: var(--font-mono);
+  --font-display: var(--font-display);
 }
 
-/* No textures, no gradients: typography does the work. */
 body {
   background-color: var(--bg);
   color: var(--ink);
@@ -99,15 +119,22 @@ body {
   -webkit-font-smoothing: antialiased;
 }
 
-/* Display type: Archivo Black is a single weight, so scale and tracking carry
-   the hierarchy. These apply wherever the display font is requested. */
+/* ---- Display type ----------------------------------------------------------
+   Outfit, ExtraBold 800 for headlines, Medium 500 for statements, tracking
+   −3.5%, sentence case. Applied wherever the display font is requested. */
 .font-\[family-name\:var\(--font-display\)\] {
-  font-weight: 400 !important;
-  letter-spacing: -0.02em;
+  font-weight: 800;
+  letter-spacing: -0.035em;
 }
 h1.font-\[family-name\:var\(--font-display\)\] {
-  letter-spacing: -0.03em;
-  line-height: 1.05;
+  letter-spacing: -0.04em;
+  line-height: 1.0;
+}
+
+/* Amounts, dates and counts line up in columns. */
+.tabular,
+.font-\[family-name\:var\(--font-display\)\] {
+  font-variant-numeric: tabular-nums;
 }
 
 ::selection {
@@ -115,7 +142,18 @@ h1.font-\[family-name\:var\(--font-display\)\] {
   color: var(--bg);
 }
 
-/* ---- Form controls: sharp, 44px, thick borders ---------------------------- */
+/* ---- Labels ----------------------------------------------------------------
+   12px, weight 900, uppercase, wide tracking. The brand's third voice after
+   display and body. */
+.label {
+  font-size: 12px;
+  font-weight: 900;
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+  line-height: 1.2;
+}
+
+/* ---- Form controls: sharp, 44px, no radius -------------------------------- */
 select,
 textarea,
 input:not([type='checkbox']):not([type='radio']) {
@@ -133,13 +171,11 @@ select {
   color: var(--ink);
 }
 
-/* Native dropdown lists and date pickers follow the theme */
 select option {
   background: var(--bg);
   color: var(--ink);
 }
 
-/* Theme change: fade colours rather than snap */
 body,
 header,
 footer,
@@ -149,7 +185,7 @@ select,
 textarea,
 a,
 button {
-  transition-property: background-color, border-color, color;
+  transition-property: background-color, border-color, color, box-shadow;
   transition-duration: 150ms;
   transition-timing-function: ease;
 }
@@ -167,7 +203,7 @@ input[type='search']::-webkit-search-results-decoration {
   height: 2.75rem; /* 44px */
 }
 
-/* Stark focus ring: white gap, then black. */
+/* Focus ring: a gap in the page colour, then ink. */
 input:focus-visible,
 select:focus-visible,
 textarea:focus-visible,
@@ -178,7 +214,7 @@ a:focus-visible,
   box-shadow: 0 0 0 2px var(--bg), 0 0 0 4px var(--ink);
 }
 
-/* Checkbox: 18px square, fills black with a white tick. */
+/* Checkbox: 18px square, fills ink with an ivory tick. */
 input[type='checkbox'] {
   appearance: none;
   -webkit-appearance: none;
@@ -216,22 +252,31 @@ input[type='checkbox']:disabled {
   cursor: not-allowed;
 }
 
-/* ---- Hover = red, site-wide -------------------------------------------------
-   Every link and button answers a hover with the accent. Filled buttons set
-   their own hover text colour via utility classes (which outrank this rule),
-   so only plain text links and un-filled controls pick this up. */
+/* ---- Hover ------------------------------------------------------------------
+   Coral answers every hover. Text links use Coral Deep, which is what the
+   guidelines require below 24px on ivory; filled buttons set their own hover
+   colours through utility classes, which outrank this rule. */
 a:hover {
-  color: var(--accent);
+  color: var(--accent-deep);
+}
+
+/* ---- The card hover state --------------------------------------------------
+   A hard offset shadow in coral. No blur, no softness: the brand has no soft
+   shadows anywhere. */
+.card-ona {
+  transition: box-shadow 120ms ease, border-color 120ms ease;
+}
+.card-ona:hover,
+.card-ona:focus-within {
+  box-shadow: 6px 6px 0 var(--accent);
 }
 
 /* ---- Editorial accents ----------------------------------------------------- */
 
-/* Red underline: featured items and the active nav link. */
 .red-rule {
   border-bottom: 3px solid var(--accent);
 }
 
-/* Pull quote: red left rule, large italic. */
 .pull-quote {
   border-left: 4px solid var(--accent);
   padding-left: 1.25rem;
@@ -254,8 +299,27 @@ a:hover {
   animation: rise-in 0.4s cubic-bezier(0.2, 0.7, 0.2, 1) both;
 }
 
+/* ---- The Blink -------------------------------------------------------------
+   The eye opening, from a closed line to a full ring. The logo's entrance,
+   used once on load rather than on every appearance. */
+@keyframes blink-open {
+  from {
+    transform: scaleY(0.06);
+    opacity: 0.4;
+  }
+  to {
+    transform: scaleY(1);
+    opacity: 1;
+  }
+}
+.blink-open {
+  transform-origin: center;
+  animation: blink-open 0.5s cubic-bezier(0.2, 0.7, 0.2, 1) both;
+}
+
 @media (prefers-reduced-motion: reduce) {
-  .rise-in {
+  .rise-in,
+  .blink-open {
     animation: none;
   }
 }

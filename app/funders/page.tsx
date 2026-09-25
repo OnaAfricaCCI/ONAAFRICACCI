@@ -6,6 +6,7 @@ import { supabase } from '@/lib/supabase'
 import type { Funder } from '@/lib/types'
 import { isPublishableInstitution } from '@/lib/quality'
 import { track } from '@/lib/analytics'
+import { Aperture } from '@/app/components/Motif'
 
 function FunderLogo({ funder, size = 44 }: { funder: Funder; size?: number }) {
   const [failed, setFailed] = useState(false)
@@ -91,7 +92,9 @@ export default function FundersPage() {
   }, [funders, search, type, region, sector, support])
 
   const resultCount = useRef(0)
-  resultCount.current = filtered.length
+  useEffect(() => {
+    resultCount.current = filtered.length
+  }, [filtered.length])
   useEffect(() => {
     const q = search.trim()
     if (!q) return
@@ -107,8 +110,9 @@ export default function FundersPage() {
 
   return (
     <main className="mx-auto max-w-6xl px-5">
-      <section className="border-b border-[var(--line)] py-12 sm:py-16">
-        <p className="text-[11px] font-bold uppercase tracking-[0.12em] text-[var(--ink-2)]">
+      <section className="grid items-center gap-8 border-b border-[var(--line)] py-12 sm:py-16 lg:grid-cols-[minmax(0,1fr)_260px]">
+        <div>
+        <p className="label text-[var(--sage-deep)]">
           The funders directory
         </p>
         <h1 className="mt-3 max-w-3xl font-[family-name:var(--font-display)] text-[38px] leading-[1.05] sm:text-[56px]">
@@ -118,6 +122,11 @@ export default function FundersPage() {
           These are the organisations putting money into African creative work. Each
           profile tells you what they fund, who can apply, and how to reach them.
         </p>
+        </div>
+        {/* Aperture: the guidelines give this one to the funder register. */}
+        <div aria-hidden="true" className="hidden h-[200px] overflow-hidden lg:block">
+          <Aperture className="h-full w-full" />
+        </div>
       </section>
 
       {/* Filter bar */}

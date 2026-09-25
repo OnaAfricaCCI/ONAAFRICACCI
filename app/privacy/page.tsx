@@ -126,7 +126,7 @@ export default function PrivacyPage() {
         <H2 id="basis">4. Our lawful basis</H2>
         <p className="mt-4">
           For the digest, contact form and opportunity submissions, we process your
-          information because you asked us to — your <strong>consent</strong>, which you can
+          information because you asked us to. That is your <strong>consent</strong>, which you can
           withdraw at any time. For analytics, we rely on our{' '}
           <strong>legitimate interest</strong> in understanding and improving a free public
           service, which we&rsquo;ve balanced against your privacy by keeping it cookieless
@@ -164,7 +164,7 @@ export default function PrivacyPage() {
         </dl>
         <p className="mt-4">
           We would disclose information if a law required us to, or to protect the safety
-          of a person or the integrity of the site — and in either case only what was
+          of a person or the integrity of the site, and in either case only what was
           necessary.
         </p>
 
@@ -183,7 +183,7 @@ export default function PrivacyPage() {
           why you don&rsquo;t see a cookie banner. The only things stored on your device are:
         </p>
         <ul className="mt-3 list-disc space-y-1.5 pl-6">
-          <li>Your light-or-dark mode choice, if you set one — kept in your browser, never sent to us.</li>
+          <li>Your light-or-dark mode choice, if you set one. Kept in your browser, never sent to us.</li>
           <li>Nothing else. Analytics runs in memory only and is discarded when you leave.</li>
         </ul>
         <p className="mt-4">
@@ -204,12 +204,12 @@ export default function PrivacyPage() {
         <H2 id="rights">10. Your rights</H2>
         <p className="mt-4">Whatever law applies to you, we offer everyone the same rights:</p>
         <ul className="mt-3 list-disc space-y-1.5 pl-6">
-          <li><strong>Access</strong> — ask what we hold about you, and receive a copy.</li>
-          <li><strong>Correction</strong> — ask us to fix anything inaccurate.</li>
-          <li><strong>Deletion</strong> — ask us to erase your information.</li>
-          <li><strong>Withdrawal</strong> — unsubscribe from the digest at any time via the link in every email.</li>
-          <li><strong>Objection and restriction</strong> — ask us to stop or limit how we use your information.</li>
-          <li><strong>Complaint</strong> — raise a concern with your data protection authority. In Kenya that is the Office of the Data Protection Commissioner.</li>
+          <li><strong>Access</strong>. Ask what we hold about you, and receive a copy.</li>
+          <li><strong>Correction</strong>. Ask us to fix anything inaccurate.</li>
+          <li><strong>Deletion</strong>. Ask us to erase your information.</li>
+          <li><strong>Withdrawal</strong>. Unsubscribe from the digest at any time via the link in every email.</li>
+          <li><strong>Objection and restriction</strong>. Ask us to stop or limit how we use your information.</li>
+          <li><strong>Complaint</strong>. Raise a concern with your data protection authority. In Kenya that is the Office of the Data Protection Commissioner.</li>
         </ul>
         <p className="mt-4">
           To exercise any of these, email us (section 14). We&rsquo;ll respond within 30 days
@@ -239,8 +239,8 @@ export default function PrivacyPage() {
 
         <H2 id="contact">14. How to contact us</H2>
         <p className="mt-4">
-          For anything about your information — a request to see, correct or delete it, or
-          a question about this policy — email{' '}
+          For anything about your information, whether a request to see, correct or delete
+          it or a question about this policy, email{' '}
           <a href={`mailto:${CONTACT}`} className="underline underline-offset-4">
             {CONTACT}
           </a>
