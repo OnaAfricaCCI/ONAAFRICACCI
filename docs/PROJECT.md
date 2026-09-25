@@ -19,9 +19,10 @@ Read this first. It is the context a new session needs; the code is the source o
 
 ## Data model (Supabase)
 
-- `opportunities` — grants. ~142 rows. Sources: `spreadsheet`, `consolidated`, `apify`. `amount` is free text (parse with `lib/amount.ts`). `link_ok/link_status/link_checked_at` set by check-links; the homepage only features `link_ok = true`. `institution_id` → funders.
+- `opportunities` — grants. ~142 rows. Sources: `spreadsheet`, `consolidated`, `apify`. `amount` is free text (parse with `lib/amount.ts`). `link_state` (`ok`/`unverified`/`dead`), `link_fail_streak`, `link_ok`, `link_status`, `link_checked_at` set by check-links; the homepage only features `link_ok = true`, and `/grants` flags only `dead`. `institution_id` → funders.
 - `funders` — **the single institutions layer** (~140). `roles` = `{funder}`, `{builder}` or both. `slug` for URLs. Profile fields: `what_they_fund`, `how_to_apply`, `deadline_notes`, `notable_grantees`, `grants_page_url`, `last_verified`, `source_url`, `institution_type`.
 - `builder_mechanisms` — the **Ecosystem layer** (45): investors, DFIs, corporate capital, government mechanisms. Derived filter fields: `economic_roles` (4 buckets: Capital & investment / Market access & trade / Skills & enterprise growth / Policy & industry infrastructure), `access_model` (Open to applications / By relationship or introduction / Programme-based). DB constraints enforce these vocabularies.
+- `link_candidates` — proposed replacements for dead links, awaiting human approval. Private (RLS, no public policy).
 - `subscribers`, `contact_messages`, `opportunity_submissions`, `posts` — private (RLS, no public policy); posts readable when published.
 - Migrations: `supabase/migrations/`. Import scripts (idempotent, dry-run by default): `scripts/import_ecosystem.py`, `import_grants.py`, `enrich_and_dedupe.py`, `add_shared_link_grants.py`. Institution resolution table: `scripts/institution-map.json`.
 
@@ -35,21 +36,51 @@ Read this first. It is the context a new session needs; the code is the source o
 
 ## Design
 
-**VoiceBox** system (`docs/` has none — spec was supplied in chat; tokens are in `app/globals.css`): black `#0A0A0A` on off-white `#FAFAFA`, one red `#EF4444`. Archivo Black display, Work Sans body, Space Mono mono. Sharp 0px corners, flat, 2px borders. **Dark mode** = inverted tokens; toggle in header, `data-theme` on `<html>`, no-flash init script. **Every link and button turns red on hover** (David's override of the one-red rule; resting state still uses red sparingly: active nav rule, urgency flags, pull quote, email box top rule, errors). Legacy token names (`--paper`, `--terracotta`, `--forest`, `--ochre`…) are aliases in globals.css — don't reintroduce colours.
+**Ona Funds brand system** (guidelines v1.3, Sept 2026; tokens in `app/globals.css`).
+
+- **Colour.** Ink `#121412`, Ivory `#F6F4EC`, Ona Coral `#FF6A4D`, Coral Deep `#D6432A`, Blush `#FFC9B8`, Sage Deep `#5F7359`, Sage `#8FA487`, Sage Mist `#DCE3D5`, Graphite `#4A5249`. Proportion: Ivory 50 / Ink 28 / Sage 14 / Coral 8. **Coral appears once per view.** Coral text under 24px on ivory must be Coral Deep, which is why `--terracotta` maps there.
+- **Type.** Outfit 800 for display at −3.5% tracking, sentence case. Source Sans 3 for body, UI and figures, tabular numerals on amounts and dates. Labels 12px / weight 900 / uppercase (`.label`).
+- **Shape.** Radius 0 everywhere. No soft shadows. Card hover is a hard offset shadow `6px 6px 0` coral (`.card-ona`). The only circles are the logo and the motif rings.
+- **The mark.** `app/components/Logo.tsx`, drawn as SVG geometry, never set in a typeface: three 100-unit circles, 20-unit gaps, 22-unit stroke, and **only the "o" carries colour**. Tones for ink / ivory / coral / sage surfaces are built in. The symbol alone is `app/icon.svg`, the favicon. Never "ONA", never a pupil, never stretched.
+- **The motif.** `app/components/Motif.tsx`: The Find, Sightline, Aperture, all built from the logo ring at the same 22% stroke ratio. **One expression per page**, never behind body text, never The Find and Aperture together. Home: The Find + Aperture per section. Grants: The Find as a band. Funders and About: Aperture. Blog and Contact: The Find. Privacy: none.
+  - Ring centres fall on a 28px grid at 14, 42, 70… **A coral ring placed off that grid reads as a blob, not a ring.** This has been got wrong twice.
+  - A horizontal rule with a single ring on it looks like a slider and invites dragging. Don't build one.
+- **Dark mode** swaps ink and ivory rather than inventing a second palette. Header and footer stay ink in both themes, so their contents use fixed colours, not tokens.
+- **Copy rules from the voice guide:** no em dashes in anything a visitor reads, "Ona Funds" on first mention then "Ona", a middle dot in page titles, currency before the figure, "up to" preserved, ranges written "X to Y".
 
 ## Copy
 
 Final copy for every page was supplied by David (Sept 2026) and is in the components. Tone: plain, human, first person plural. "Cultural and creative industries" = who we serve; "creative economy" = what we make legible. Don't claim things are "structured by AI".
 
-## Status (22 Sept 2026)
+## Status (25 Sept 2026)
 
-- Live on onafunds.com. Redesign, dark mode, analytics (awaiting PostHog key), SEO (sitemap 147 URLs, JSON-LD, per-page metadata), security (CSP + headers, rate limits, honeypots, guarded endpoints, Next 16.3.5 / 0 vulns), privacy policy at `/privacy` (controller name + privacy email still placeholders).
-- Ecosystem work: Stages 1–2 done (schema, 45 mechanisms, 140 institutions linked). **Stage 3 (`/ecosystem` route), Stage 4 (shared profiles at `/institutions/[slug]`, fold Funders in), Stage 5 (copy) not built.**
-- Branches: `main` (deployed), `feature/ecosystem`, `design/voicebox` — both merged into main.
+- Live on onafunds.com, on the Ona Funds brand system.
+- **Scheduled jobs are running.** `check-links` daily at 03:00 UTC, `weekly-digest` Mondays 09:00 UTC. First unattended run confirmed 25 Sept. `supabase/config.toml` pins `verify_jwt = false` for both, because pg_cron sends no JWT and a deploy without it silently 401s every night.
+- **Link health is three-state**, not boolean: `link_state` is `ok` / `unverified` / `dead`, with `link_fail_streak` and a two-strikes rule. Timeouts, DNS failures and bot-blocks are `unverified` and are never flagged to visitors, because they are evidence about our access, not about the page.
+- Link re-discovery built: `scripts/rediscover_links.py` finds replacements for dead links, `scripts/review_links.py --go` is the human gate, `link_candidates` is the queue. 16 links repaired this way.
+- Content verification built: `scripts/verify_content.py` reads each grant's page and reports where our details no longer match the funder's. It writes nothing.
+- Ecosystem work: Stages 1–2 done. **Stages 3–5 not built.**
 
 ## Roadmap David asked to be reminded of (after analytics + user testing)
 
 1. Enrichment pipeline — Claude extracts structured summary, eligibility criteria, how-to-apply from each grant's source page.
 2. Grant detail pages `/grants/[slug]` with "who can apply" checklist and "remind me before the deadline".
 3. Eligibility self-check (graded answers, never a hard "no").
-Also pending: Ecosystem Stages 3–5; Resend domain verification for `digest@onafunds.com`; cron jobs for `check-links` (daily) and `weekly-digest` (Mondays); 47 dead grant links to fix; `amount_value` numeric column; PostHog key; Supabase Pro for backups; 2FA on Vercel/Supabase/Namecheap/Google.
+Also pending: Ecosystem Stages 3–5; Resend domain verification; `amount_value` numeric column; Supabase Pro for backups; 2FA on Vercel/Supabase/Namecheap/Google; automated tests (there are none); server-rendering `/grants` for search and mobile weight.
+
+## Sources the crawler cannot read, to check by hand
+
+Grants live on foundation websites, which are plain and static. **Finance lives on bank websites, which are JavaScript applications behind bot protection.** The ingestion pipeline will systematically under-collect the finance and investment category unless someone checks these directly.
+
+Claude's browser renders JavaScript, so it *can* read these even though Apify cannot. Ask it to open the page and extract the details rather than feeding the URL to the crawler.
+
+| Source | Why the crawler fails | Check every |
+|---|---|---|
+| **iDICE** `idice.ng/opportunities` | Returns 101 characters of text. Entirely JavaScript-rendered. | **2 months.** Highest value on this list. Carries open, closed and upcoming programmes side by side. Founders Lab Cohort 3 and the Startup Bridge Growth Lab are both coming. Applications run through `idice.boi.ng`. |
+| **afreximbank.com** | Returns 403 to any automated request. | Use `cms.canex.africa` instead, which is the same content and readable. |
+| **fedagroup.org** (FEDA) | Returns 403. | Via CANEX pages. |
+| **canex.africa/africa-film-form** | 17 characters. JavaScript-rendered. | With the Film Fund below. |
+
+**Africa Film Fund — watch, do not list.** Afreximbank via FEDA, "up to US$1 billion", announced May 2025. Its own page says "Further details, including investment parameters and application guidelines, will be shared in due course." Listing it now would put a billion-dollar headline against something nobody can apply to. Source: `https://cms.canex.africa/africa-film-fund/`
+
+**Two accuracy rules for this category.** A facility size is not money disbursed: CANEX's US$2 billion is lending capacity for 2024 to 2027. And "up to" is a ceiling, so it must survive into the listing.
