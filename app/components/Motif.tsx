@@ -69,18 +69,30 @@ export function TheFind({
 /**
  * The Find, as a full-width strip.
  *
- * Used beside a count. The coral ring is placed inside the first 540px so it
- * is visible on a phone as well as a desktop.
+ * A row of rings with one filled. Used as a section divider and beside a
+ * count. It carries no track, so unlike a rule with a single ring on it, it
+ * cannot be mistaken for a slider.
  *
  * Both coordinates must land on the pattern grid, whose ring centres fall at
  * 14, 42, 70 and so on. An earlier version put the coral at y=28, which is
  * exactly halfway between two rows: it read as a blob sitting between the
  * rings rather than as one of them, which is the whole point of the motif.
- *
- * Not currently placed anywhere. It stays because the guidelines define it as
- * one of the four expressions, and it is correct now.
  */
-export function FindStrip({ tone = 'ink', className = '' }: { tone?: 'ink' | 'ivory'; className?: string }) {
+export function FindStrip({
+  tone = 'ink',
+  className = '',
+  /**
+   * How far from the left the coral ring sits, in pixels. Must land on the
+   * 28px grid (14, 42, 70, 98 …) or it reads as a blob between the rings
+   * rather than as one of them. The default keeps it visible on a 320px
+   * screen, where the content column is only about 280px wide.
+   */
+  coralAt = 154,
+}: {
+  tone?: 'ink' | 'ivory'
+  className?: string
+  coralAt?: number
+}) {
   const id = `find-strip-${tone}`
   const stroke = tone === 'ivory' ? '#f6f4ec' : 'var(--ink)'
   return (
@@ -91,7 +103,7 @@ export function FindStrip({ tone = 'ink', className = '' }: { tone?: 'ink' | 'iv
         </pattern>
       </defs>
       <rect width="100%" height="100%" fill={`url(#${id})`} />
-      <circle cx="294" cy="14" r="7.8" fill="var(--accent)" />
+      <circle cx={coralAt} cy="14" r="7.8" fill="var(--accent)" />
     </svg>
   )
 }
@@ -123,32 +135,6 @@ export function Sightline({
       <line x1="2" y1="24" x2={x} y2="24" stroke="var(--ink)" strokeWidth="5" />
       <circle cx={x} cy="24" r="9.8" fill="none" stroke="var(--ink)" strokeWidth="2.4" />
       <circle cx={x} cy="24" r="8.6" fill="var(--accent)" />
-    </svg>
-  )
-}
-
-/**
- * Sightline as a section rule.
- *
- * The guidelines name section dividers as one of Sightline's jobs, so a
- * masthead can end on the eye rather than on a plain border. No viewBox here:
- * the line stretches to the container while the ring keeps its true size, which
- * a viewBox would squash.
- */
-export function SightlineRule({
-  className = '',
-  /** How far from the left the eye sits, in pixels. */
-  at = 240,
-}: {
-  className?: string
-  at?: number
-}) {
-  return (
-    <svg className={className} height="28" width="100%" aria-hidden="true" focusable="false">
-      <line x1="0" y1="14" x2="100%" y2="14" stroke="var(--border-md)" strokeWidth="2" />
-      <line x1="0" y1="14" x2={at} y2="14" stroke="var(--ink)" strokeWidth="5" />
-      <circle cx={at} cy="14" r="9.8" fill="none" stroke="var(--ink)" strokeWidth="2.4" />
-      <circle cx={at} cy="14" r="8.6" fill="var(--accent)" />
     </svg>
   )
 }

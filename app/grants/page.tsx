@@ -6,7 +6,7 @@ import { supabase } from '@/lib/supabase'
 import { parseAmount } from '@/lib/amount'
 import { isPublishableGrant } from '@/lib/quality'
 import { track } from '@/lib/analytics'
-import { SightlineRule } from '@/app/components/Motif'
+import { FindStrip } from '@/app/components/Motif'
 import {
   SCOPE_GROUP_LABELS,
   SCOPE_OPTIONS,
@@ -314,9 +314,11 @@ export default function GrantsPage() {
           check each one and keep it current, so your time goes into making the work,
           not chasing the money.
         </p>
-        {/* Sightline as the section rule: the database is a record of dates,
-            so the divider is the one that measures time. */}
-        <SightlineRule className="mt-10 block w-full" at={240} />
+        {/* The Find as a band. A rule with a single ring on it reads as a
+            slider and invites dragging, so the divider is a field of rings
+            instead: no track, nothing to grab, and it is the expression that
+            says "one of these fits you", which is what this page is for. */}
+        <FindStrip className="mt-10 block h-7 w-full" />
       </section>
 
       {/* Filter bar */}
