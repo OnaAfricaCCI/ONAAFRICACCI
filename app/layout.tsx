@@ -52,7 +52,9 @@ export const metadata: Metadata = {
   robots: { index: true, follow: true },
   verification: { google: "3d_p8pZxx2dyrU9GRkbaKQdWqYhNK2gDdlpwac7TpJQ" },
   twitter: {
-    card: "summary",
+    // The share card is a 1200x630 banner, so it needs the large format.
+    // "summary" crops it into a small square and loses the headline.
+    card: "summary_large_image",
     title: SITE_TITLE,
     description: SITE_DEFINITION,
   },
