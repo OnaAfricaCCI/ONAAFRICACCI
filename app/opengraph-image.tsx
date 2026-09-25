@@ -85,7 +85,6 @@ export default async function Image() {
         <div style={{ display: 'flex', flexDirection: 'column', flex: 1, justifyContent: 'space-between' }}>
           {/* Lockup: the drawn wordmark, then "funds" on the same baseline. */}
           <div style={{ display: 'flex', alignItems: 'flex-end', gap: 18 }}>
-            {/* eslint-disable-next-line @next/next/no-img-element */}
             <img src={dataUri(WORDMARK)} width={204} height={60} alt="" />
             <span style={{ fontSize: 72, fontWeight: 400, lineHeight: 0.82, letterSpacing: -2 }}>
               funds
@@ -114,7 +113,6 @@ export default async function Image() {
         </div>
 
         {/* One motif, in its own column. */}
-        {/* eslint-disable-next-line @next/next/no-img-element */}
         <img src={dataUri(theFind())} width={120} height={320} alt="" style={{ alignSelf: 'center' }} />
       </div>
     ),

@@ -6,6 +6,7 @@ import { formatDate } from '@/lib/media'
 import type { Funder } from '@/lib/types'
 import { isPublishableInstitution } from '@/lib/quality'
 import TrackedLink from '@/app/components/TrackedLink'
+import { OG_IMAGE } from '@/lib/site'
 
 export const dynamic = 'force-dynamic'
 
@@ -83,7 +84,7 @@ export async function generateMetadata({
     title: data.name,
     description: desc,
     alternates: { canonical: `/funders/${data.slug ?? slug}` },
-    openGraph: { title: `${data.name} · Ona Funds`, description: desc, url: `/funders/${data.slug ?? slug}`, type: 'profile' },
+    openGraph: { title: `${data.name} · Ona Funds`, description: desc, url: `/funders/${data.slug ?? slug}`, type: 'profile', images: [OG_IMAGE] },
   }
 }
 

@@ -1,10 +1,11 @@
 import type { Metadata } from 'next'
+import { OG_IMAGE } from '@/lib/site'
 
 export const metadata: Metadata = {
   title: { default: 'Blog', template: '%s · Ona Funds' },
   description: "News, updates and conversations from across Africa's cultural and creative industries.",
   alternates: { canonical: '/blog' },
-  openGraph: { title: 'Blog · Ona Funds', description: "News, updates and conversations from across Africa's cultural and creative industries.", url: '/blog' },
+  openGraph: { title: 'Blog · Ona Funds', description: "News, updates and conversations from across Africa's cultural and creative industries.", url: '/blog', images: [OG_IMAGE] },
 }
 
 export default function Layout({ children }: { children: React.ReactNode }) {

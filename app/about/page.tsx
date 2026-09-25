@@ -1,5 +1,6 @@
 import Link from 'next/link'
 import type { Metadata } from 'next'
+import { OG_IMAGE } from '@/lib/site'
 import { Aperture } from '@/app/components/Motif'
 
 export const metadata: Metadata = {
@@ -11,6 +12,7 @@ export const metadata: Metadata = {
     description:
       'Ona Funds is a public record of the funding open to Africa’s cultural and creative industries.',
     type: 'website',
+    images: [OG_IMAGE],
   },
 }
 
