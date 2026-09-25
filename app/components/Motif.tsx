@@ -71,6 +71,14 @@ export function TheFind({
  *
  * Used beside a count. The coral ring is placed inside the first 540px so it
  * is visible on a phone as well as a desktop.
+ *
+ * Both coordinates must land on the pattern grid, whose ring centres fall at
+ * 14, 42, 70 and so on. An earlier version put the coral at y=28, which is
+ * exactly halfway between two rows: it read as a blob sitting between the
+ * rings rather than as one of them, which is the whole point of the motif.
+ *
+ * Not currently placed anywhere. It stays because the guidelines define it as
+ * one of the four expressions, and it is correct now.
  */
 export function FindStrip({ tone = 'ink', className = '' }: { tone?: 'ink' | 'ivory'; className?: string }) {
   const id = `find-strip-${tone}`
@@ -83,7 +91,7 @@ export function FindStrip({ tone = 'ink', className = '' }: { tone?: 'ink' | 'iv
         </pattern>
       </defs>
       <rect width="100%" height="100%" fill={`url(#${id})`} />
-      <circle cx="294" cy="28" r="7.8" fill="var(--accent)" />
+      <circle cx="294" cy="14" r="7.8" fill="var(--accent)" />
     </svg>
   )
 }

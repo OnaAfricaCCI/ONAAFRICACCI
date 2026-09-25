@@ -1,7 +1,7 @@
 import Link from 'next/link'
 import EmailCapture from '@/app/components/EmailCapture'
 import FeaturedCarousel, { type FeaturedGrant } from '@/app/components/FeaturedCarousel'
-import { Aperture, FindStrip, TheFind } from '@/app/components/Motif'
+import { Aperture, TheFind } from '@/app/components/Motif'
 import { supabase } from '@/lib/supabase'
 import { daysUntil, deadlineLabel } from '@/lib/amount'
 
@@ -39,11 +39,8 @@ function shuffle<T>(items: T[]): T[] {
  * Only grants whose application link has been verified as working qualify, so
  * a visitor is never sent to a dead page. "Live" means the deadline has not
  * passed, the same rule /grants uses to hide closed calls.
- *
- * Returns the count alongside the cards so the page can state how many
- * opportunities are tracked without running a second query.
  */
-async function featured(): Promise<{ grants: FeaturedGrant[]; liveCount: number }> {
+async function featured(): Promise<FeaturedGrant[]> {
   const today = new Date().toISOString().slice(0, 10)
 
   const { data, error } = await supabase
@@ -60,11 +57,11 @@ async function featured(): Promise<{ grants: FeaturedGrant[]; liveCount: number 
   // a design choice. Now the reason is in the logs where it can be found.
   if (error) {
     console.error('featured grants query failed:', error.message)
-    return { grants: [], liveCount: 0 }
+    return []
   }
   if (!data || data.length === 0) {
     console.warn('featured grants: no live, link-checked grants available')
-    return { grants: [], liveCount: 0 }
+    return []
   }
 
   const rows = data as Row[]
@@ -85,7 +82,7 @@ async function featured(): Promise<{ grants: FeaturedGrant[]; liveCount: number 
   const datedIds = new Set(dated.map((r) => r.id))
   const rest = shuffle(linked.filter((r) => !datedIds.has(r.id)))
 
-  const grants = [...dated, ...rest]
+  return [...dated, ...rest]
     .slice(0, FEATURED_COUNT)
     .map((r) => {
       const days = daysUntil(r.deadline)
@@ -103,12 +100,10 @@ async function featured(): Promise<{ grants: FeaturedGrant[]; liveCount: number 
         href: r.application_link!.trim(),
       }
     })
-
-  return { grants, liveCount: rows.length }
 }
 
 export default async function Home() {
-  const { grants, liveCount } = await featured()
+  const grants = await featured()
 
   return (
     <main>
@@ -152,23 +147,6 @@ export default async function Home() {
           />
         </div>
       </section>
-
-      {/* ---- The Find strip: the count, stated plainly. ---- */}
-      {liveCount > 0 && (
-        <section className="border-b border-[var(--ink)]">
-          <div className="mx-auto grid max-w-6xl grid-cols-[auto_minmax(0,1fr)] items-center gap-8 px-5 py-7">
-            <div className="flex flex-col gap-1">
-              <span className="font-[family-name:var(--font-display)] text-[44px] leading-none">
-                {liveCount}
-              </span>
-              <span className="label text-[var(--sage-deep)]">
-                Open opportunities tracked
-              </span>
-            </div>
-            <FindStrip className="hidden h-14 w-full sm:block" />
-          </div>
-        </section>
-      )}
 
       <FeaturedCarousel grants={grants} />
 
