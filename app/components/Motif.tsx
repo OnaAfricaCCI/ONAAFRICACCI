@@ -120,6 +120,32 @@ export function Sightline({
 }
 
 /**
+ * Sightline as a section rule.
+ *
+ * The guidelines name section dividers as one of Sightline's jobs, so a
+ * masthead can end on the eye rather than on a plain border. No viewBox here:
+ * the line stretches to the container while the ring keeps its true size, which
+ * a viewBox would squash.
+ */
+export function SightlineRule({
+  className = '',
+  /** How far from the left the eye sits, in pixels. */
+  at = 240,
+}: {
+  className?: string
+  at?: number
+}) {
+  return (
+    <svg className={className} height="28" width="100%" aria-hidden="true" focusable="false">
+      <line x1="0" y1="14" x2="100%" y2="14" stroke="var(--border-md)" strokeWidth="2" />
+      <line x1="0" y1="14" x2={at} y2="14" stroke="var(--ink)" strokeWidth="5" />
+      <circle cx={at} cy="14" r="9.8" fill="none" stroke="var(--ink)" strokeWidth="2.4" />
+      <circle cx={at} cy="14" r="8.6" fill="var(--accent)" />
+    </svg>
+  )
+}
+
+/**
  * Aperture — the campaign expression.
  *
  * The ring enlarged past the page edge. Used on sage or ink as a bold crop of

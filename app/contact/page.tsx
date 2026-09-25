@@ -3,6 +3,7 @@
 import Link from 'next/link'
 import { useState } from 'react'
 import { track } from '@/lib/analytics'
+import { TheFind } from '@/app/components/Motif'
 
 const inputClass =
   'control-h w-full border-2 border-[var(--border-md)] bg-[var(--bg)] px-[14px] text-sm ' +
@@ -37,8 +38,9 @@ export default function ContactPage() {
 
   return (
     <main className="mx-auto max-w-6xl px-5">
-      <section className="border-b border-[var(--line)] py-12 sm:py-16">
-        <p className="text-[11px] font-bold uppercase tracking-[0.12em] text-[var(--ink-2)]">
+      <section className="grid items-center gap-8 border-b border-[var(--line)] py-12 sm:py-16 lg:grid-cols-[minmax(0,1fr)_auto]">
+        <div>
+        <p className="label text-[var(--sage-deep)]">
           Contact
         </p>
         <h1 className="mt-3 max-w-3xl font-[family-name:var(--font-display)] text-[38px] leading-[1.05] sm:text-[56px]">
@@ -55,6 +57,13 @@ export default function ContactPage() {
           </a>
           .
         </p>
+        </div>
+        <TheFind
+          cols={4}
+          rows={4}
+          coral={{ col: 1, row: 2 }}
+          className="hidden h-[112px] w-[112px] justify-self-end lg:block"
+        />
       </section>
 
       <section className="grid gap-px border border-[var(--line)] bg-[var(--line)] my-12 lg:grid-cols-2">

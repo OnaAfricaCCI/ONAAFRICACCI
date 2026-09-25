@@ -5,6 +5,7 @@ import { useEffect, useMemo, useState } from 'react'
 import { supabase } from '@/lib/supabase'
 import { formatDate, videoThumb } from '@/lib/media'
 import type { Post, PostType } from '@/lib/types'
+import { TheFind } from '@/app/components/Motif'
 
 const TYPE_LABEL: Record<PostType, string> = {
   article: 'Read',
@@ -146,8 +147,9 @@ export default function BlogPage() {
 
   return (
     <main className="mx-auto max-w-6xl px-5">
-      <section className="border-b border-[var(--line)] py-12 sm:py-16">
-        <p className="text-[11px] font-bold uppercase tracking-[0.12em] text-[var(--ink-2)]">
+      <section className="grid items-center gap-8 border-b border-[var(--line)] py-12 sm:py-16 lg:grid-cols-[minmax(0,1fr)_auto]">
+        <div>
+        <p className="label text-[var(--sage-deep)]">
           The blog
         </p>
         <h1 className="mt-3 max-w-3xl font-[family-name:var(--font-display)] text-[38px] leading-[1.05] sm:text-[56px]">
@@ -157,6 +159,13 @@ export default function BlogPage() {
           Stories, updates and conversations from across Africa&rsquo;s cultural and
           creative industries.
         </p>
+        </div>
+        <TheFind
+          cols={5}
+          rows={3}
+          coral={{ col: 3, row: 1 }}
+          className="hidden h-[84px] w-[140px] justify-self-end lg:block"
+        />
       </section>
 
       {/* Type tabs */}

@@ -1,5 +1,6 @@
 import Link from 'next/link'
 import type { Metadata } from 'next'
+import { Aperture } from '@/app/components/Motif'
 
 export const metadata: Metadata = {
   title: 'About',
@@ -77,6 +78,16 @@ export default function AboutPage() {
           funding visible to the people who should have it.
         </p>
       </section>
+
+      {/* Aperture, on its own. The page explains that Ona means "see", so the
+          eye enlarged past the edge belongs here more than anywhere. Nothing
+          sits over it: the motif and the words take turns. */}
+      <div
+        aria-hidden="true"
+        className="-mx-5 h-[140px] overflow-hidden bg-[var(--sage-deep)] sm:h-[180px]"
+      >
+        <Aperture className="h-full w-full" />
+      </div>
 
       {/* The problem */}
       <section className="border-b border-[var(--line)] py-12">

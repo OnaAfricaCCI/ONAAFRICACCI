@@ -6,6 +6,7 @@ import { supabase } from '@/lib/supabase'
 import { parseAmount } from '@/lib/amount'
 import { isPublishableGrant } from '@/lib/quality'
 import { track } from '@/lib/analytics'
+import { SightlineRule } from '@/app/components/Motif'
 import {
   SCOPE_GROUP_LABELS,
   SCOPE_OPTIONS,
@@ -301,7 +302,7 @@ export default function GrantsPage() {
   return (
     <main className="mx-auto max-w-6xl px-5">
       {/* Masthead */}
-      <section className="border-b border-[var(--line)] py-12 sm:py-16">
+      <section className="pt-12 sm:pt-16">
         <p className="text-[11px] font-bold uppercase tracking-[0.12em] text-[var(--ink-2)]">
           The grants database
         </p>
@@ -313,6 +314,9 @@ export default function GrantsPage() {
           check each one and keep it current, so your time goes into making the work,
           not chasing the money.
         </p>
+        {/* Sightline as the section rule: the database is a record of dates,
+            so the divider is the one that measures time. */}
+        <SightlineRule className="mt-10 block w-full" at={240} />
       </section>
 
       {/* Filter bar */}
