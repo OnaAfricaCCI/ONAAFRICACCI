@@ -1,4 +1,5 @@
 import type { ReactNode } from 'react'
+import BlogFigure from './BlogFigures'
 
 /**
  * Renders a post body.
@@ -17,6 +18,7 @@ import type { ReactNode } from 'react'
  *   - item                a list
  *   1. item               a numbered list
  *   **bold**              emphasis, inline
+ *   ::: capital-stack     a designed figure, from the registry in BlogFigures
  *
  * Anything else is a paragraph. Nothing here interprets HTML, so a post can
  * never inject markup into the page.
@@ -42,6 +44,12 @@ export default function Prose({ body }: { body: string }) {
     <div className="mt-10 flex flex-col gap-6 text-[17px] leading-relaxed text-[var(--ink-2)]">
       {blocks.map((block, i) => {
         const lines = block.split('\n').map((l) => l.trim()).filter(Boolean)
+
+        // A figure on its own line. Prose does not know what any of them look
+        // like; it only knows to hand the name over.
+        if (block.startsWith('::: ')) {
+          return <BlogFigure key={i} name={block.slice(4).trim()} />
+        }
 
         if (block.startsWith('### ')) {
           return (
