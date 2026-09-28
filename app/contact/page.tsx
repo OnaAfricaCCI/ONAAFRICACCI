@@ -4,6 +4,7 @@ import Link from 'next/link'
 import { useState } from 'react'
 import { track } from '@/lib/analytics'
 import { TheFind } from '@/app/components/Motif'
+import SocialLinks from '@/app/components/SocialLinks'
 
 const inputClass =
   'control-h w-full border-2 border-[var(--border-md)] bg-[var(--bg)] px-[14px] text-sm ' +
@@ -57,6 +58,10 @@ export default function ContactPage() {
           </a>
           .
         </p>
+        <div className="mt-6">
+          <p className="label text-[var(--sage-deep)]">Follow Ona Funds</p>
+          <SocialLinks className="mt-3" />
+        </div>
         </div>
         <TheFind
           cols={4}

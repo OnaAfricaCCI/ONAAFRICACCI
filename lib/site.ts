@@ -24,3 +24,18 @@ export const SITE_DEFINITION =
  * shared links came to show the Vercel logo.
  */
 export const OG_IMAGE = '/opengraph-image'
+
+/**
+ * Ona's own profiles.
+ *
+ * One place, used by the footer, the contact page and every blog post. An
+ * empty string hides that icon rather than sending someone to a platform's
+ * homepage, which is what a wrong link does.
+ *
+ * Both are stored as https. LinkedIn accepts http and redirects, and a
+ * redirect on every click is a hop nobody needs.
+ */
+export const SOCIAL = {
+  instagram: 'https://www.instagram.com/ona.funds/',
+  linkedin: 'https://www.linkedin.com/company/ona-funds',
+} as const

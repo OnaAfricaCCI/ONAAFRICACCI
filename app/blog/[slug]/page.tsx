@@ -7,6 +7,7 @@ import { supabase } from '@/lib/supabase'
 import { embedUrl, formatDate } from '@/lib/media'
 import type { Post } from '@/lib/types'
 import Prose from '@/app/components/Prose'
+import SocialLinks from '@/app/components/SocialLinks'
 
 export const dynamic = 'force-dynamic'
 
@@ -135,18 +136,26 @@ export default async function PostPage({
 
       {post.body && <Prose body={post.body} />}
 
-      {(post.tags ?? []).length > 0 && (
-        <div className="mt-10 flex flex-wrap gap-2 border-t border-[var(--line)] pt-6">
-          {post.tags.map((t) => (
-            <span
-              key={t}
-              className="bg-[var(--ochre-soft)] px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.12em]"
-            >
-              {t}
-            </span>
-          ))}
+      {/* Tags, then somewhere to go next. Bordered pills rather than filled
+          ones, per the blog kit. */}
+      <div className="mt-10 flex flex-wrap items-center justify-between gap-6 border-t-2 border-[var(--ink)] pt-6">
+        {(post.tags ?? []).length > 0 && (
+          <div className="flex flex-wrap gap-2">
+            {post.tags.map((t) => (
+              <span
+                key={t}
+                className="border border-[var(--ink)] px-2.5 py-1.5 text-[12px] font-bold"
+              >
+                {t}
+              </span>
+            ))}
+          </div>
+        )}
+        <div className="flex flex-wrap items-center gap-4">
+          <span className="label text-[var(--sage-deep)]">Follow</span>
+          <SocialLinks />
         </div>
-      )}
+      </div>
     </main>
   )
 }
