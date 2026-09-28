@@ -3,6 +3,7 @@ import { notFound } from 'next/navigation'
 import { supabase } from '@/lib/supabase'
 import { embedUrl, formatDate } from '@/lib/media'
 import type { Post } from '@/lib/types'
+import Prose from '@/app/components/Prose'
 
 export const dynamic = 'force-dynamic'
 
@@ -80,18 +81,7 @@ export default async function PostPage({
         />
       ) : null}
 
-      {/* Body — blank-line separated paragraphs */}
-      {post.body && (
-        <div className="mt-10 space-y-5 text-[17px] leading-relaxed text-[var(--ink-2)]">
-          {post.body
-            .split(/\n{2,}/)
-            .map((para) => para.trim())
-            .filter(Boolean)
-            .map((para, i) => (
-              <p key={i}>{para}</p>
-            ))}
-        </div>
-      )}
+      {post.body && <Prose body={post.body} />}
 
       {(post.tags ?? []).length > 0 && (
         <div className="mt-10 flex flex-wrap gap-2 border-t border-[var(--line)] pt-6">
