@@ -20,7 +20,7 @@
   --ink: #121412;            /* Type, the logo ring, dark sections */
   --bg: #f6f4ec;             /* Ivory. Warmer than white. */
   --accent: #ff6a4d;         /* Ona Coral. The eye. 24px and above, or on ink. */
-  --accent-deep: #d6432a;    /* Coral for text under 24px on ivory */
+  --accent-deep: #c23a22;    /* Coral for text under 24px on ivory (blog kit v1) */
   --accent-soft: #ffc9b8;    /* Blush. Badges, hover tint. */
   --accent-active: #d6432a;
 
@@ -279,10 +279,14 @@ a:hover {
 
 .pull-quote {
   border-left: 4px solid var(--accent);
-  padding-left: 1.25rem;
-  font-size: 1.25rem;
-  line-height: 1.65;
-  font-style: italic;
+  padding: 1.75rem 0 1.75rem 1.5rem;
+  font-family: var(--font-display), sans-serif;
+  font-weight: 800;
+  letter-spacing: -0.035em;
+  font-size: clamp(26px, 3.4vw, 38px);
+  line-height: 1.1;
+  color: var(--ink);
+  text-wrap: balance;
 }
 
 @keyframes rise-in {

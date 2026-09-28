@@ -37,6 +37,9 @@ function inline(text: string): ReactNode[] {
   )
 }
 
+/** The reading column. Figures are free to run wider. */
+const COL = 'max-w-[700px]'
+
 export default function Prose({ body }: { body: string }) {
   const blocks = body.split(/\n{2,}/).map((b) => b.trim()).filter(Boolean)
 
@@ -55,7 +58,7 @@ export default function Prose({ body }: { body: string }) {
           return (
             <h3
               key={i}
-              className="mt-2 font-[family-name:var(--font-display)] text-[22px] leading-[1.25] text-[var(--ink)]"
+              className={`${COL} mt-2 font-[family-name:var(--font-display)] text-[22px] leading-[1.25] text-[var(--ink)]`}
             >
               {block.slice(4)}
             </h3>
@@ -66,7 +69,7 @@ export default function Prose({ body }: { body: string }) {
           return (
             <h2
               key={i}
-              className="mt-6 font-[family-name:var(--font-display)] text-[28px] leading-[1.15] text-[var(--ink)] sm:text-[32px]"
+              className={`${COL} mt-6 font-[family-name:var(--font-display)] text-[28px] leading-[1.15] text-[var(--ink)] sm:text-[32px]`}
             >
               {block.slice(3)}
             </h2>
@@ -77,7 +80,7 @@ export default function Prose({ body }: { body: string }) {
         // figures that deserve to stand away from the prose.
         if (block.startsWith('> ')) {
           return (
-            <p key={i} className="pull-quote text-[var(--ink)]">
+            <p key={i} className={`${COL} pull-quote`}>
               {inline(lines.map((l) => l.replace(/^>\s?/, '')).join(' '))}
             </p>
           )
@@ -85,7 +88,7 @@ export default function Prose({ body }: { body: string }) {
 
         if (lines.every((l) => /^\d+\.\s/.test(l))) {
           return (
-            <ol key={i} className="flex list-decimal flex-col gap-2.5 pl-6 marker:font-bold marker:text-[var(--accent-deep)]">
+            <ol key={i} className={`${COL} flex list-decimal flex-col gap-2.5 pl-6 marker:font-bold marker:text-[var(--accent-deep)]`}>
               {lines.map((l, j) => (
                 <li key={j}>{inline(l.replace(/^\d+\.\s/, ''))}</li>
               ))}
@@ -95,7 +98,7 @@ export default function Prose({ body }: { body: string }) {
 
         if (lines.every((l) => l.startsWith('- '))) {
           return (
-            <ul key={i} className="flex list-disc flex-col gap-2.5 pl-6 marker:text-[var(--accent-deep)]">
+            <ul key={i} className={`${COL} flex list-disc flex-col gap-2.5 pl-6 marker:text-[var(--accent-deep)]`}>
               {lines.map((l, j) => (
                 <li key={j}>{inline(l.slice(2))}</li>
               ))}
@@ -103,7 +106,7 @@ export default function Prose({ body }: { body: string }) {
           )
         }
 
-        return <p key={i}>{inline(block)}</p>
+        return <p key={i} className={COL}>{inline(block)}</p>
       })}
     </div>
   )

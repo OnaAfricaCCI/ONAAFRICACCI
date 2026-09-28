@@ -29,7 +29,7 @@ export default async function PostPage({
   const date = formatDate(post.published_at ?? post.created_at)
 
   return (
-    <main className="mx-auto max-w-3xl px-5 py-12">
+    <main className="mx-auto max-w-[960px] px-5 py-12">
       <Link
         href="/blog"
         className="text-xs font-semibold uppercase tracking-[0.15em] text-[var(--terracotta)] underline-offset-4 hover:text-[var(--accent)] hover:underline"
@@ -57,11 +57,19 @@ export default async function PostPage({
           {post.title}
         </h1>
         {post.excerpt && (
-          <p className="mt-4 text-lg leading-relaxed text-[var(--ink-soft)]">{post.excerpt}</p>
+          <p className="mt-4 max-w-[700px] text-lg leading-relaxed text-[var(--ink-soft)]">{post.excerpt}</p>
         )}
       </header>
 
-      {/* Media */}
+      {/*
+        Media. Video only.
+
+        cover_url deliberately is not rendered here. It holds the post's
+        link-preview image, which belongs in the meta tags and nowhere else:
+        showing it in the body repeated the title underneath itself and put a
+        faint chart behind the opening paragraphs. The post header figure does
+        this job instead.
+      */}
       {embed ? (
         <div className="mt-10 aspect-video w-full border-2 border-[var(--ink)] bg-black">
           <iframe
@@ -72,13 +80,6 @@ export default async function PostPage({
             className="h-full w-full"
           />
         </div>
-      ) : post.cover_url ? (
-        // eslint-disable-next-line @next/next/no-img-element
-        <img
-          src={post.cover_url}
-          alt=""
-          className="mt-10 w-full border-2 border-[var(--ink)] object-cover"
-        />
       ) : null}
 
       {post.body && <Prose body={post.body} />}
