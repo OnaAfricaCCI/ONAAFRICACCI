@@ -1,3 +1,6 @@
+import { existsSync } from 'node:fs'
+import { join } from 'node:path'
+import type { Metadata } from 'next'
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import { supabase } from '@/lib/supabase'
@@ -6,6 +9,54 @@ import type { Post } from '@/lib/types'
 import Prose from '@/app/components/Prose'
 
 export const dynamic = 'force-dynamic'
+
+/**
+ * The share card for one post.
+ *
+ * A post with its own artwork uses it. Drop a 1200x630 file at
+ * public/blog/<slug>/og-1200x630.png and it is picked up: 1200x630 is what
+ * Open Graph asks for, and it is the shape WhatsApp, LinkedIn and Facebook
+ * crop to. A post without artwork falls back to the generated card in
+ * opengraph-image.tsx, which sets the post's title in Outfit.
+ */
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ slug: string }>
+}): Promise<Metadata> {
+  const { slug } = await params
+  const { data } = await supabase
+    .from('posts')
+    .select('title, excerpt')
+    .eq('slug', slug)
+    .eq('published', true)
+    .maybeSingle()
+
+  const post = data as { title?: string; excerpt?: string } | null
+  if (!post) return {}
+
+  const art = `/blog/${slug}/og-1200x630.png`
+  const hasArt = existsSync(join(process.cwd(), 'public', 'blog', slug, 'og-1200x630.png'))
+
+  return {
+    title: post.title,
+    description: post.excerpt ?? undefined,
+    alternates: { canonical: `/blog/${slug}` },
+    openGraph: {
+      title: post.title,
+      description: post.excerpt ?? undefined,
+      url: `/blog/${slug}`,
+      type: 'article',
+      ...(hasArt ? { images: [{ url: art, width: 1200, height: 630 }] } : {}),
+    },
+    twitter: {
+      card: 'summary_large_image',
+      title: post.title,
+      description: post.excerpt ?? undefined,
+      ...(hasArt ? { images: [art] } : {}),
+    },
+  }
+}
 
 export default async function PostPage({
   params,

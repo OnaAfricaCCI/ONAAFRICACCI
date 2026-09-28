@@ -96,7 +96,7 @@ function Thumb({ post }: { post: Post }) {
         src={src}
         alt=""
         onError={() => setFailed(true)}
-        className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-[1.03]"
+        className="h-full w-full object-cover object-left transition-transform duration-500 group-hover:scale-[1.03]"
       />
       {post.post_type === 'video' && <PlayMark />}
     </div>
