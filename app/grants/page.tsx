@@ -10,6 +10,7 @@ import { FindStrip } from '@/app/components/Motif'
 import {
   SCOPE_GROUP_LABELS,
   SCOPE_OPTIONS,
+  eligibilityLabels,
   matchesScope,
   scopeRank,
   scopesFor,
@@ -36,6 +37,8 @@ type Opportunity = {
    */
   link_state: string | null
   link_checked_at: string | null
+  /** Structured, human-reviewed: 'individual' | 'organisation' | 'either' | 'partnership'. Null until enriched. */
+  eligible_who: string | null
 }
 
 /**
@@ -47,7 +50,7 @@ type Opportunity = {
  */
 const COLUMNS =
   'id,name,funder,deadline,amount,eligible_countries,cci_sector,funding_type,' +
-  'deadline_type,application_link,description,created_at,link_state,link_checked_at'
+  'deadline_type,application_link,description,created_at,link_state,link_checked_at,eligible_who'
 
 /**
  * A ceiling on what one request can pull back.
@@ -100,6 +103,8 @@ function formatDeadline(deadline: string | null, deadlineType: string | null): s
   if (isNaN(d.getTime())) return deadline
   return d.toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })
 }
+
+const WHO_LABEL: Record<string, string> = {"individual": "Individuals", "organisation": "Registered organisations", "either": "Individuals or organisations", "partnership": "Applicants with a partner"}
 
 function formatCheckedAt(iso: string): string {
   const d = new Date(iso)
@@ -548,12 +553,21 @@ export default function GrantsPage() {
                       </p>
                     )}
 
-                    {(o.eligible_countries ?? []).length > 0 && (
-                      <p className="mt-3 text-xs uppercase tracking-[0.12em] text-[var(--ink-soft)]">
-                        <span className="font-semibold">Eligible: </span>
-                        {(o.eligible_countries ?? []).slice(0, 6).join(' · ')}
-                        {(o.eligible_countries ?? []).length > 6 &&
-                          ` · +${(o.eligible_countries ?? []).length - 6} more`}
+                    {/*
+                      Who can apply. The structured line (individual vs
+                      organisation) shows first when a human has reviewed it;
+                      the geographic line is the funder's own answer, cleaned
+                      for display but never rewritten in the database.
+                    */}
+                    {(o.eligible_who || (o.eligible_countries ?? []).length > 0) && (
+                      <p className="mt-3 text-xs uppercase leading-relaxed tracking-[0.12em] text-[var(--ink-soft)]">
+                        <span className="font-semibold">Open to: </span>
+                        {[
+                          o.eligible_who ? WHO_LABEL[o.eligible_who] ?? null : null,
+                          ...eligibilityLabels(o.eligible_countries).slice(0, 5),
+                        ]
+                          .filter(Boolean)
+                          .join(' · ')}
                       </p>
                     )}
                   </div>

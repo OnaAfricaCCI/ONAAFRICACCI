@@ -280,3 +280,64 @@ export function scopeRank(selected: string, scopes: Set<string>): number {
 
   return 2
 }
+
+/**
+ * Clean, human labels for a grant's geographic eligibility, for the card.
+ *
+ * The stored `eligible_countries` values are the funders' own answers to a
+ * spreadsheet question, "is Africa eligible?". Shown raw under a label like
+ * "Eligible:", a bare "Yes" is meaningless and "Yes — global" reads as broken.
+ *
+ * This does not change what is stored. It reads the same words and presents
+ * them the way the filter already interprets them, so nothing is invented: a
+ * bare "Yes" meant "yes, African applicants can apply", so that is what it now
+ * says, and "Yes — South Africa" is simply South Africa.
+ *
+ * This answers WHERE an applicant can be based. It does not claim to say WHO
+ * (an individual, a company); that is the structured field being added
+ * separately, and the card shows it alongside these when present.
+ */
+const LABEL_MAP: [RegExp, string][] = [
+  [/^global(?: eligibility)?$/i, 'Open globally'],
+  [/^global,?\s*(.*)$/i, 'Open globally'],
+  [/^africa[- ]specific(?: eligibility)?$/i, 'Across Africa'],
+  [/^africa$/i, 'Across Africa'],
+  [/^(many|selected|specified)\s+african\s+(countries|markets|states)/i, 'Selected African countries'],
+  [/^african\s+(countries|partners|artists|and diaspora).*/i, 'African applicants'],
+  [/^continent and diaspora.*/i, 'Africa and diaspora'],
+  [/^africa\/?\s*diaspora.*/i, 'Africa and diaspora'],
+]
+
+export function eligibilityLabels(raw: string[] | null | undefined): string[] {
+  if (!raw?.length) return []
+  const out: string[] = []
+
+  for (const original of raw) {
+    let v = original.trim()
+    if (!v) continue
+
+    // A bare "Yes" answered the "is Africa eligible?" column: it means African
+    // applicants can apply, nothing narrower.
+    if (/^yes\.?$/i.test(v)) {
+      out.push('Open to African applicants')
+      continue
+    }
+
+    // Strip a leading "Yes —", "Yes,", "Yes " that prefixes the real answer.
+    v = v.replace(/^yes\s*[—,-]\s*/i, '').replace(/^yes\s+/i, '').trim()
+    if (!v) continue
+
+    const mapped = LABEL_MAP.find(([re]) => re.test(v))
+    if (mapped) {
+      out.push(mapped[1])
+      continue
+    }
+
+    // Otherwise it is already a place or a readable phrase. Capitalise the
+    // first letter and keep the funder's own wording.
+    out.push(v.charAt(0).toUpperCase() + v.slice(1))
+  }
+
+  // De-duplicate, preserving order.
+  return [...new Set(out)]
+}
