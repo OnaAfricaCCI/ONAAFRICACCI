@@ -19,6 +19,7 @@ type Row = {
   eligible_countries: string[] | null
   application_link: string | null
   link_checked_at: string | null
+  featured: boolean | null
 }
 
 const FEATURED_COUNT = 6
@@ -34,19 +35,29 @@ function shuffle<T>(items: T[]): T[] {
 }
 
 /**
- * Featured strip: a random handful of live grants, re-drawn on every request.
+ * "Grants worth a look" on the homepage.
  *
- * Only grants whose application link has been verified as working qualify, so
- * a visitor is never sent to a dead page. "Live" means the deadline has not
- * passed, the same rule /grants uses to hide closed calls.
+ * Hand-picked, not random. An editor marks the strongest opportunities with
+ * `featured = true` in the database (a checkbox in the Supabase table editor),
+ * and the strip shows six of them, reshuffled on every visit, so a small
+ * curated pool of a dozen stays fresh without ever surfacing a trade fair or a
+ * $1,000 microgrant in the shop window.
+ *
+ * Two safeguards still apply, the same as the rest of the site: only grants
+ * whose link was verified working, and only ones that are still open. If a
+ * featured grant closes or its link dies it drops out automatically. Should the
+ * live featured pool fall below MIN_FEATURED, the strip tops up from the
+ * general pool so the homepage never looks empty, and that top-up is logged so
+ * the shortfall is noticed.
  */
+const MIN_FEATURED = 4
 async function featured(): Promise<FeaturedGrant[]> {
   const today = new Date().toISOString().slice(0, 10)
 
   const { data, error } = await supabase
     .from('opportunities')
     .select(
-      'id,name,funder,amount,deadline,deadline_type,cci_sector,funding_type,eligible_countries,application_link,link_checked_at',
+      'id,name,funder,amount,deadline,deadline_type,cci_sector,funding_type,eligible_countries,application_link,link_checked_at,featured',
     )
     .or(`deadline.is.null,deadline.gte.${today}`)
     .eq('link_ok', true)
@@ -67,24 +78,22 @@ async function featured(): Promise<FeaturedGrant[]> {
   const rows = data as Row[]
   const linked = rows.filter((r) => (r.application_link ?? '').trim() !== '')
 
-  /*
-   * Dated calls first, then a random draw.
-   *
-   * Most listings carry no fixed deadline, so a purely random six almost never
-   * included one, and the Sightline had nothing to mark. Leading with the
-   * soonest dated calls fixes that and surfaces the genuinely urgent ones,
-   * while the random tail keeps the strip different on every visit.
-   */
-  const dated = linked
-    .filter((r) => r.deadline)
-    .sort((a, b) => (a.deadline ?? '').localeCompare(b.deadline ?? ''))
-    .slice(0, 2)
-  const datedIds = new Set(dated.map((r) => r.id))
-  const rest = shuffle(linked.filter((r) => !datedIds.has(r.id)))
+  // Curated first. Six of the featured pool, reshuffled each visit.
+  const chosen = shuffle(linked.filter((r) => r.featured)).slice(0, FEATURED_COUNT)
 
-  return [...dated, ...rest]
-    .slice(0, FEATURED_COUNT)
-    .map((r) => {
+  // Top up only if the curated pool has thinned. This should be rare; when it
+  // happens it means featured grants have closed or lost their links faster
+  // than they have been replaced, which is worth seeing in the logs.
+  if (chosen.length < MIN_FEATURED) {
+    console.warn(
+      `featured grants: only ${chosen.length} live featured; topping up from the general pool`,
+    )
+    const chosenIds = new Set(chosen.map((r) => r.id))
+    const filler = shuffle(linked.filter((r) => !chosenIds.has(r.id)))
+    chosen.push(...filler.slice(0, FEATURED_COUNT - chosen.length))
+  }
+
+  return chosen.map((r) => {
       const days = daysUntil(r.deadline)
       return {
         id: r.id,
