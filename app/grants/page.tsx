@@ -39,6 +39,9 @@ type Opportunity = {
   link_checked_at: string | null
   /** Structured, human-reviewed: 'individual' | 'organisation' | 'either' | 'partnership'. Null until enriched. */
   eligible_who: string | null
+  eligible_conditions: string | null
+  /** Only when true does the structured eligibility above reach a visitor. */
+  eligibility_reviewed: boolean | null
 }
 
 /**
@@ -50,7 +53,8 @@ type Opportunity = {
  */
 const COLUMNS =
   'id,name,funder,deadline,amount,eligible_countries,cci_sector,funding_type,' +
-  'deadline_type,application_link,description,created_at,link_state,link_checked_at,eligible_who'
+  'deadline_type,application_link,description,created_at,link_state,link_checked_at,' +
+  'eligible_who,eligible_conditions,eligibility_reviewed'
 
 /**
  * A ceiling on what one request can pull back.
@@ -559,17 +563,26 @@ export default function GrantsPage() {
                       the geographic line is the funder's own answer, cleaned
                       for display but never rewritten in the database.
                     */}
-                    {(o.eligible_who || (o.eligible_countries ?? []).length > 0) && (
-                      <p className="mt-3 text-xs uppercase leading-relaxed tracking-[0.12em] text-[var(--ink-soft)]">
-                        <span className="font-semibold">Open to: </span>
-                        {[
-                          o.eligible_who ? WHO_LABEL[o.eligible_who] ?? null : null,
-                          ...eligibilityLabels(o.eligible_countries).slice(0, 5),
-                        ]
-                          .filter(Boolean)
-                          .join(' · ')}
-                      </p>
-                    )}
+                    {(() => {
+                      // Structured "who" only when a human has approved it.
+                      const who =
+                        o.eligibility_reviewed && o.eligible_who
+                          ? WHO_LABEL[o.eligible_who] ?? null
+                          : null
+                      const parts = [who, ...eligibilityLabels(o.eligible_countries).slice(0, 5)].filter(
+                        Boolean,
+                      )
+                      if (parts.length === 0) return null
+                      return (
+                        <p className="mt-3 text-xs uppercase leading-relaxed tracking-[0.12em] text-[var(--ink-soft)]">
+                          <span className="font-semibold">Open to: </span>
+                          {parts.join(' · ')}
+                          {o.eligibility_reviewed && o.eligible_conditions ? (
+                            <span className="normal-case"> — {o.eligible_conditions}</span>
+                          ) : null}
+                        </p>
+                      )
+                    })()}
                   </div>
 
                   {/* Fact block */}
