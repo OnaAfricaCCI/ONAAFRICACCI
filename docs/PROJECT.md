@@ -19,7 +19,7 @@ Read this first. It is the context a new session needs; the code is the source o
 
 ## Data model (Supabase)
 
-- `opportunities` — grants. ~142 rows. Sources: `spreadsheet`, `consolidated`, `apify`. `amount` is free text (parse with `lib/amount.ts`). `link_state` (`ok`/`unverified`/`dead`), `link_fail_streak`, `link_ok`, `link_status`, `link_checked_at` set by check-links; the homepage only features `link_ok = true`, and `/grants` flags only `dead`. `institution_id` → funders.
+- `opportunities` — grants. ~142 rows. Sources: `spreadsheet`, `consolidated`, `apify`. `amount` is free text (parse with `lib/amount.ts`). `link_state` (`ok`/`unverified`/`dead`), `link_fail_streak`, `link_ok`, `link_status`, `link_checked_at` set by check-links; the homepage only features `link_ok = true`, and `/grants` flags only `dead`. `featured boolean` — curates the homepage strip (see rules). `institution_id` → funders.
 - `funders` — **the single institutions layer** (~140). `roles` = `{funder}`, `{builder}` or both. `slug` for URLs. Profile fields: `what_they_fund`, `how_to_apply`, `deadline_notes`, `notable_grantees`, `grants_page_url`, `last_verified`, `source_url`, `institution_type`.
 - `builder_mechanisms` — the **Ecosystem layer** (45): investors, DFIs, corporate capital, government mechanisms. Derived filter fields: `economic_roles` (4 buckets: Capital & investment / Market access & trade / Skills & enterprise growth / Policy & industry infrastructure), `access_model` (Open to applications / By relationship or introduction / Programme-based). DB constraints enforce these vocabularies.
 - `link_candidates` — proposed replacements for dead links, awaiting human approval. Private (RLS, no public policy).
@@ -29,7 +29,8 @@ Read this first. It is the context a new session needs; the code is the source o
 ## Rules that must hold
 
 - **Never show a blank record.** `lib/quality.ts` — grants and institutions need name + description, mechanisms need name + what_it_provides. Applied in every query and page.
-- **Never feature a dead link.** Homepage carousel filters `link_ok = true`.
+- **Never feature a dead link.** The homepage "Grants worth a look" strip filters `link_ok = true`.
+- **The homepage strip is curated, not random.** It shows six of the grants flagged `featured = true`, reshuffled on each visit (`app/page.tsx` `featured()`). An editor ticks the `featured` box in the Supabase table editor to add or remove one — no deploy. Random draw once surfaced trade fairs and $1,000 microgrants beside the Nigeria Prize; curation fixed that. Safeguards: featured grants are still filtered to open + `link_ok`, so a closed or broken one drops out automatically; if the live featured pool falls below 4 the strip tops up from the general pool and logs the shortfall. ~12 flagged as of 29 Sept 2026.
 - **Blank stays blank.** Don't invent data. Descriptions are composed from source fields, not written.
 - **Grants end in "Apply"; Ecosystem records end in "Learn more" / "How to engage".** Never a fake Apply.
 - Two co-equal layers: Grants & Opportunities (applyable) and Ecosystem (structural). Same nav level, parallel copy.
