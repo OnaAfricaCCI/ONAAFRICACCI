@@ -45,3 +45,9 @@ supabase/.temp/
 
 # Generated content-check reports
 content-check-*.md
+
+# Local Claude Code config
+.claude/
+
+# Transient enrichment/staging queues (DB is authoritative)
+/scripts/funder_enrichment_queue.json

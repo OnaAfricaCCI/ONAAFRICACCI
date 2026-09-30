@@ -3,6 +3,7 @@ import { Outfit, Source_Sans_3 } from "next/font/google";
 import Link from "next/link";
 import Analytics from "./components/Analytics";
 import BackToTop from "./components/BackToTop";
+import NavMemory from "./components/NavMemory";
 import NavLinks from "./components/NavLinks";
 import { Logo, LogoSymbol } from "./components/Logo";
 import SocialLinks from "./components/SocialLinks";
@@ -163,6 +164,7 @@ export default function RootLayout({
         </footer>
 
         <BackToTop />
+        <NavMemory />
         <Analytics />
       </body>
     </html>

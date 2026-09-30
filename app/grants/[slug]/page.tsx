@@ -7,6 +7,8 @@ import { eligibilityLabels } from '@/lib/eligibility'
 import { slugify } from '@/lib/slug'
 import { SITE_URL, OG_IMAGE } from '@/lib/site'
 import TrackedLink from '@/app/components/TrackedLink'
+import BackLink from '@/app/components/BackLink'
+import GrantList, { type GrantListItem } from '@/app/components/GrantList'
 
 export const dynamic = 'force-dynamic'
 
@@ -29,7 +31,7 @@ export const dynamic = 'force-dynamic'
  */
 
 const COLUMNS =
-  'id,name,funder,funder_id,amount,deadline,deadline_type,cci_sector,funding_type,' +
+  'id,name,funder,funder_id,institution_id,amount,deadline,deadline_type,cci_sector,funding_type,' +
   'eligible_countries,eligible_who,eligible_conditions,eligibility_reviewed,' +
   'application_link,description,link_state,link_checked_at'
 
@@ -38,6 +40,7 @@ type Grant = {
   name: string
   funder: string | null
   funder_id: string | null
+  institution_id: string | null
   amount: string | null
   deadline: string | null
   deadline_type: string | null
@@ -60,8 +63,27 @@ const WHO_LABEL: Record<string, string> = {
   partnership: 'Applicants with a partner',
 }
 
-/** Find a publishable grant by the slug derived from its name. */
+/**
+ * Find a publishable grant by its slug.
+ *
+ * The fast path is the stored slug column — one indexed row. Older grants
+ * whose slug has not been backfilled yet, and any edge case, fall back to
+ * matching the slug derived from the name, so no URL breaks during the
+ * backfill. Both paths generate the identical URL, so a grant's address never
+ * changes as it crosses from one to the other.
+ */
 async function grantBySlug(slug: string): Promise<Grant | null> {
+  const direct = await supabase
+    .from('opportunities')
+    .select(COLUMNS)
+    .eq('slug', slug)
+    .not('description', 'is', null)
+    .maybeSingle()
+  if (direct.data) {
+    const g = direct.data as unknown as Grant
+    if (isPublishableGrant(g)) return g
+  }
+
   const { data } = await supabase.from('opportunities').select(COLUMNS).not('description', 'is', null)
   const rows = ((data as unknown as Grant[]) ?? []).filter(isPublishableGrant)
   return rows.find((g) => slugify(g.name) === slug) ?? null
@@ -72,6 +94,70 @@ function daysLeft(deadline: string | null): number | null {
   const d = new Date(deadline)
   if (isNaN(d.getTime())) return null
   return Math.ceil((d.getTime() - Date.now()) / 86_400_000)
+}
+
+/** A one-line description of the funder, and a link to their profile. */
+async function funderBlurb(
+  institutionId: string | null,
+): Promise<{ name: string; slug: string | null; description: string | null } | null> {
+  if (!institutionId) return null
+  const { data } = await supabase
+    .from('funders')
+    .select('name, slug, description')
+    .eq('id', institutionId)
+    .maybeSingle()
+  return (data as { name: string; slug: string | null; description: string | null }) ?? null
+}
+
+const RELATED_COLUMNS = 'id,name,slug,funder,institution_id,funding_type,cci_sector,deadline,deadline_type,eligible_countries,description,link_state'
+
+/**
+ * Other opportunities worth seeing from this page: the same funder's other
+ * calls, and open calls in the same sector or country. Only open, working,
+ * publishable grants — never a closed or dead one — and never this grant itself.
+ * Every row is a real grant already in the database; nothing is invented.
+ */
+async function relatedGrants(
+  g: Grant,
+): Promise<{ fromFunder: GrantListItem[]; related: GrantListItem[] }> {
+  const { data } = await supabase
+    .from('opportunities')
+    .select(RELATED_COLUMNS)
+    .not('description', 'is', null)
+    .neq('id', g.id)
+  type Row = GrantListItem & {
+    id: string
+    institution_id?: string | null
+    eligible_countries: string[] | null
+    description: string | null
+    link_state: string | null
+  }
+  const open = ((data as unknown as (Row & { institution_id?: string | null })[]) ?? [])
+    .filter((r) => isPublishableGrant(r as { name: string; description?: string | null }))
+    .filter((r) => r.link_state !== 'dead')
+    .filter((r) => {
+      const dl = daysLeft(r.deadline)
+      return dl === null || dl >= 0 // hide calls whose fixed deadline has passed
+    })
+
+  // Siblings share the funder profile (institution_id), even though their
+  // free-text funder name can differ ("Goethe-Institut" vs "Goethe-Institut /
+  // partners"). Match on the profile, not the name.
+  const sameFunder = (r: { institution_id?: string | null }) =>
+    g.institution_id != null && r.institution_id === g.institution_id
+  const fromFunder = open.filter(sameFunder).slice(0, 4)
+
+  const country = (g.eligible_countries ?? [])[0]
+  const related = open
+    .filter((r) => !sameFunder(r)) // not the same funder (those are shown above)
+    .filter(
+      (r) =>
+        (g.cci_sector && r.cci_sector === g.cci_sector) ||
+        (country && (r.eligible_countries ?? []).includes(country)),
+    )
+    .slice(0, 5)
+
+  return { fromFunder, related }
 }
 
 /** Closed (a fixed deadline has passed) or its link is dead: keep the page, hide it from search. */
@@ -130,6 +216,17 @@ export default async function GrantPage({ params }: { params: Promise<{ slug: st
     g.eligibility_reviewed && g.eligible_who ? WHO_LABEL[g.eligible_who] ?? null : null
   const openTo = [who, ...eligibilityLabels(g.eligible_countries).slice(0, 6)].filter(Boolean)
 
+  // Funder context and cross-links — all from grants already in the database.
+  const [funder, { fromFunder, related }] = await Promise.all([
+    funderBlurb(g.institution_id),
+    relatedGrants(g),
+  ])
+  const funderHref = funder?.slug
+    ? `/funders/${funder.slug}`
+    : g.funder_id
+      ? `/funders/${g.funder_id}`
+      : null
+
   const verified = g.link_checked_at
     ? new Date(g.link_checked_at).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })
     : null
@@ -152,12 +249,12 @@ export default async function GrantPage({ params }: { params: Promise<{ slug: st
     <main className="mx-auto max-w-3xl px-5 py-12">
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
 
-      <Link
+      <BackLink
         href="/grants"
         className="text-xs font-bold uppercase tracking-[0.15em] text-[var(--terracotta)] underline-offset-4 hover:text-[var(--accent)] hover:underline"
       >
         ← All grants
-      </Link>
+      </BackLink>
 
       {/* Kicker */}
       <div className="mt-8 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs font-bold uppercase tracking-[0.18em] text-[var(--ink-soft)]">
@@ -175,8 +272,8 @@ export default async function GrantPage({ params }: { params: Promise<{ slug: st
       </h1>
       {g.funder && (
         <p className="mt-3 text-lg text-[var(--ink-2)]">
-          {g.funder_id ? (
-            <Link href={`/funders/${g.funder_id}`} className="underline underline-offset-4 hover:text-[var(--accent)]">
+          {funderHref ? (
+            <Link href={funderHref} className="underline underline-offset-4 hover:text-[var(--accent)]">
               {g.funder}
             </Link>
           ) : (
@@ -195,7 +292,10 @@ export default async function GrantPage({ params }: { params: Promise<{ slug: st
       <dl className="mt-8 grid gap-px border border-[var(--ink)] bg-[var(--ink)] sm:grid-cols-2">
         {g.amount && (
           <div className="bg-[var(--bg)] p-5">
-            <dt className="text-[10px] font-bold uppercase tracking-[0.2em] text-[var(--ink-soft)]">Award</dt>
+            <dt className="text-[10px] font-bold uppercase tracking-[0.2em] text-[var(--ink-soft)]">
+              {/* A loan or investment is money to repay, not an award — never label it as one. */}
+              {g.funding_type === 'loan' || g.funding_type === 'investment' ? 'Financing' : 'Award'}
+            </dt>
             <dd className="mt-1 font-[family-name:var(--font-display)] text-xl leading-snug text-[var(--forest)]">
               {g.amount}
             </dd>
@@ -261,8 +361,54 @@ export default async function GrantPage({ params }: { params: Promise<{ slug: st
         </div>
       )}
 
+      {/* About the funder — the funder's own words, with a link to their full profile. */}
+      {funder?.description && (
+        <section className="mt-12 border-t border-[var(--line)] pt-8">
+          <h2 className="text-[10px] font-bold uppercase tracking-[0.2em] text-[var(--ink-soft)]">
+            About {funder.name}
+          </h2>
+          <p className="mt-3 text-[16px] leading-relaxed text-[var(--ink-2)]">
+            {funder.description.length > 320
+              ? funder.description.slice(0, 320).replace(/\s+\S*$/, '') + '…'
+              : funder.description}
+          </p>
+          {funderHref && (
+            <Link
+              href={funderHref}
+              className="mt-3 inline-block text-xs font-bold uppercase tracking-[0.12em] text-[var(--terracotta)] underline-offset-4 hover:text-[var(--accent)] hover:underline"
+            >
+              View {funder.name}&rsquo;s profile →
+            </Link>
+          )}
+        </section>
+      )}
+
+      {/* More from this funder */}
+      {fromFunder.length > 0 && (
+        <section className="mt-12 border-t border-[var(--line)] pt-8">
+          <h2 className="text-[10px] font-bold uppercase tracking-[0.2em] text-[var(--ink-soft)]">
+            More from {funder?.name ?? g.funder}
+          </h2>
+          <div className="mt-4">
+            <GrantList items={fromFunder} />
+          </div>
+        </section>
+      )}
+
+      {/* Related opportunities — same sector or open to the same place. */}
+      {related.length > 0 && (
+        <section className="mt-12 border-t border-[var(--line)] pt-8">
+          <h2 className="text-[10px] font-bold uppercase tracking-[0.2em] text-[var(--ink-soft)]">
+            Related opportunities
+          </h2>
+          <div className="mt-4">
+            <GrantList items={related} showFunder />
+          </div>
+        </section>
+      )}
+
       {verified && (
-        <p className="mt-8 border-t border-[var(--line)] pt-6 text-xs text-[var(--ink-3)]">
+        <p className="mt-12 border-t border-[var(--line)] pt-6 text-xs text-[var(--ink-3)]">
           Ona checks every listing. This one&rsquo;s link was last verified on {verified}. Amounts,
           deadlines and eligibility are the funder&rsquo;s own; always confirm on their page before applying.
         </p>

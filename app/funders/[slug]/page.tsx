@@ -1,4 +1,3 @@
-import Link from 'next/link'
 import type { Metadata } from 'next'
 import { notFound } from 'next/navigation'
 import { supabase } from '@/lib/supabase'
@@ -6,6 +5,9 @@ import { formatDate } from '@/lib/media'
 import type { Funder } from '@/lib/types'
 import { isPublishableInstitution } from '@/lib/quality'
 import TrackedLink from '@/app/components/TrackedLink'
+import BackLink from '@/app/components/BackLink'
+import GrantList, { type GrantListItem } from '@/app/components/GrantList'
+import { isPublishableGrant } from '@/lib/quality'
 import { OG_IMAGE } from '@/lib/site'
 
 export const dynamic = 'force-dynamic'
@@ -106,6 +108,25 @@ export default async function FunderProfilePage({
 
   const f = data as Funder
 
+  // This funder's own opportunities — the most useful thing on the page, and
+  // until now the one thing it never showed. Open and working calls first.
+  const { data: oppData } = await supabase
+    .from('opportunities')
+    .select('id,name,slug,funding_type,cci_sector,deadline,deadline_type,description,link_state')
+    .eq('institution_id', f.id)
+    .not('description', 'is', null)
+  type OppRow = GrantListItem & { id: string; description: string | null; link_state: string | null }
+  const now = Date.now()
+  const opportunities = ((oppData as unknown as OppRow[]) ?? [])
+    .filter((o) => isPublishableGrant(o as { name: string; description?: string | null }))
+    .map((o) => {
+      const d = o.deadline ? new Date(o.deadline) : null
+      const days = d && !isNaN(d.getTime()) ? Math.ceil((d.getTime() - now) / 86_400_000) : null
+      return { ...o, _closed: days !== null && days < 0, _days: days }
+    })
+    // Open calls first, then by soonest deadline; closed ones sink to the end.
+    .sort((a, b) => Number(a._closed) - Number(b._closed) || (a._days ?? 1e9) - (b._days ?? 1e9))
+
   const regions = f.regions_of_focus ?? []
   const sectors = f.cci_sectors ?? []
   const fundingTypes = f.funding_types ?? []
@@ -118,15 +139,18 @@ export default async function FunderProfilePage({
 
   const hasContact = f.contact_person || f.contact_email
   const hasCycle = f.application_cycle || f.deadline_notes
+  // Where to send an applicant when we have no written steps: the funder's own
+  // opportunities page, or failing that their site.
+  const applyUrl = f.grants_page_url || f.website
 
   return (
     <main className="mx-auto max-w-3xl px-5 py-12">
-      <Link
+      <BackLink
         href="/funders"
         className="text-xs font-semibold uppercase tracking-[0.15em] text-[var(--terracotta)] underline-offset-4 hover:text-[var(--accent)] hover:underline"
       >
         ← All funders
-      </Link>
+      </BackLink>
 
       {/* Header */}
       <header className="mt-6 border-b-2 border-[var(--ink)] pb-8">
@@ -181,6 +205,14 @@ export default async function FunderProfilePage({
         )}
       </header>
 
+      {/* Opportunities from this funder */}
+      <Section
+        title={`Opportunities${opportunities.length ? ` · ${opportunities.length}` : ''}`}
+        empty={opportunities.length === 0}
+      >
+        <GrantList items={opportunities} />
+      </Section>
+
       {/* 1. Overview */}
       <Section title="Overview" empty={!f.description}>
         <Prose text={f.description ?? ''} />
@@ -233,16 +265,35 @@ export default async function FunderProfilePage({
         <ul className="grid gap-x-8 gap-y-2 sm:grid-cols-2">
           {grantees.map((g) => (
             <li key={g} className="flex gap-2 text-[15px]">
-              <span className="text-[var(--ink-3)]">Not stated</span>
+              <span aria-hidden className="text-[var(--ink-3)]">›</span>
               {g}
             </li>
           ))}
         </ul>
       </Section>
 
-      {/* 6. How to apply */}
-      <Section title="How to apply" empty={!f.how_to_apply}>
-        <Prose text={f.how_to_apply ?? ''} />
+      {/* 6. How to apply — real steps when we have them, otherwise a friendly
+          pointer to the funder's own application page (never a blank or a
+          robotic "not available"). */}
+      <Section title="How to apply" empty={!f.how_to_apply && !applyUrl}>
+        {f.how_to_apply ? (
+          <Prose text={f.how_to_apply} />
+        ) : (
+          applyUrl && (
+            <div className="text-[16px] leading-relaxed text-[var(--ink-2)]">
+              <p>Applications are made on {f.name}&rsquo;s own site.</p>
+              <TrackedLink
+                event={{ name: 'funder_link_click', funder: f.name, link: 'grants_page' }}
+                href={applyUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="mt-3 inline-block text-xs font-bold uppercase tracking-[0.12em] text-[var(--terracotta)] underline-offset-4 hover:text-[var(--accent)] hover:underline"
+              >
+                Go to the application page ↗
+              </TrackedLink>
+            </div>
+          )
+        )}
       </Section>
 
       {/* 7. Official links & contact */}
