@@ -6,6 +6,7 @@ import EmailCapture from '@/app/components/EmailCapture'
 import { parseAmount } from '@/lib/amount'
 import { track } from '@/lib/analytics'
 import { slugify } from '@/lib/slug'
+import { closedState, daysLeft } from '@/lib/deadline'
 import { FindStrip } from '@/app/components/Motif'
 import {
   SCOPE_GROUP_LABELS,
@@ -96,6 +97,9 @@ function formatDeadline(deadline: string | null, deadlineType: string | null): s
   if (!deadline) return deadlineType === 'recurring' ? 'Recurring' : null
   const d = new Date(deadline)
   if (isNaN(d.getTime())) return deadline
+  // A recurring call's past date is its last round, not an expiry — say
+  // "Recurring" rather than show a dead date. A future date is the next round.
+  if (deadlineType === 'recurring' && (daysLeft(deadline) ?? 0) < 0) return 'Recurring'
   return d.toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })
 }
 
@@ -105,13 +109,6 @@ function formatCheckedAt(iso: string): string {
   const d = new Date(iso)
   if (isNaN(d.getTime())) return ''
   return d.toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })
-}
-
-function daysLeft(deadline: string | null): number | null {
-  if (!deadline) return null
-  const d = new Date(deadline)
-  if (isNaN(d.getTime())) return null
-  return Math.ceil((d.getTime() - Date.now()) / 86_400_000)
 }
 
 export default function GrantsExplorer({
@@ -166,11 +163,6 @@ export default function GrantsExplorer({
     () => [...new Set(opportunities.map((o) => o.cci_sector).filter(Boolean))].sort() as string[],
     [opportunities],
   )
-  /** Raw wording, still used for the digest sign-up's country preferences. */
-  const countries = useMemo(
-    () => [...new Set(opportunities.flatMap((o) => o.eligible_countries ?? []))].sort(),
-    [opportunities],
-  )
   /**
    * The same wording read as scopes — continent, region, country — so the
    * filter can offer 20 sensible options instead of 95 literal ones. Nothing
@@ -198,9 +190,12 @@ export default function GrantsExplorer({
     const terms = search.trim().toLowerCase().split(/\s+/).filter(Boolean)
 
     return (o: Opportunity) => {
-      // Hide grants whose fixed deadline has already passed (unless toggled on)
-      const dl = daysLeft(o.deadline)
-      if (!showExpired && dl !== null && dl < 0) return false
+      // Expiry is type-aware: only a one-time (fixed) call expires on its date;
+      // recurring and rolling opportunities stay "open". A closed one-time call
+      // lingers for a week ("recently-closed") behind the toggle, then is gone.
+      const state = closedState(o.deadline, o.deadline_type)
+      if (state === 'gone') return false
+      if (state === 'recently-closed' && !showExpired) return false
       if (sector !== 'all' && o.cci_sector !== sector) return false
       if (fundingType !== 'all' && o.funding_type !== fundingType) return false
       if (deadlineType !== 'all' && o.deadline_type !== deadlineType) return false
@@ -458,7 +453,7 @@ export default function GrantsExplorer({
                 onChange={(e) => { setShowExpired(e.target.checked); track({ name: 'show_expired_toggle', on: e.target.checked }) }}
                 className="h-4 w-4 accent-[var(--terracotta)]"
               />
-              Show expired
+              Show recently closed
             </label>
             {(activeFilters > 0 || search) && (
               <button
@@ -501,8 +496,8 @@ export default function GrantsExplorer({
                   No open opportunities right now.
                 </p>
                 <p className="mt-2 text-sm text-[var(--ink-soft)]">
-                  Check back soon, or turn on &ldquo;Show expired&rdquo; to see what&rsquo;s
-                  been listed before.
+                  Check back soon, or turn on &ldquo;Show recently closed&rdquo; to see calls
+                  that closed in the last week.
                 </p>
               </>
             )}
@@ -682,7 +677,6 @@ export default function GrantsExplorer({
         <div className="mb-14">
           <EmailCapture
             sectors={sectors}
-            countries={countries}
             heading="Never miss a deadline"
             blurb="A weekly email with what’s new and what’s closing soon. Tell us what you’re looking for and we’ll keep it relevant."
           />

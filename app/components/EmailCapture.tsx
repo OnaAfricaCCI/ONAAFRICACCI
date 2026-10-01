@@ -2,11 +2,16 @@
 
 import { useState } from 'react'
 import { track } from '@/lib/analytics'
+import { SCOPE_OPTIONS, SCOPE_GROUP_LABELS, type ScopeGroup } from '@/lib/eligibility'
 
 type Props = {
-  /** Optional dropdown choices. When omitted, only the email field is shown. */
+  /**
+   * When `sectors` are supplied the form shows the "tailor it" dropdowns (on the
+   * grants page); omit them for the plain email-only form (the homepage). The
+   * place dropdown uses the same scope list as the grants filter, so a sign-up
+   * and a filter mean exactly the same thing.
+   */
   sectors?: string[]
-  countries?: string[]
   heading?: string
   blurb?: string
   /** 'band' = full-width bordered block, 'inline' = lighter, for mid-page use */
@@ -17,7 +22,6 @@ const EMAIL_RE = /^[^@\s]+@[^@\s]+\.[^@\s]+$/
 
 export default function EmailCapture({
   sectors = [],
-  countries = [],
   heading = 'Get the weekly digest',
   blurb = 'New opportunities and closing deadlines, once a week. No noise, unsubscribe anytime.',
   variant = 'band',
@@ -29,7 +33,7 @@ export default function EmailCapture({
   const [status, setStatus] = useState<'idle' | 'sending' | 'done' | 'error'>('idle')
   const [message, setMessage] = useState('')
 
-  const hasPrefs = sectors.length > 0 || countries.length > 0
+  const hasPrefs = sectors.length > 0
 
   async function submit(e: React.FormEvent) {
     e.preventDefault()
@@ -134,19 +138,23 @@ export default function EmailCapture({
                 ))}
               </select>
             )}
-            {countries.length > 0 && (
-              <select
-                value={country}
-                onChange={(e) => setCountry(e.target.value)}
-                aria-label="Country you care about (optional)"
-                className="control-h w-full truncate border-2 border-[var(--border-md)] bg-[var(--bg)] pl-[14px] pr-9 text-sm hover:border-[var(--ink)] focus:border-[var(--ink)] focus:outline-none sm:max-w-52"
-              >
-                <option value="">Any country (optional)</option>
-                {countries.map((c) => (
-                  <option key={c} value={c}>{c}</option>
-                ))}
-              </select>
-            )}
+            <select
+              value={country}
+              onChange={(e) => setCountry(e.target.value)}
+              aria-label="Where you’re based (optional)"
+              className="control-h w-full truncate border-2 border-[var(--border-md)] bg-[var(--bg)] pl-[14px] pr-9 text-sm hover:border-[var(--ink)] focus:border-[var(--ink)] focus:outline-none sm:max-w-52"
+            >
+              {/* Same scope list as the grants filter's "Anywhere", so a sign-up
+                  preference and a filter choice mean exactly the same thing. */}
+              <option value="">Anywhere (optional)</option>
+              {(['region', 'country'] as ScopeGroup[]).map((group) => (
+                <optgroup key={group} label={SCOPE_GROUP_LABELS[group]}>
+                  {SCOPE_OPTIONS.filter((o) => o.group === group).map((o) => (
+                    <option key={o.value} value={o.value}>{o.label}</option>
+                  ))}
+                </optgroup>
+              ))}
+            </select>
           </div>
         )}
 

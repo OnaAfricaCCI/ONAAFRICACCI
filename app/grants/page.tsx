@@ -1,6 +1,7 @@
 import { supabase } from '@/lib/supabase'
 import { isPublishableGrant } from '@/lib/quality'
 import { parseGrantFilters } from '@/lib/grantFilters'
+import { isGone } from '@/lib/deadline'
 import GrantsExplorer, { type Opportunity } from './GrantsExplorer'
 
 export const dynamic = 'force-dynamic'
@@ -43,7 +44,12 @@ export default async function GrantsPage({
   if (error) {
     console.error('grants list query failed:', error.message)
   }
-  const rows = ((data as unknown as Opportunity[]) ?? []).filter(isPublishableGrant)
+  // Drop one-time calls that closed over a week ago on the server, so they are
+  // never in the HTML a crawler reads. Recurring/rolling (and recently-closed,
+  // for the toggle) are kept; the explorer handles the rest client-side.
+  const rows = ((data as unknown as Opportunity[]) ?? [])
+    .filter(isPublishableGrant)
+    .filter((r) => !isGone(r.deadline, r.deadline_type))
 
   // Filters travel in the URL so a shared link and the browser Back button both
   // land on the same filtered view. Seeding the explorer from them here means

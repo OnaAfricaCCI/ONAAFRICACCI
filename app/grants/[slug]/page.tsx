@@ -5,6 +5,7 @@ import { supabase } from '@/lib/supabase'
 import { isPublishableGrant } from '@/lib/quality'
 import { eligibilityLabels } from '@/lib/eligibility'
 import { slugify } from '@/lib/slug'
+import { daysLeft, isOpenListing, isClosed } from '@/lib/deadline'
 import { SITE_URL, OG_IMAGE } from '@/lib/site'
 import TrackedLink from '@/app/components/TrackedLink'
 import BackLink from '@/app/components/BackLink'
@@ -89,13 +90,6 @@ async function grantBySlug(slug: string): Promise<Grant | null> {
   return rows.find((g) => slugify(g.name) === slug) ?? null
 }
 
-function daysLeft(deadline: string | null): number | null {
-  if (!deadline) return null
-  const d = new Date(deadline)
-  if (isNaN(d.getTime())) return null
-  return Math.ceil((d.getTime() - Date.now()) / 86_400_000)
-}
-
 /** A one-line description of the funder, and a link to their profile. */
 async function funderBlurb(
   institutionId: string | null,
@@ -135,10 +129,9 @@ async function relatedGrants(
   const open = ((data as unknown as (Row & { institution_id?: string | null })[]) ?? [])
     .filter((r) => isPublishableGrant(r as { name: string; description?: string | null }))
     .filter((r) => r.link_state !== 'dead')
-    .filter((r) => {
-      const dl = daysLeft(r.deadline)
-      return dl === null || dl >= 0 // hide calls whose fixed deadline has passed
-    })
+    // Only still-open listings: recurring/rolling stay; a one-time call that has
+    // closed drops out. (Type-aware, so recurring past dates are not "expired".)
+    .filter((r) => isOpenListing(r.deadline, r.deadline_type))
 
   // Siblings share the funder profile (institution_id), even though their
   // free-text funder name can differ ("Goethe-Institut" vs "Goethe-Institut /
@@ -160,10 +153,13 @@ async function relatedGrants(
   return { fromFunder, related }
 }
 
-/** Closed (a fixed deadline has passed) or its link is dead: keep the page, hide it from search. */
+/**
+ * Keep the page (no deletions), but hide it from search once it is no longer an
+ * open listing — a one-time call that has closed, or a dead link. Recurring and
+ * rolling opportunities with a past date stay indexable.
+ */
 function shouldIndex(g: Grant): boolean {
-  const dl = daysLeft(g.deadline)
-  if (dl !== null && dl < 0) return false
+  if (!isOpenListing(g.deadline, g.deadline_type)) return false
   if (g.link_state === 'dead') return false
   return true
 }
@@ -173,6 +169,8 @@ function deadlineText(g: Grant): string | null {
   if (!g.deadline) return g.deadline_type === 'recurring' ? 'Recurring' : null
   const d = new Date(g.deadline)
   if (isNaN(d.getTime())) return g.deadline
+  // A recurring call's past date is its last round, not an expiry.
+  if (g.deadline_type === 'recurring' && (daysLeft(g.deadline) ?? 0) < 0) return 'Recurring'
   return d.toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' })
 }
 
@@ -208,7 +206,8 @@ export default async function GrantPage({ params }: { params: Promise<{ slug: st
   if (!g) notFound()
 
   const dl = daysLeft(g.deadline)
-  const closed = dl !== null && dl < 0
+  // Only one-time calls close on their date; recurring/rolling never do.
+  const closed = isClosed(g.deadline, g.deadline_type)
   const urgent = dl !== null && dl >= 0 && dl <= 30
   const dead = g.link_state === 'dead'
 

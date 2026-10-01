@@ -29,6 +29,8 @@ function deadlineText(g: GrantListItem): string | null {
   const d = new Date(g.deadline)
   if (isNaN(d.getTime())) return null
   const days = Math.ceil((d.getTime() - Date.now()) / 86_400_000)
+  // A recurring call's past date is its last round, not an expiry.
+  if (g.deadline_type === 'recurring' && days < 0) return 'Recurring'
   const date = d.toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })
   if (days >= 0 && days <= 30) return `${date} · ${days === 0 ? 'today' : `${days}d left`}`
   return date

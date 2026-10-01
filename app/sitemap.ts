@@ -3,6 +3,7 @@ import { supabase } from '@/lib/supabase'
 import { SITE_URL } from '@/lib/site'
 import { isPublishableGrant } from '@/lib/quality'
 import { slugify } from '@/lib/slug'
+import { isOpenListing } from '@/lib/deadline'
 
 export const revalidate = 3600 // rebuild the sitemap at most hourly
 
@@ -17,7 +18,6 @@ export const revalidate = 3600 // rebuild the sitemap at most hourly
  */
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const now = new Date()
-  const today = now.toISOString().slice(0, 10)
 
   const statics: MetadataRoute.Sitemap = [
     { url: `${SITE_URL}/`, lastModified: now, changeFrequency: 'daily', priority: 1 },
@@ -35,13 +35,15 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   // surface, and the reason phase one exists.
   const { data: grantRows } = await supabase
     .from('opportunities')
-    .select('name, slug, description, deadline, link_state, link_checked_at, created_at')
+    .select('name, slug, description, deadline, deadline_type, link_state, link_checked_at, created_at')
     .not('description', 'is', null)
-    .or(`deadline.is.null,deadline.gte.${today}`) // still open
     .neq('link_state', 'dead') // link works, or is unverified — never a known 404
 
   const grants: MetadataRoute.Sitemap = (grantRows ?? [])
     .filter((g) => isPublishableGrant(g as { name: string; description?: string | null }))
+    // Still an open listing: recurring/rolling (even with a past date) stay;
+    // a one-time call that has closed drops out, matching the page's noindex.
+    .filter((g) => isOpenListing(g.deadline, (g as { deadline_type: string | null }).deadline_type))
     .map((g) => ({
       url: `${SITE_URL}/grants/${g.slug || slugify(g.name)}`,
       lastModified: new Date(g.link_checked_at ?? g.created_at ?? now),

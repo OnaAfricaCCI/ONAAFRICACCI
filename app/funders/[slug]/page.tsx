@@ -8,6 +8,7 @@ import TrackedLink from '@/app/components/TrackedLink'
 import BackLink from '@/app/components/BackLink'
 import GrantList, { type GrantListItem } from '@/app/components/GrantList'
 import { isPublishableGrant } from '@/lib/quality'
+import { closedState, isGone } from '@/lib/deadline'
 import { OG_IMAGE } from '@/lib/site'
 
 export const dynamic = 'force-dynamic'
@@ -119,10 +120,13 @@ export default async function FunderProfilePage({
   const now = Date.now()
   const opportunities = ((oppData as unknown as OppRow[]) ?? [])
     .filter((o) => isPublishableGrant(o as { name: string; description?: string | null }))
+    // Drop one-time calls that closed over a week ago; recurring/rolling stay.
+    .filter((o) => !isGone(o.deadline, o.deadline_type))
     .map((o) => {
       const d = o.deadline ? new Date(o.deadline) : null
       const days = d && !isNaN(d.getTime()) ? Math.ceil((d.getTime() - now) / 86_400_000) : null
-      return { ...o, _closed: days !== null && days < 0, _days: days }
+      // Type-aware: recurring/rolling count as open, so they sort to the top.
+      return { ...o, _closed: closedState(o.deadline, o.deadline_type) !== 'open', _days: days }
     })
     // Open calls first, then by soonest deadline; closed ones sink to the end.
     .sort((a, b) => Number(a._closed) - Number(b._closed) || (a._days ?? 1e9) - (b._days ?? 1e9))

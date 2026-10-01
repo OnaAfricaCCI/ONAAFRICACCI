@@ -18,6 +18,11 @@
 // Add ?to=you@example.com to send only to yourself (a live test).
 
 import { createClient } from 'npm:@supabase/supabase-js@2'
+// The same scope logic the grants filter uses, so a subscriber's place
+// preference means exactly what it means on the site: pick Kenya and you match
+// Kenya, East Africa, pan-African and global calls — not only grants that
+// literally say "Kenya". `lib/eligibility.ts` is pure TypeScript (no imports).
+import { scopesFor, matchesScope } from '../../../lib/eligibility.ts'
 
 const SUPABASE_URL = Deno.env.get('SUPABASE_URL')!
 const SERVICE_ROLE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
@@ -86,10 +91,19 @@ const fmtDate = (iso: string | null) => {
 function matches(g: Grant, sub: Subscriber): boolean {
   const wantSectors = (sub.sectors ?? []).filter(Boolean)
   const wantCountries = (sub.countries ?? []).filter(Boolean)
-  if (wantSectors.length && !wantSectors.includes(g.cci_sector ?? '')) return false
+
+  // Sector: a grant matches if it is in a chosen sector, or is multi-sector
+  // (open to everyone), so a "Music" subscriber still gets cross-sector funds.
+  if (wantSectors.length) {
+    const sec = g.cci_sector ?? ''
+    if (!wantSectors.includes(sec) && sec !== 'multi-sector') return false
+  }
+
+  // Place: scope-aware, exactly like the grants filter — a chosen country also
+  // matches the regions, the continent and global calls that take it in.
   if (wantCountries.length) {
-    const eligible = g.eligible_countries ?? []
-    if (!wantCountries.some((c) => eligible.includes(c))) return false
+    const scopes = scopesFor(g.eligible_countries)
+    if (!wantCountries.some((c) => matchesScope(c, scopes))) return false
   }
   return true
 }

@@ -5,6 +5,7 @@ import { Aperture, TheFind } from '@/app/components/Motif'
 import { supabase } from '@/lib/supabase'
 import { daysUntil, deadlineLabel } from '@/lib/amount'
 import { slugify } from '@/lib/slug'
+import { isOpenListing } from '@/lib/deadline'
 
 export const dynamic = 'force-dynamic'
 
@@ -54,14 +55,11 @@ function shuffle<T>(items: T[]): T[] {
  */
 const MIN_FEATURED = 4
 async function featured(): Promise<FeaturedGrant[]> {
-  const today = new Date().toISOString().slice(0, 10)
-
   const { data, error } = await supabase
     .from('opportunities')
     .select(
       'id,name,funder,amount,deadline,deadline_type,cci_sector,funding_type,eligible_countries,application_link,link_checked_at,featured,slug',
     )
-    .or(`deadline.is.null,deadline.gte.${today}`)
     .eq('link_ok', true)
     .not('description', 'is', null)
 
@@ -78,7 +76,11 @@ async function featured(): Promise<FeaturedGrant[]> {
   }
 
   const rows = data as Row[]
-  const linked = rows.filter((r) => (r.application_link ?? '').trim() !== '')
+  // Only still-open listings on the homepage: recurring/rolling stay even with a
+  // past date; a one-time call that has closed drops out.
+  const linked = rows.filter(
+    (r) => (r.application_link ?? '').trim() !== '' && isOpenListing(r.deadline, r.deadline_type),
+  )
 
   // Curated first. Six of the featured pool, reshuffled each visit.
   const chosen = shuffle(linked.filter((r) => r.featured)).slice(0, FEATURED_COUNT)
