@@ -139,6 +139,10 @@ export default function GrantsExplorer({
   const [search, setSearch] = useState(initialFilters.search)
   const [sortBy, setSortBy] = useState<SortKey>(initialFilters.sortBy)
 
+  // On phones the filter controls collapse behind a "Filters" button so the
+  // grants are visible straight away; on desktop they are always shown.
+  const [filtersOpen, setFiltersOpen] = useState(false)
+
   // Mirror the filters into the address bar as they change, without a
   // navigation or a server round-trip, so the URL always describes the view.
   // We only rewrite the current entry (replaceState), so Back still steps out
@@ -323,9 +327,9 @@ export default function GrantsExplorer({
 
       {/* Filter bar */}
       <section className="sticky top-[92px] sm:top-[66px] z-10 -mx-5 border-b border-[var(--line)] bg-[var(--paper)]/95 px-5 py-4 backdrop-blur-sm">
-        {/* Row 1: search (8 cols) + sort (2 cols) — same 10-col track as the filters */}
-        <div className="mb-3 grid grid-cols-1 gap-3 sm:grid-cols-10">
-          <div className="relative sm:col-span-8">
+        {/* Row 1: search (always) + a Filters button that opens the controls on phones */}
+        <div className="flex items-center gap-3">
+          <div className="relative flex-1">
             <svg
               aria-hidden="true"
               viewBox="0 0 20 20"
@@ -355,101 +359,119 @@ export default function GrantsExplorer({
               </button>
             )}
           </div>
-          <select
-            className={`${selectClass} sm:col-span-2`}
-            value={sortBy}
-            onChange={(e) => { setSortBy(e.target.value as SortKey); track({ name: 'grant_sort', sort: e.target.value }) }}
-            aria-label="Sort grants"
+          <button
+            type="button"
+            onClick={() => setFiltersOpen((v) => !v)}
+            aria-expanded={filtersOpen}
+            aria-controls="grant-filters"
+            className="control-h flex shrink-0 items-center gap-2 border-2 border-[var(--border-md)] bg-[var(--bg)] px-4 text-sm font-semibold transition-colors hover:border-[var(--accent)] sm:hidden"
           >
-            {SORT_OPTIONS.map((s) => (
-              <option key={s.value} value={s.value}>{s.label}</option>
-            ))}
-          </select>
+            <svg aria-hidden="true" viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="2" className="h-4 w-4">
+              <path d="M3 5h14M6 10h8M9 15h2" strokeLinecap="round" />
+            </svg>
+            Filters{activeFilters > 0 ? ` · ${activeFilters}` : ''}
+          </button>
         </div>
 
-        {/* Row 2: five equal-width selects on the same 10-col track (2 cols each) */}
+        {/* The controls: always shown on desktop, collapsible on phones. */}
         <div
-          role="group"
-          aria-label="Filter grants"
-          className="grid grid-cols-2 gap-3 sm:grid-cols-10 [&>select]:sm:col-span-2"
+          id="grant-filters"
+          className={`${filtersOpen ? 'block' : 'hidden'} mt-3 sm:block`}
         >
-          <select className={selectClass} value={sector} onChange={(e) => { setSector(e.target.value); track({ name: 'grant_filter', filter: 'sector', value: e.target.value, results: -1 }) }}>
-            <option value="all">All sectors</option>
-            {sectors.map((s) => (
-              <option key={s} value={s}>{s}</option>
-            ))}
-          </select>
-          <select
-            className={selectClass}
-            value={country}
-            onChange={(e) => { setCountry(e.target.value); track({ name: 'grant_filter', filter: 'country', value: e.target.value, results: -1 }) }}
-            aria-label="Where you’re based"
+          <div
+            role="group"
+            aria-label="Filter grants"
+            className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6"
           >
-            <option value="all">Anywhere</option>
-            {(['region', 'country'] as ScopeGroup[]).map((group) => {
-              const options = SCOPE_OPTIONS.filter(
-                // Hide options that would return nothing — but never hide the
-                // one that's currently selected, or the box would go blank.
-                (o) => o.group === group && ((scopeCounts.get(o.value) ?? 0) > 0 || o.value === country),
-              )
-              if (!options.length) return null
-              return (
-                <optgroup key={group} label={SCOPE_GROUP_LABELS[group]}>
-                  {options.map((o) => (
-                    <option key={o.value} value={o.value}>
-                      {o.label}
-                    </option>
-                  ))}
-                </optgroup>
-              )
-            })}
-          </select>
-          <select className={selectClass} value={fundingType} onChange={(e) => { setFundingType(e.target.value); track({ name: 'grant_filter', filter: 'funding_type', value: e.target.value, results: -1 }) }}>
-            <option value="all">All types</option>
-            {fundingTypes.map((t) => (
-              <option key={t} value={t}>{t}</option>
-            ))}
-          </select>
-          <select className={selectClass} value={deadlineType} onChange={(e) => { setDeadlineType(e.target.value); track({ name: 'grant_filter', filter: 'deadline_type', value: e.target.value, results: -1 }) }}>
-            <option value="all">All deadlines</option>
-            {deadlineTypes.map((t) => (
-              <option key={t} value={t}>{t}</option>
-            ))}
-          </select>
-          <select
-            className={selectClass}
-            value={amountBand}
-            onChange={(e) => { setAmountBand(e.target.value as AmountBand); track({ name: 'grant_filter', filter: 'amount', value: e.target.value, results: -1 }) }}
-          >
-            <option value="all">Any amount</option>
-            {AMOUNT_BANDS.map((b) => (
-              <option key={b.value} value={b.value}>{b.label}</option>
-            ))}
-          </select>
-        </div>
-
-        {/* Row 2: toggles */}
-        <div className="mt-3 flex items-center gap-5">
-          <label className="flex cursor-pointer items-center gap-2 text-xs font-medium uppercase tracking-[0.12em] text-[var(--ink-soft)]">
-            <input
-              type="checkbox"
-              checked={showExpired}
-              onChange={(e) => { setShowExpired(e.target.checked); track({ name: 'show_expired_toggle', on: e.target.checked }) }}
-              className="h-4 w-4 accent-[var(--terracotta)]"
-            />
-            Show expired
-          </label>
-          {(activeFilters > 0 || search) && (
-            <button
-              onClick={() => {
-                setSector('all'); setCountry('all'); setFundingType('all')
-                setDeadlineType('all'); setAmountBand('all'); setSearch('')
-              }}
-              className="text-xs font-semibold uppercase tracking-[0.15em] text-[var(--terracotta)] underline underline-offset-4 hover:text-[var(--accent)]"
+            <select
+              className={selectClass}
+              value={sortBy}
+              onChange={(e) => { setSortBy(e.target.value as SortKey); track({ name: 'grant_sort', sort: e.target.value }) }}
+              aria-label="Sort grants"
             >
-              Clear all{activeFilters > 0 ? ` (${activeFilters})` : ''}
-            </button>
-          )}
+              {SORT_OPTIONS.map((s) => (
+                <option key={s.value} value={s.value}>{s.label}</option>
+              ))}
+            </select>
+            <select className={selectClass} value={sector} onChange={(e) => { setSector(e.target.value); track({ name: 'grant_filter', filter: 'sector', value: e.target.value, results: -1 }) }} aria-label="Sector">
+              <option value="all">All sectors</option>
+              {sectors.map((s) => (
+                <option key={s} value={s}>{s}</option>
+              ))}
+            </select>
+            <select
+              className={selectClass}
+              value={country}
+              onChange={(e) => { setCountry(e.target.value); track({ name: 'grant_filter', filter: 'country', value: e.target.value, results: -1 }) }}
+              aria-label="Where you’re based"
+            >
+              <option value="all">Anywhere</option>
+              {(['region', 'country'] as ScopeGroup[]).map((group) => {
+                const options = SCOPE_OPTIONS.filter(
+                  // Hide options that would return nothing — but never hide the
+                  // one that's currently selected, or the box would go blank.
+                  (o) => o.group === group && ((scopeCounts.get(o.value) ?? 0) > 0 || o.value === country),
+                )
+                if (!options.length) return null
+                return (
+                  <optgroup key={group} label={SCOPE_GROUP_LABELS[group]}>
+                    {options.map((o) => (
+                      <option key={o.value} value={o.value}>
+                        {o.label}
+                      </option>
+                    ))}
+                  </optgroup>
+                )
+              })}
+            </select>
+            <select className={selectClass} value={fundingType} onChange={(e) => { setFundingType(e.target.value); track({ name: 'grant_filter', filter: 'funding_type', value: e.target.value, results: -1 }) }} aria-label="Funding type">
+              <option value="all">All types</option>
+              {fundingTypes.map((t) => (
+                <option key={t} value={t}>{t}</option>
+              ))}
+            </select>
+            <select className={selectClass} value={deadlineType} onChange={(e) => { setDeadlineType(e.target.value); track({ name: 'grant_filter', filter: 'deadline_type', value: e.target.value, results: -1 }) }} aria-label="Deadline type">
+              <option value="all">All deadlines</option>
+              {deadlineTypes.map((t) => (
+                <option key={t} value={t}>{t}</option>
+              ))}
+            </select>
+            <select
+              className={selectClass}
+              value={amountBand}
+              onChange={(e) => { setAmountBand(e.target.value as AmountBand); track({ name: 'grant_filter', filter: 'amount', value: e.target.value, results: -1 }) }}
+              aria-label="Amount"
+            >
+              <option value="all">Any amount</option>
+              {AMOUNT_BANDS.map((b) => (
+                <option key={b.value} value={b.value}>{b.label}</option>
+              ))}
+            </select>
+          </div>
+
+          {/* Toggles */}
+          <div className="mt-3 flex flex-wrap items-center gap-x-5 gap-y-2">
+            <label className="flex cursor-pointer items-center gap-2 text-xs font-medium uppercase tracking-[0.12em] text-[var(--ink-soft)]">
+              <input
+                type="checkbox"
+                checked={showExpired}
+                onChange={(e) => { setShowExpired(e.target.checked); track({ name: 'show_expired_toggle', on: e.target.checked }) }}
+                className="h-4 w-4 accent-[var(--terracotta)]"
+              />
+              Show expired
+            </label>
+            {(activeFilters > 0 || search) && (
+              <button
+                onClick={() => {
+                  setSector('all'); setCountry('all'); setFundingType('all')
+                  setDeadlineType('all'); setAmountBand('all'); setSearch('')
+                }}
+                className="text-xs font-semibold uppercase tracking-[0.15em] text-[var(--terracotta)] underline underline-offset-4 hover:text-[var(--accent)]"
+              >
+                Clear all{activeFilters > 0 ? ` (${activeFilters})` : ''}
+              </button>
+            )}
+          </div>
         </div>
       </section>
 

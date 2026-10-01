@@ -5,6 +5,7 @@ import Analytics from "./components/Analytics";
 import BackToTop from "./components/BackToTop";
 import NavMemory from "./components/NavMemory";
 import NavLinks from "./components/NavLinks";
+import MobileMenu from "./components/MobileMenu";
 import { Logo, LogoSymbol } from "./components/Logo";
 import SocialLinks from "./components/SocialLinks";
 import ThemeToggle, { THEME_INIT_SCRIPT } from "./components/ThemeToggle";
@@ -108,11 +109,11 @@ export default function RootLayout({
             reversed out of a dark surface, and it keeps the ivory page below it
             clean for the motif. */}
         <header className="sticky top-0 z-30 bg-[#121412] text-[#f6f4ec]">
-          <div className="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-x-6 gap-y-3 px-5 py-3 sm:h-16 sm:flex-nowrap sm:py-0">
+          <div className="mx-auto flex h-14 max-w-6xl items-center justify-between gap-x-6 px-5 sm:h-16">
             <Link href="/" aria-label="Ona Funds, home" className="blink-open shrink-0">
               <Logo tone="ivory" width={124} />
             </Link>
-            <div className="flex w-full min-w-0 items-center justify-between gap-4 sm:w-auto">
+            <div className="flex items-center gap-2 sm:gap-4">
               <NavLinks />
               <Link
                 href="/#digest"
@@ -121,6 +122,7 @@ export default function RootLayout({
                 Get the digest
               </Link>
               <ThemeToggle />
+              <MobileMenu />
             </div>
           </div>
         </header>

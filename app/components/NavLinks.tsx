@@ -2,17 +2,12 @@
 
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-
-const LINKS = [
-  { href: '/grants', label: 'Grants' },
-  { href: '/funders', label: 'Funders' },
-  { href: '/blog', label: 'Blog' },
-  { href: '/about', label: 'About' },
-  { href: '/contact', label: 'Contact' },
-]
+import { NAV_LINKS } from '@/lib/nav'
 
 /**
- * Header navigation.
+ * Desktop header navigation (medium screens and up). On small screens it is
+ * hidden and MobileMenu takes over, so a growing set of links never crowds a
+ * phone header.
  *
  * The header is ink on every theme, so these colours are fixed rather than
  * themed: sage for resting links, ivory for the section you are in, and the
@@ -21,8 +16,8 @@ const LINKS = [
 export default function NavLinks() {
   const pathname = usePathname()
   return (
-    <nav className="flex min-w-0 flex-1 gap-5 overflow-x-auto whitespace-nowrap text-[13px] font-bold uppercase tracking-[0.08em] [scrollbar-width:none] sm:flex-none sm:gap-6 [&::-webkit-scrollbar]:hidden">
-      {LINKS.map((l) => {
+    <nav className="hidden items-center gap-5 whitespace-nowrap text-[13px] font-bold uppercase tracking-[0.08em] md:flex lg:gap-6">
+      {NAV_LINKS.map((l) => {
         const active = pathname === l.href || pathname.startsWith(`${l.href}/`)
         return (
           <Link

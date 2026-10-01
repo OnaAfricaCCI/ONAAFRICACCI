@@ -4,6 +4,7 @@ import FeaturedCarousel, { type FeaturedGrant } from '@/app/components/FeaturedC
 import { Aperture, TheFind } from '@/app/components/Motif'
 import { supabase } from '@/lib/supabase'
 import { daysUntil, deadlineLabel } from '@/lib/amount'
+import { slugify } from '@/lib/slug'
 
 export const dynamic = 'force-dynamic'
 
@@ -20,6 +21,7 @@ type Row = {
   application_link: string | null
   link_checked_at: string | null
   featured: boolean | null
+  slug: string | null
 }
 
 const FEATURED_COUNT = 6
@@ -57,7 +59,7 @@ async function featured(): Promise<FeaturedGrant[]> {
   const { data, error } = await supabase
     .from('opportunities')
     .select(
-      'id,name,funder,amount,deadline,deadline_type,cci_sector,funding_type,eligible_countries,application_link,link_checked_at,featured',
+      'id,name,funder,amount,deadline,deadline_type,cci_sector,funding_type,eligible_countries,application_link,link_checked_at,featured,slug',
     )
     .or(`deadline.is.null,deadline.gte.${today}`)
     .eq('link_ok', true)
@@ -106,7 +108,9 @@ async function featured(): Promise<FeaturedGrant[]> {
         kicker: [r.funding_type, r.cci_sector].filter(Boolean).join(' · ') || null,
         who: r.eligible_countries?.slice(0, 3).join(' · ') ?? null,
         checkedAt: r.link_checked_at,
-        href: r.application_link!.trim(),
+        // Link to the grant's own page on Ona (where the Apply button and full
+        // detail live), not straight out to the funder's site.
+        href: `/grants/${r.slug || slugify(r.name)}`,
       }
     })
 }

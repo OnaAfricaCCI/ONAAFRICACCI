@@ -1,5 +1,6 @@
 'use client'
 
+import Link from 'next/link'
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { track } from '@/lib/analytics'
 import { Sightline } from './Motif'
@@ -197,12 +198,10 @@ export default function FeaturedCarousel({
           const verified = verifiedLabel(g.checkedAt)
           return (
             <li key={g.id} className="w-[19rem] shrink-0 snap-start sm:w-[21rem]">
-              <a
+              <Link
                 href={g.href}
-                target="_blank"
-                rel="noopener noreferrer"
                 onClick={() =>
-                  track({ name: 'grant_apply_click', grant: g.name, funder: g.funder, from: 'carousel' })
+                  track({ name: 'grant_card_click', grant: g.name, funder: g.funder, from: 'carousel' })
                 }
                 className="card-ona group flex h-full flex-col border border-[var(--ink)] bg-[var(--bg)] text-[var(--ink)]"
               >
@@ -250,7 +249,7 @@ export default function FeaturedCarousel({
                 <div className="bg-[var(--sage-mist)] px-4 py-2.5 text-xs text-[var(--ink-2)]">
                   {verified ? `Link checked ${verified}` : 'Link checked before listing'}
                 </div>
-              </a>
+              </Link>
             </li>
           )
         })}
