@@ -27,7 +27,7 @@ export const metadata: Metadata = {
 const FOUNDER: { name: string; role: string; photo: string | null; bio: string[] } = {
   name: 'David Amira',
   role: 'Founder',
-  photo: null,
+  photo: '/david-amira.jpg',
   bio: [
     'David Amira is a communications strategist based in Nairobi. His background is in pan-African communications and advocacy, spanning media, campaigns and stakeholder work for organisations across the continent.',
     'Over more than a decade working across the continent, he kept noticing the same thing. Opportunity travels through networks, and the people outside those networks tend to hear about it too late, if they hear at all. Ona is his attempt to change who gets to see what.',
