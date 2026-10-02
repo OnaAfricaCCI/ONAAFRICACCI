@@ -630,26 +630,24 @@ export default function GrantsExplorer({
                       </p>
                     )}
                     {o.application_link && (
-                      <a
-                        href={o.application_link}
+                      // "Learn more" keeps the visitor on Ona: it opens this
+                      // grant's own profile, where the (unchanged) Apply directive
+                      // sends them on to the provider. An internal link is never a
+                      // dead end, so the old dead-link button variant is gone.
+                      <Link
+                        href={grantHref(o)}
                         onClick={() =>
                           track({
-                            name: 'grant_apply_click',
+                            name: 'grant_card_click',
                             grant: o.name,
                             funder: o.funder,
                             from: 'list',
                           })
                         }
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className={
-                          o.link_state === 'dead'
-                            ? 'mt-auto block w-full border-2 border-dashed border-[var(--line)] px-4 py-2 text-[13px] font-bold uppercase tracking-[0.06em] text-[var(--ink-soft)] transition-colors hover:border-[var(--accent)] hover:text-[var(--accent)] sm:w-auto'
-                            : 'mt-auto block w-full border-2 border-[var(--ink)] px-4 py-2 text-[13px] font-bold uppercase tracking-[0.06em] transition-colors hover:border-[var(--accent)] hover:bg-[var(--accent)] hover:text-[var(--bg)] sm:w-auto'
-                        }
+                        className="mt-auto block w-full border-2 border-[var(--ink)] px-4 py-2 text-[13px] font-bold uppercase tracking-[0.06em] transition-colors hover:border-[var(--accent)] hover:bg-[var(--accent)] hover:text-[var(--bg)] sm:w-auto"
                       >
-                        {o.link_state === 'dead' ? 'Try the link →' : 'Apply →'}
-                      </a>
+                        Learn more →
+                      </Link>
                     )}
                     {/*
                       Show our working.

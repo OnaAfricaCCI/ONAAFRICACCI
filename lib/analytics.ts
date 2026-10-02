@@ -15,7 +15,7 @@ export const ANALYTICS_ENABLED =
 export type AnalyticsEvent =
   // The single most important signal: interest in a specific grant
   | { name: 'grant_apply_click'; grant: string; funder: string | null; from: 'list' | 'carousel' }
-  | { name: 'grant_card_click'; grant: string; funder: string | null; from: 'carousel' }
+  | { name: 'grant_card_click'; grant: string; funder: string | null; from: 'carousel' | 'list' }
   | { name: 'grant_search'; query: string; results: number }
   | { name: 'grant_filter'; filter: string; value: string; results: number }
   | { name: 'grant_sort'; sort: string }
