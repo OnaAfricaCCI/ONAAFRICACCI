@@ -94,7 +94,9 @@ function sectorColor(sector: string | null): string {
 
 function formatDeadline(deadline: string | null, deadlineType: string | null): string | null {
   if (deadlineType === 'rolling') return 'Rolling'
-  if (!deadline) return deadlineType === 'recurring' ? 'Recurring' : null
+  // No date and not rolling/recurring (mostly 'unknown': pipeline, nomination
+  // or between-rounds programmes). Say so plainly instead of showing nothing.
+  if (!deadline) return deadlineType === 'recurring' ? 'Recurring' : 'Timing varies'
   const d = new Date(deadline)
   if (isNaN(d.getTime())) return deadline
   // A recurring call's past date is its last round, not an expiry — say

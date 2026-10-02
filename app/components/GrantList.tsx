@@ -25,7 +25,7 @@ function href(g: GrantListItem): string {
 
 function deadlineText(g: GrantListItem): string | null {
   if (g.deadline_type === 'rolling') return 'Rolling'
-  if (!g.deadline) return g.deadline_type === 'recurring' ? 'Recurring' : null
+  if (!g.deadline) return g.deadline_type === 'recurring' ? 'Recurring' : 'Timing varies'
   const d = new Date(g.deadline)
   if (isNaN(d.getTime())) return null
   const days = Math.ceil((d.getTime() - Date.now()) / 86_400_000)

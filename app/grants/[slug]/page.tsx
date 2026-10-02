@@ -166,7 +166,10 @@ function shouldIndex(g: Grant): boolean {
 
 function deadlineText(g: Grant): string | null {
   if (g.deadline_type === 'rolling') return 'Rolling — no fixed deadline'
-  if (!g.deadline) return g.deadline_type === 'recurring' ? 'Recurring' : null
+  if (!g.deadline)
+    return g.deadline_type === 'recurring'
+      ? 'Recurring'
+      : 'Timing varies — check the funder’s page for current calls'
   const d = new Date(g.deadline)
   if (isNaN(d.getTime())) return g.deadline
   // A recurring call's past date is its last round, not an expiry.
