@@ -577,7 +577,7 @@ export default function GrantsExplorer({
           <nav className="mt-12 flex items-center justify-center gap-4" aria-label={`Page ${page}`}>
             <button
               type="button"
-              onClick={() => go({}, page - 1)}
+              onClick={() => { go({}, page - 1); window.scrollTo({ top: 0 }) }}
               disabled={page <= 1}
               className="border-2 border-[var(--ink)] px-5 py-2 text-[13px] font-bold uppercase tracking-[0.06em] transition-colors hover:border-[var(--accent)] hover:bg-[var(--accent)] hover:text-[var(--bg)] disabled:cursor-not-allowed disabled:opacity-35 disabled:hover:bg-transparent disabled:hover:text-[var(--ink)]"
             >
@@ -588,7 +588,7 @@ export default function GrantsExplorer({
             </span>
             <button
               type="button"
-              onClick={() => go({}, page + 1)}
+              onClick={() => { go({}, page + 1); window.scrollTo({ top: 0 }) }}
               disabled={page >= totalPages}
               className="border-2 border-[var(--ink)] px-5 py-2 text-[13px] font-bold uppercase tracking-[0.06em] transition-colors hover:border-[var(--accent)] hover:bg-[var(--accent)] hover:text-[var(--bg)] disabled:cursor-not-allowed disabled:opacity-35 disabled:hover:bg-transparent disabled:hover:text-[var(--ink)]"
             >
