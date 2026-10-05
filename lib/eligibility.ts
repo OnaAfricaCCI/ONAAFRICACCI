@@ -267,6 +267,24 @@ export function matchesScope(selected: string, scopes: Set<string>): boolean {
 }
 
 /**
+ * The server-side mirror of matchesScope, for a filtered database query.
+ *
+ * Returns the set of scope tags where a grant carrying ANY of them is open to
+ * someone who chose `selected`. Choosing a country includes its region, its
+ * sub-Saharan/Francophone grouping, and continent- or world-wide funds — so the
+ * database `where scopes && expandScope(country)` returns exactly what the
+ * browser's matchesScope used to. Returns [] for 'all' (no scope filter).
+ */
+export function expandScope(selected: string): string[] {
+  if (selected === 'all') return []
+  if (selected === AFRICA || selected === GLOBAL) return [selected]
+  const country = COUNTRY_BY_VALUE.get(selected)
+  if (country) return [...new Set([selected, ...broaderThan(country), AFRICA, GLOBAL])]
+  // A region (or sub-Saharan / Francophone): itself, plus continent- and world-wide.
+  return [selected, AFRICA, GLOBAL]
+}
+
+/**
  * How closely a grant speaks to the chosen place: 0 when it names it, 1 when it
  * covers the surrounding region, 2 when it is simply continent-wide or global.
  * Used to sort the most specific results to the top.

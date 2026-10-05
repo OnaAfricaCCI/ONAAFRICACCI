@@ -1,20 +1,17 @@
 'use client'
 
 import Link from 'next/link'
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { useEffect, useState } from 'react'
+import { usePathname, useRouter } from 'next/navigation'
 import EmailCapture from '@/app/components/EmailCapture'
-import { parseAmount } from '@/lib/amount'
 import { track } from '@/lib/analytics'
 import { slugify } from '@/lib/slug'
-import { closedState, daysLeft } from '@/lib/deadline'
+import { daysLeft } from '@/lib/deadline'
 import { FindStrip } from '@/app/components/Motif'
 import {
   SCOPE_GROUP_LABELS,
   SCOPE_OPTIONS,
   eligibilityLabels,
-  matchesScope,
-  scopeRank,
-  scopesFor,
   type ScopeGroup,
 } from '@/lib/eligibility'
 import {
@@ -115,20 +112,32 @@ function formatCheckedAt(iso: string): string {
 
 export default function GrantsExplorer({
   initialGrants,
-  truncated,
   initialFilters = DEFAULT_FILTERS,
+  page,
+  pageSize,
+  total,
+  sectors,
+  fundingTypes,
+  deadlineTypes,
 }: {
   initialGrants: Opportunity[]
-  truncated: boolean
   initialFilters?: GrantFilters
+  page: number
+  pageSize: number
+  total: number
+  sectors: string[]
+  fundingTypes: string[]
+  deadlineTypes: string[]
 }) {
-  // The server has already fetched and filtered; the list is in the HTML from
-  // the first paint, which is what a crawler reads. This component only adds
-  // the interactive filtering on top.
-  const [opportunities] = useState<Opportunity[]>(initialGrants)
+  const router = useRouter()
+  const pathname = usePathname()
 
-  // Seeded from the URL (via the server) so that a shared link, or Back from a
-  // grant page, restores the exact filters the visitor had.
+  // The server has already searched, filtered, sorted and paginated; `results`
+  // is this page. The controls below navigate (changing the URL) to ask the
+  // server for a new page — nothing is filtered in the browser any more.
+  const results = initialGrants
+
+  // Control state, seeded from the URL. Changing a control navigates.
   const [sector, setSector] = useState(initialFilters.sector)
   const [country, setCountry] = useState(initialFilters.country)
   const [fundingType, setFundingType] = useState(initialFilters.fundingType)
@@ -142,159 +151,62 @@ export default function GrantsExplorer({
   // grants are visible straight away; on desktop they are always shown.
   const [filtersOpen, setFiltersOpen] = useState(false)
 
-  // Mirror the filters into the address bar as they change, without a
-  // navigation or a server round-trip, so the URL always describes the view.
-  // We only rewrite the current entry (replaceState), so Back still steps out
-  // to the grant page and then the list, never through each keystroke.
+  // Keep the controls in step with the URL on navigation (including Back).
   useEffect(() => {
-    const query = grantFiltersToQuery({
-      search,
-      sector,
-      country,
-      fundingType,
-      deadlineType,
-      amountBand,
-      sortBy,
-      showExpired,
-    })
-    const url = query ? `${window.location.pathname}?${query}` : window.location.pathname
-    window.history.replaceState(window.history.state, '', url)
-  }, [search, sector, country, fundingType, deadlineType, amountBand, sortBy, showExpired])
+    setSector(initialFilters.sector)
+    setCountry(initialFilters.country)
+    setFundingType(initialFilters.fundingType)
+    setDeadlineType(initialFilters.deadlineType)
+    setAmountBand(initialFilters.amountBand)
+    setShowExpired(initialFilters.showExpired)
+    setSortBy(initialFilters.sortBy)
+    setSearch(initialFilters.search)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [
+    initialFilters.sector, initialFilters.country, initialFilters.fundingType,
+    initialFilters.deadlineType, initialFilters.amountBand, initialFilters.showExpired,
+    initialFilters.sortBy, initialFilters.search,
+  ])
 
-  const sectors = useMemo(
-    () => [...new Set(opportunities.map((o) => o.cci_sector).filter(Boolean))].sort() as string[],
-    [opportunities],
-  )
-  /**
-   * The same wording read as scopes — continent, region, country — so the
-   * filter can offer 20 sensible options instead of 95 literal ones. Nothing
-   * about the grant itself changes; the cards still show the funder's words.
-   */
-  const scopeIndex = useMemo(() => {
-    const m = new Map<string, Set<string>>()
-    for (const o of opportunities) m.set(o.id, scopesFor(o.eligible_countries))
-    return m
-  }, [opportunities])
-  const fundingTypes = useMemo(
-    () => [...new Set(opportunities.map((o) => o.funding_type).filter(Boolean))].sort() as string[],
-    [opportunities],
-  )
-  const deadlineTypes = useMemo(
-    () => [...new Set(opportunities.map((o) => o.deadline_type).filter(Boolean))].sort() as string[],
-    [opportunities],
-  )
-
-  /**
-   * Every filter except the place one. Kept separate so the place dropdown can
-   * show how many grants each option would return, given everything else.
-   */
-  const passesOthers = useMemo(() => {
-    const terms = search.trim().toLowerCase().split(/\s+/).filter(Boolean)
-
-    return (o: Opportunity) => {
-      // Expiry is type-aware: only a one-time (fixed) call expires on its date;
-      // recurring and rolling opportunities stay "open". A closed one-time call
-      // lingers for a week ("recently-closed") behind the toggle, then is gone.
-      const state = closedState(o.deadline, o.deadline_type)
-      if (state === 'gone') return false
-      if (state === 'recently-closed' && !showExpired) return false
-      if (sector !== 'all' && o.cci_sector !== sector) return false
-      if (fundingType !== 'all' && o.funding_type !== fundingType) return false
-      if (deadlineType !== 'all' && o.deadline_type !== deadlineType) return false
-      if (amountBand !== 'all') {
-        const band = AMOUNT_BANDS.find((b) => b.value === amountBand)!
-        const value = parseAmount(o.amount)
-        if (value === null || value < band.min || value >= band.max) return false
-      }
-      if (terms.length) {
-        const haystack = [
-          o.name,
-          o.funder,
-          o.description,
-          o.cci_sector,
-          o.funding_type,
-          o.amount,
-          ...(o.eligible_countries ?? []),
-        ]
-          .filter(Boolean)
-          .join(' ')
-          .toLowerCase()
-        // every word must appear somewhere (order-independent)
-        if (!terms.every((t) => haystack.includes(t))) return false
-      }
-      return true
+  // Navigate to a view. A filter change resets to page 1; paging keeps filters.
+  const go = (next: Partial<GrantFilters>, toPage = 1, replace = false) => {
+    const f: GrantFilters = {
+      search, sector, country, fundingType, deadlineType, amountBand, sortBy, showExpired, ...next,
     }
-  }, [sector, fundingType, deadlineType, amountBand, showExpired, search])
+    const query = grantFiltersToQuery(f)
+    const qs = [query, toPage > 1 ? `page=${toPage}` : ''].filter(Boolean).join('&')
+    const url = qs ? `${pathname}?${qs}` : pathname
+    if (replace) router.replace(url, { scroll: false })
+    else router.push(url, { scroll: false })
+  }
 
-  /**
-   * How many grants each place option would return, given the other filters.
-   * Not shown to anyone — it's only used to leave out options that would lead
-   * to an empty page.
-   */
-  const scopeCounts = useMemo(() => {
-    const counts = new Map<string, number>()
-    for (const o of opportunities) {
-      if (!passesOthers(o)) continue
-      const scopes = scopeIndex.get(o.id) ?? new Set<string>()
-      for (const opt of SCOPE_OPTIONS) {
-        if (matchesScope(opt.value, scopes)) counts.set(opt.value, (counts.get(opt.value) ?? 0) + 1)
-      }
-    }
-    return counts
-  }, [opportunities, scopeIndex, passesOthers])
-
-  const filtered = useMemo(() => {
-    const matches = opportunities.filter(
-      (o) => passesOthers(o) && matchesScope(country, scopeIndex.get(o.id) ?? new Set<string>()),
-    )
-
-    const byName = (a: Opportunity, b: Opportunity) =>
-      a.name.localeCompare(b.name, undefined, { sensitivity: 'base', numeric: true })
-
-    // With a place chosen, grants naming that place come before the
-    // continent-wide and global ones that also include it.
-    const byPlace = (a: Opportunity, b: Opportunity) =>
-      scopeRank(country, scopeIndex.get(a.id) ?? new Set<string>()) -
-      scopeRank(country, scopeIndex.get(b.id) ?? new Set<string>())
-
-    return [...matches].sort((a, b) => {
-      const place = byPlace(a, b)
-      if (place !== 0) return place
-      switch (sortBy) {
-        case 'az':
-          return byName(a, b)
-        case 'za':
-          return byName(b, a)
-        case 'newest':
-          return b.created_at.localeCompare(a.created_at)
-        case 'deadline': {
-          // soonest real deadline first; undated entries last, alphabetical within
-          const da = daysLeft(a.deadline)
-          const db = daysLeft(b.deadline)
-          if (da === null && db === null) return byName(a, b)
-          if (da === null) return 1
-          if (db === null) return -1
-          return da - db || byName(a, b)
-        }
-      }
-    })
-  }, [opportunities, scopeIndex, passesOthers, country, sortBy])
-
-  // Record a search once typing settles, with how many results it produced.
-  const resultCount = useRef(0)
+  // Search navigates once typing settles (and records the search).
   useEffect(() => {
-    resultCount.current = filtered.length
-  }, [filtered.length])
-  useEffect(() => {
-    const q = search.trim()
-    if (!q) return
-    const t = setTimeout(() => track({ name: 'grant_search', query: q, results: resultCount.current }), 900)
-    return () => clearTimeout(t)
+    if (search === initialFilters.search) return
+    const id = setTimeout(() => {
+      go({ search }, 1, true)
+      if (search.trim()) track({ name: 'grant_search', query: search.trim(), results: total })
+    }, 500)
+    return () => clearTimeout(id)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [search])
+
+  // When a dropdown or the toggle moves the filters away from the URL, navigate
+  // (which resets to page 1 and asks the server for the matching page). The
+  // search box has its own debounced effect above; this watches the rest.
+  useEffect(() => {
+    const next = grantFiltersToQuery({
+      search, sector, country, fundingType, deadlineType, amountBand, sortBy, showExpired,
+    })
+    if (next === grantFiltersToQuery(initialFilters)) return
+    router.push(next ? `${pathname}?${next}` : pathname, { scroll: false })
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [sector, country, fundingType, deadlineType, amountBand, sortBy, showExpired])
 
   const activeFilters = [sector, country, fundingType, deadlineType, amountBand].filter(
     (f) => f !== 'all',
   ).length
+  const totalPages = Math.max(1, Math.ceil(total / pageSize))
 
   const selectClass =
     'control-h w-full truncate border-2 border-[var(--border-md)] bg-[var(--bg)] pl-[14px] pr-9 text-sm font-medium ' +
@@ -404,11 +316,7 @@ export default function GrantsExplorer({
             >
               <option value="all">Anywhere</option>
               {(['region', 'country'] as ScopeGroup[]).map((group) => {
-                const options = SCOPE_OPTIONS.filter(
-                  // Hide options that would return nothing — but never hide the
-                  // one that's currently selected, or the box would go blank.
-                  (o) => o.group === group && ((scopeCounts.get(o.value) ?? 0) > 0 || o.value === country),
-                )
+                const options = SCOPE_OPTIONS.filter((o) => o.group === group)
                 if (!options.length) return null
                 return (
                   <optgroup key={group} label={SCOPE_GROUP_LABELS[group]}>
@@ -474,14 +382,7 @@ export default function GrantsExplorer({
 
       {/* Results */}
       <section className="py-8">
-        {truncated && (
-          <p className="mb-6 border-2 border-[var(--line)] p-4 text-sm text-[var(--ink-2)]">
-            Showing the most recently added opportunities. Use search and the
-            filters to narrow down. Older entries are still here.
-          </p>
-        )}
-
-        {filtered.length === 0 && (
+        {results.length === 0 && (
           <div className="border-2 border-dashed border-[var(--line)] p-16 text-center">
             {activeFilters > 0 || search ? (
               <>
@@ -507,7 +408,7 @@ export default function GrantsExplorer({
         )}
 
         <ul className="divide-y divide-[var(--line)]">
-          {filtered.map((o, i) => {
+          {results.map((o, i) => {
             const dl = daysLeft(o.deadline)
             const urgent = dl !== null && dl >= 0 && dl <= 30
             return (
@@ -671,6 +572,30 @@ export default function GrantsExplorer({
             )
           })}
         </ul>
+
+        {totalPages > 1 && (
+          <nav className="mt-12 flex items-center justify-center gap-4" aria-label={`Page ${page}`}>
+            <button
+              type="button"
+              onClick={() => go({}, page - 1)}
+              disabled={page <= 1}
+              className="border-2 border-[var(--ink)] px-5 py-2 text-[13px] font-bold uppercase tracking-[0.06em] transition-colors hover:border-[var(--accent)] hover:bg-[var(--accent)] hover:text-[var(--bg)] disabled:cursor-not-allowed disabled:opacity-35 disabled:hover:bg-transparent disabled:hover:text-[var(--ink)]"
+            >
+              ← Previous
+            </button>
+            <span className="text-sm font-semibold text-[var(--ink-soft)]">
+              Page {page}
+            </span>
+            <button
+              type="button"
+              onClick={() => go({}, page + 1)}
+              disabled={page >= totalPages}
+              className="border-2 border-[var(--ink)] px-5 py-2 text-[13px] font-bold uppercase tracking-[0.06em] transition-colors hover:border-[var(--accent)] hover:bg-[var(--accent)] hover:text-[var(--bg)] disabled:cursor-not-allowed disabled:opacity-35 disabled:hover:bg-transparent disabled:hover:text-[var(--ink)]"
+            >
+              Next →
+            </button>
+          </nav>
+        )}
       </section>
 
       {(
