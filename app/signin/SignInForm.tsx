@@ -4,6 +4,7 @@ import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { createBrowserSupabase } from '@/lib/supabase/browser'
+import { createAccount, signIn } from '@/lib/clientAuth'
 import { safeNext } from '@/lib/returnUrl'
 
 const EMAIL_RE = /^[^@\s]+@[^@\s]+\.[^@\s]+$/
@@ -27,26 +28,13 @@ export default function SignInForm({ next, hadError }: { next: string; hadError:
     if (!EMAIL_RE.test(value)) { setMessage('Please enter a valid email address.'); return }
     if (password.length < MIN_PW) { setMessage(`Your password needs at least ${MIN_PW} characters.`); return }
     setBusy(true)
-    try {
-      const supabase = createBrowserSupabase()
-      if (mode === 'create') {
-        const { data, error } = await supabase.auth.signUp({ email: value, password })
-        if (error) {
-          if (/already registered|already exists|already been/i.test(error.message)) {
-            setMode('signin'); setNotice('That email already has an account. Enter your password to sign in.')
-          } else { setMessage(error.message) }
-          setBusy(false); return
-        }
-        if (!data.session) { setNotice('Almost there — check your email to confirm your address, then sign in.'); setBusy(false); return }
-      } else {
-        const { data, error } = await supabase.auth.signInWithPassword({ email: value, password })
-        if (error || !data.session) { setMessage('That email and password don’t match. Try again, or create an account.'); setBusy(false); return }
-      }
-      router.push(safeNext(next, '/profile'))
-      router.refresh()
-    } catch {
-      setMessage('Something went wrong. Please try again.'); setBusy(false)
+    const result = mode === 'create' ? await createAccount(value, password) : await signIn(value, password)
+    if (!result.ok) {
+      if (result.switchToSignin) { setMode('signin'); setNotice(result.error) } else { setMessage(result.error) }
+      setBusy(false); return
     }
+    router.push(safeNext(next, '/profile'))
+    router.refresh()
   }
 
   async function forgot() {
