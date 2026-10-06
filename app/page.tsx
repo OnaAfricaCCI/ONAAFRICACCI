@@ -171,6 +171,39 @@ export default async function Home() {
 
       <FeaturedCarousel grants={grants} />
 
+      {/* ---- My Funding teaser: "Funding that fits you." ---- */}
+      <section className="mx-auto max-w-6xl px-5 py-16 sm:py-20">
+        <div className="grid overflow-hidden border-2 border-[var(--ink)] lg:grid-cols-[1.1fr_0.9fr]">
+          <div className="flex flex-col gap-5 px-7 py-12 sm:px-12 sm:py-14">
+            <p className="label text-[var(--sage-deep)]">Find funding for me</p>
+            <h2 className="font-[family-name:var(--font-display)] text-[34px] leading-[1.03] sm:text-[52px]">
+              Funding that fits you.
+            </h2>
+            <p className="max-w-lg text-[17px] leading-relaxed text-[var(--ink-2)]">
+              Tell Ona what you do, where you&rsquo;re based and what you&rsquo;re looking for. We&rsquo;ll
+              surface opportunities that fit your work.
+            </p>
+            <Link
+              href="/find-funding"
+              className="self-start bg-[var(--accent)] px-6 py-3.5 text-[14px] font-bold text-[#121412] transition-colors hover:bg-[var(--ink)] hover:text-[var(--bg)]"
+            >
+              Find funding for me
+            </Link>
+          </div>
+          <div aria-hidden="true" className="relative min-h-[200px] overflow-hidden bg-[var(--sage-deep)] lg:min-h-full">
+            <div className="absolute inset-0 grid grid-cols-5 content-center gap-5 p-8 sm:gap-6 sm:p-10">
+              {Array.from({ length: 15 }, (_, i) => (
+                <div
+                  key={i}
+                  className="rounded-full"
+                  style={i === 7 ? { aspectRatio: '1', background: 'var(--accent)' } : { aspectRatio: '1', border: '6px solid #8FA487' }}
+                />
+              ))}
+            </div>
+          </div>
+        </div>
+      </section>
+
       {/* ---- Funders band: Aperture on sage. ---- */}
       <section className="relative overflow-hidden bg-[var(--sage-deep)] text-[#f6f4ec]">
         <div className="mx-auto grid max-w-6xl gap-8 px-5 py-16 sm:py-20 lg:grid-cols-2 lg:items-center">
