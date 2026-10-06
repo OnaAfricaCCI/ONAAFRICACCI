@@ -42,7 +42,7 @@ export default function SaveButton({
         type="button"
         onClick={onClick}
         aria-pressed={saved}
-        className="inline-flex items-center gap-2 px-[18px] py-[11px] text-[14px] font-bold"
+        className="inline-flex cursor-pointer items-center gap-2 px-[18px] py-[11px] text-[14px] font-bold"
         style={
           saved
             ? { background: 'var(--ink)', color: 'var(--bg)', border: 'none' }
@@ -61,7 +61,7 @@ export default function SaveButton({
       onClick={onClick}
       aria-pressed={saved}
       title={saved ? 'Saved' : 'Save'}
-      className="flex h-[34px] w-[34px] shrink-0 items-center justify-center"
+      className="flex h-[34px] w-[34px] shrink-0 cursor-pointer items-center justify-center"
       style={
         saved
           ? { background: 'var(--ink)', color: 'var(--bg)', border: 'none' }

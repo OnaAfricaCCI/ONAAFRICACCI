@@ -4,6 +4,9 @@ import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { useEffect, useRef, useState } from 'react'
 import { NAV_LINKS } from '@/lib/nav'
+import { useAccount } from './AccountProvider'
+
+const ACCOUNT_PATHS = ['/find-funding', '/recommendations', '/saved', '/profile']
 
 /**
  * The header menu on phones. With several sections now, a row of links no
@@ -15,8 +18,11 @@ import { NAV_LINKS } from '@/lib/nav'
  */
 export default function MobileMenu() {
   const pathname = usePathname()
+  const { user, ready } = useAccount()
   const [open, setOpen] = useState(false)
   const wrap = useRef<HTMLDivElement>(null)
+  const myFundingHref = ready && user ? '/recommendations' : '/find-funding'
+  const myFundingActive = ACCOUNT_PATHS.some((p) => pathname === p || pathname.startsWith(`${p}/`))
 
   // Close after navigating to a new page.
   useEffect(() => {
@@ -87,6 +93,15 @@ export default function MobileMenu() {
                 </Link>
               )
             })}
+            <Link
+              href={myFundingHref}
+              aria-current={myFundingActive ? 'page' : undefined}
+              className={`border-b border-white/10 py-3.5 text-[15px] font-bold uppercase tracking-[0.08em] transition-colors hover:text-[var(--accent)] ${
+                myFundingActive ? 'text-[var(--accent)]' : 'text-[#dce3d5]'
+              }`}
+            >
+              My Funding
+            </Link>
           </nav>
           <Link
             href="/#digest"

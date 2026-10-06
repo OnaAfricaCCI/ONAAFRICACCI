@@ -17,10 +17,13 @@ const TABS = [
 export default function AccountTabs() {
   const pathname = usePathname()
   return (
-    <div style={{ background: '#121412' }}>
+    <div
+      className="sticky top-14 z-20 border-b border-white/10 sm:top-16"
+      style={{ background: '#121412' }}
+    >
       <nav
         aria-label="My Funding"
-        className="mx-auto flex max-w-6xl gap-7 px-5 text-[12px] font-black uppercase tracking-[0.12em]"
+        className="mx-auto flex max-w-6xl gap-5 px-5 text-[11px] font-black uppercase tracking-[0.1em] sm:gap-7 sm:text-[12px] sm:tracking-[0.12em]"
       >
         {TABS.map((t) => {
           const active = pathname === t.href || pathname.startsWith(`${t.href}/`)

@@ -54,7 +54,7 @@ export default async function SavedPage() {
     const byId = new Map((opps ?? []).map((o) => [o.id as string, o]))
     items = ids.map((id) => {
       const o = byId.get(id)
-      if (!o) return { id, name: '', slug: null, funder: null, funding_type: null, cci_sector: null, closedLabel: 'No longer listed', missing: true }
+      if (!o) return { id, name: '', slug: null, funder: null, funding_type: null, cci_sector: null, deadline: null, deadline_type: null, closedLabel: 'No longer listed', missing: true }
       const state = closedState(o.deadline as string | null, o.deadline_type as string | null)
       return {
         id,
@@ -63,6 +63,8 @@ export default async function SavedPage() {
         funder: (o.funder as string | null) ?? null,
         funding_type: (o.funding_type as string | null) ?? null,
         cci_sector: (o.cci_sector as string | null) ?? null,
+        deadline: (o.deadline as string | null) ?? null,
+        deadline_type: (o.deadline_type as string | null) ?? null,
         closedLabel: CLOSED_LABEL[state] ?? null,
       }
     })

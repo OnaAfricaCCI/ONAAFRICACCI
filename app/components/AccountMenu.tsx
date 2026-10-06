@@ -23,7 +23,7 @@ export default function AccountMenu() {
     <Link
       href={href}
       aria-current={active ? 'page' : undefined}
-      className="whitespace-nowrap border-b-[3px] pb-0.5 text-[13px] font-bold uppercase tracking-[0.08em] transition-colors hover:text-[var(--accent)]"
+      className="hidden whitespace-nowrap border-b-[3px] pb-0.5 text-[13px] font-bold uppercase tracking-[0.08em] transition-colors hover:text-[var(--accent)] md:inline-block"
       style={{
         color: active ? '#F6F4EC' : '#DCE3D5',
         borderColor: active ? '#FF6A4D' : 'transparent',
