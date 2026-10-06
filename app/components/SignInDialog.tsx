@@ -5,14 +5,13 @@ import Link from 'next/link'
 import { createBrowserSupabase } from '@/lib/supabase/browser'
 
 /**
- * The sign-in / create-account dialog. Passwordless: we email a secure, expiring
- * magic link (Supabase), which works the same whether the person is new or
- * returning. The pending save and the page to return to travel in the link's
- * redirect so the save completes once on return.
+ * The sign-in / create-account dialog (design: ink ring mark, ink action
+ * button, no-mailing-list reassurance). Passwordless: we email a secure,
+ * expiring magic link, the same for new and returning people. The pending save
+ * and the return page travel in the link's redirect so the save completes once.
  *
- * Accessibility: it is a modal dialog (role=dialog, aria-modal), traps focus,
- * closes on Escape or a backdrop click, and restores focus to wherever the user
- * was when it opened.
+ * Modal dialog: role=dialog, aria-modal, focus trap, Escape / backdrop close,
+ * focus restored on close.
  */
 const EMAIL_RE = /^[^@\s]+@[^@\s]+\.[^@\s]+$/
 
@@ -37,12 +36,12 @@ export default function SignInDialog({
   const trapFocus = useCallback((e: KeyboardEvent) => {
     const root = dialogRef.current
     if (!root) return
-    const focusable = root.querySelectorAll<HTMLElement>(
+    const f = root.querySelectorAll<HTMLElement>(
       'a[href], button:not([disabled]), input:not([disabled]), [tabindex]:not([tabindex="-1"])',
     )
-    if (focusable.length === 0) return
-    const first = focusable[0]
-    const last = focusable[focusable.length - 1]
+    if (f.length === 0) return
+    const first = f[0]
+    const last = f[f.length - 1]
     if (e.shiftKey && document.activeElement === first) {
       e.preventDefault()
       last.focus()
@@ -60,11 +59,11 @@ export default function SignInDialog({
       if (e.key === 'Tab') trapFocus(e)
     }
     document.addEventListener('keydown', onKey)
-    const prevOverflow = document.body.style.overflow
+    const prev = document.body.style.overflow
     document.body.style.overflow = 'hidden'
     return () => {
       document.removeEventListener('keydown', onKey)
-      document.body.style.overflow = prevOverflow
+      document.body.style.overflow = prev
       returnFocus.current?.focus?.()
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -85,10 +84,7 @@ export default function SignInDialog({
       cb.searchParams.set('next', window.location.pathname + window.location.search)
       if (pendingSaveId) cb.searchParams.set('save', pendingSaveId)
       const supabase = createBrowserSupabase()
-      const { error } = await supabase.auth.signInWithOtp({
-        email: value,
-        options: { emailRedirectTo: cb.toString() },
-      })
+      const { error } = await supabase.auth.signInWithOtp({ email: value, options: { emailRedirectTo: cb.toString() } })
       if (error) throw error
       setState('sent')
     } catch {
@@ -99,7 +95,8 @@ export default function SignInDialog({
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-end justify-center bg-black/50 p-0 sm:items-center sm:p-4"
+      className="fixed inset-0 z-50 flex items-end justify-center p-0 sm:items-center sm:p-6"
+      style={{ background: 'rgba(18,20,18,0.55)' }}
       onMouseDown={(e) => {
         if (e.target === e.currentTarget) onClose()
       }}
@@ -109,43 +106,33 @@ export default function SignInDialog({
         role="dialog"
         aria-modal="true"
         aria-labelledby="signin-heading"
-        className="w-full max-w-md border-2 border-[var(--ink)] bg-[var(--bg)] p-6 sm:p-8"
+        className="flex w-full max-w-[400px] flex-col gap-4 p-[30px]"
+        style={{ background: 'var(--bg)', border: '1px solid var(--ink)' }}
       >
-        <div className="flex items-start justify-between gap-4">
-          <h2 id="signin-heading" className="font-[family-name:var(--font-display)] text-2xl leading-tight">
-            {heading}
-          </h2>
-          <button
-            type="button"
-            onClick={onClose}
-            aria-label="Close"
-            className="-mr-1 -mt-1 shrink-0 p-1 text-2xl leading-none text-[var(--ink-soft)] hover:text-[var(--accent)]"
-          >
-            ×
+        <div className="flex items-start justify-between">
+          <svg viewBox="0 0 100 100" width="30" height="30" aria-hidden="true">
+            <circle cx="50" cy="50" r="39" fill="none" stroke="var(--ink)" strokeWidth="22" />
+            <circle cx="50" cy="50" r="28" fill="#FF6A4D" />
+          </svg>
+          <button type="button" onClick={onClose} aria-label="Close" className="text-[22px] leading-none" style={{ color: 'var(--graphite)' }}>
+            ✕
           </button>
         </div>
 
         {state === 'sent' ? (
-          <div className="mt-4">
-            <p className="text-[15px] leading-relaxed">
-              Check your inbox. We’ve emailed a secure sign-in link to{' '}
-              <strong className="break-all">{email.trim().toLowerCase()}</strong>. Open it on this device to
-              finish{pendingSaveId ? ' and save this opportunity' : ''}.
+          <>
+            <h3 id="signin-heading" className="mf-d text-[26px]" style={{ lineHeight: 1.05 }}>Check your inbox.</h3>
+            <p className="text-[15px] leading-relaxed" style={{ color: 'var(--graphite)' }}>
+              We’ve emailed a secure sign-in link to <strong className="break-all" style={{ color: 'var(--ink)' }}>{email.trim().toLowerCase()}</strong>.
+              Open it on this device to finish{pendingSaveId ? ' and save this opportunity' : ''}.
             </p>
-            <button
-              type="button"
-              onClick={onClose}
-              className="mt-6 w-full border-2 border-[var(--ink)] px-4 py-3 text-[13px] font-bold uppercase tracking-[0.06em] hover:bg-[var(--ink)] hover:text-[var(--bg)]"
-            >
-              Done
-            </button>
-          </div>
+            <button type="button" onClick={onClose} className="mf-btn-outline w-full">Done</button>
+          </>
         ) : (
-          <form onSubmit={submit} className="mt-4">
-            <p className="text-[15px] leading-relaxed text-[var(--ink-2)]">{body}</p>
-            <label htmlFor="signin-email" className="mt-5 block text-[11px] font-bold uppercase tracking-[0.12em] text-[var(--ink-2)]">
-              Email address
-            </label>
+          <form onSubmit={submit} className="flex flex-col gap-4">
+            <h3 id="signin-heading" className="mf-d text-[28px]" style={{ lineHeight: 1.02 }}>{heading}</h3>
+            <p className="text-[15px] leading-relaxed" style={{ color: 'var(--graphite)' }}>{body}</p>
+            <label htmlFor="signin-email" className="mf-lbl">Email</label>
             <input
               id="signin-email"
               ref={inputRef}
@@ -157,28 +144,18 @@ export default function SignInDialog({
               onChange={(e) => setEmail(e.target.value)}
               aria-invalid={state === 'error'}
               aria-describedby={state === 'error' ? 'signin-error' : undefined}
-              placeholder="you@example.com"
-              className="control-h mt-1.5 w-full border-2 border-[var(--border-md)] bg-[var(--bg)] px-3 text-sm focus:border-[var(--ink)] focus:outline-none"
+              placeholder="you@email.com"
+              className="mf-fld"
             />
             {state === 'error' && (
-              <p id="signin-error" role="alert" className="mt-2 text-sm text-[var(--terracotta)]">
-                {message}
-              </p>
+              <p id="signin-error" role="alert" className="text-[14px]" style={{ color: 'var(--accent-active)' }}>{message}</p>
             )}
-            <button
-              type="submit"
-              disabled={state === 'sending'}
-              className="mt-5 w-full bg-[var(--accent)] px-4 py-3 text-[13px] font-bold uppercase tracking-[0.06em] text-[#121412] transition-colors hover:bg-[var(--ink)] hover:text-[var(--bg)] disabled:opacity-60"
-            >
+            <button type="submit" disabled={state === 'sending'} className="mf-btn-ink w-full disabled:opacity-60">
               {state === 'sending' ? 'Sending…' : 'Email me a sign-in link'}
             </button>
-            <p className="mt-4 text-xs leading-relaxed text-[var(--ink-3)]">
-              New or returning, the link does both. An account lets you save opportunities and build an
-              optional profile for more relevant results. It is not a funding application. See our{' '}
-              <Link href="/privacy" className="underline underline-offset-2">
-                privacy policy
-              </Link>
-              .
+            <p className="text-[13px] leading-normal" style={{ color: 'var(--graphite)' }}>
+              No password to remember. We will not add you to any mailing list.{' '}
+              <Link href="/privacy" className="font-semibold underline underline-offset-2">Privacy</Link>.
             </p>
           </form>
         )}

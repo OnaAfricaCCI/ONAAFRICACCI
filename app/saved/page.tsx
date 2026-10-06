@@ -5,6 +5,7 @@ import { supabaseAdmin } from '@/lib/supabase-admin'
 import { closedState } from '@/lib/deadline'
 import SavedList, { type SavedItem } from './SavedList'
 import ProfileSetupCard from '@/app/components/ProfileSetupCard'
+import AccountTabs from '@/app/components/AccountTabs'
 
 export const dynamic = 'force-dynamic'
 
@@ -26,18 +27,16 @@ export default async function SavedPage() {
   if (!user) {
     return (
       <main className="mx-auto max-w-2xl px-5 py-16">
-        <h1 className="font-[family-name:var(--font-display)] text-[32px] leading-tight sm:text-[44px]">Saved opportunities</h1>
-        <p className="mt-4 text-lg text-[var(--ink-2)]">
+        <span className="mf-lbl">Your account</span>
+        <h1 className="mf-d mt-3 text-[34px] sm:text-[44px]">Saved opportunities</h1>
+        <p className="mt-4 text-[17px]" style={{ color: 'var(--graphite)' }}>
           Sign in to see the opportunities you’ve saved. Your shortlist follows you across devices.
         </p>
-        <Link href="/signin?next=/saved" className="mt-6 inline-block bg-[var(--accent)] px-5 py-3 text-[13px] font-bold uppercase tracking-[0.06em] text-[#121412] hover:bg-[var(--ink)] hover:text-[var(--bg)]">
-          Sign in
-        </Link>
+        <Link href="/signin?next=/saved" className="mf-btn mt-6">Sign in</Link>
       </main>
     )
   }
 
-  // Saved ids (private, via the user's own session → RLS).
   const { data: savedRows } = await supabase
     .from('saved_opportunities')
     .select('opportunity_id, created_at')
@@ -45,8 +44,6 @@ export default async function SavedPage() {
     .order('created_at', { ascending: false })
   const ids = (savedRows ?? []).map((r) => r.opportunity_id)
 
-  // Opportunity details (public content) read with the service role, safe
-  // columns only. Handle any that have since been removed, gracefully.
   let items: SavedItem[] = []
   if (ids.length) {
     const { data: opps } = await supabaseAdmin
@@ -70,7 +67,6 @@ export default async function SavedPage() {
     })
   }
 
-  // Show the setup nudge only when there's no completed profile.
   const { data: profile } = await supabase
     .from('grant_seeker_profiles')
     .select('status')
@@ -79,17 +75,20 @@ export default async function SavedPage() {
   const showSetupCard = profile?.status !== 'completed'
 
   return (
-    <main className="mx-auto max-w-3xl px-5 py-12 sm:py-16">
-      <p className="text-[11px] font-bold uppercase tracking-[0.12em] text-[var(--sage-deep)]">Your account</p>
-      <h1 className="mt-3 font-[family-name:var(--font-display)] text-[32px] leading-tight sm:text-[44px]">Saved opportunities</h1>
-      <p className="mt-4 text-[15px] leading-relaxed text-[var(--ink-2)]">
-        Your private shortlist. Applications always happen on the funder’s own site.
-      </p>
+    <>
+      <AccountTabs />
+      <main className="mx-auto max-w-6xl px-5 py-10 sm:py-12">
+        <span className="mf-lbl">Saved opportunities</span>
+        <h1 className="mf-d mt-3 text-[34px] sm:text-[44px]">Your shortlist.</h1>
+        <p className="mt-3 text-[15px]" style={{ color: 'var(--graphite)' }}>
+          Private to you. <span className="tabular-nums">{items.length}</span> saved. Applications always happen on the funder’s own site.
+        </p>
 
-      <div className="mt-8">
-        {showSetupCard && <ProfileSetupCard />}
-        <SavedList items={items} />
-      </div>
-    </main>
+        <div className="mt-7 flex flex-col gap-6">
+          {showSetupCard && <ProfileSetupCard />}
+          <SavedList items={items} />
+        </div>
+      </main>
+    </>
   )
 }

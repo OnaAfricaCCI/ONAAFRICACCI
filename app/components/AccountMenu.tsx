@@ -1,33 +1,35 @@
 'use client'
 
 import Link from 'next/link'
+import { usePathname } from 'next/navigation'
 import { useAccount } from './AccountProvider'
 
 /**
- * The header's account control. Rendered on the client from the shared session
- * state (so it never forces the whole site to render dynamically, and SSR stays
- * cacheable). Before the session is known it shows the neutral "Find funding"
- * entry, which is also what signed-out visitors see.
+ * The header's "My Funding" tab — styled like the main nav links (sage at rest,
+ * ivory + coral underline when active), fixed colours because the header is ink
+ * in both themes. Rendered on the client from the shared session state, so SSR
+ * stays cacheable. Signed in, it leads to the account area (For you); signed
+ * out, to the "Find funding for me" landing.
  */
+const ACCOUNT_PATHS = ['/find-funding', '/recommendations', '/saved', '/profile']
+
 export default function AccountMenu() {
   const { user, ready } = useAccount()
-  const link = 'text-[13px] font-semibold text-[#f6f4ec]/85 transition-colors hover:text-[var(--accent)]'
+  const pathname = usePathname()
+  const href = ready && user ? '/recommendations' : '/find-funding'
+  const active = ACCOUNT_PATHS.some((p) => pathname === p || pathname.startsWith(`${p}/`))
 
-  if (!ready || !user) {
-    return (
-      <Link href="/find-funding" className={link}>
-        Find funding<span className="hidden sm:inline"> for me</span>
-      </Link>
-    )
-  }
   return (
-    <div className="flex items-center gap-3 sm:gap-4">
-      <Link href="/saved" className={link}>
-        Saved
-      </Link>
-      <Link href="/profile" className={link}>
-        Profile
-      </Link>
-    </div>
+    <Link
+      href={href}
+      aria-current={active ? 'page' : undefined}
+      className="whitespace-nowrap border-b-[3px] pb-0.5 text-[13px] font-bold uppercase tracking-[0.08em] transition-colors hover:text-[var(--accent)]"
+      style={{
+        color: active ? '#F6F4EC' : '#DCE3D5',
+        borderColor: active ? '#FF6A4D' : 'transparent',
+      }}
+    >
+      My Funding
+    </Link>
   )
 }

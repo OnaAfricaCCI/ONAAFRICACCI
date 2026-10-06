@@ -6,10 +6,8 @@ import { track } from '@/lib/analytics'
 import { useAccount } from './AccountProvider'
 
 /**
- * The "create a profile" invitation buttons, with analytics. Records a view on
- * mount and a click, tagged by entry point (no personal data). If the visitor
- * is already signed in with a profile, the primary action points at their
- * recommendations instead of setup.
+ * The "create a profile" invitation buttons (design styling), with analytics.
+ * Records a view on mount and a click, tagged by entry point (no personal data).
  */
 export default function InviteButtons({
   entryPoint,
@@ -31,25 +29,19 @@ export default function InviteButtons({
   }, [entryPoint])
 
   return (
-    <div className="flex flex-wrap gap-3">
+    <div className="flex flex-wrap items-center gap-3.5">
       <Link
         href={primaryHref}
         onClick={() => track({ name: 'profile_invite_click', entry_point: entryPoint })}
-        className="bg-[var(--accent)] px-5 py-3 text-[13px] font-bold uppercase tracking-[0.06em] text-[#121412] transition-colors hover:bg-[var(--ink)] hover:text-[var(--bg)]"
+        className="mf-btn"
       >
         {primaryLabel}
       </Link>
-      <Link
-        href={secondaryHref}
-        className="border-2 border-[var(--ink)] px-5 py-3 text-[13px] font-bold uppercase tracking-[0.06em] transition-colors hover:border-[var(--accent)] hover:bg-[var(--accent)] hover:text-[var(--bg)]"
-      >
+      <Link href={secondaryHref} className="mf-btn-outline">
         {secondaryLabel}
       </Link>
       {user && (
-        <Link
-          href="/profile"
-          className="self-center text-[13px] font-semibold text-[var(--terracotta)] underline underline-offset-4 hover:text-[var(--accent)]"
-        >
+        <Link href="/profile" className="text-[15px] font-bold underline underline-offset-4" style={{ color: 'var(--accent-deep)' }}>
           Open my profile
         </Link>
       )}

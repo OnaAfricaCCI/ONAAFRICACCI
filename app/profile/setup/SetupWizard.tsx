@@ -4,7 +4,6 @@ import { useEffect, useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { track } from '@/lib/analytics'
-import PrivacyNotice from '@/app/components/PrivacyNotice'
 import CountrySelect from '@/app/components/CountrySelect'
 import { COUNTRY_NAME_BY_CODE } from '@/lib/countries'
 import {
@@ -30,14 +29,8 @@ export type WizardProfile = {
 }
 
 const EMPTY: WizardProfile = {
-  country_code: null,
-  applicant_type: null,
-  organisation_name: null,
-  organisation_country: null,
-  disciplines: [],
-  stage: null,
-  support_types: [],
-  languages: [],
+  country_code: null, applicant_type: null, organisation_name: null, organisation_country: null,
+  disciplines: [], stage: null, support_types: [], languages: [],
 }
 
 function resumeStep(p: WizardProfile): number {
@@ -48,10 +41,7 @@ function resumeStep(p: WizardProfile): number {
 }
 
 export default function SetupWizard({
-  initial,
-  suggestedFromFilters,
-  entryPoint,
-  alreadyCompleted = false,
+  initial, suggestedFromFilters, entryPoint, alreadyCompleted = false,
 }: {
   initial: WizardProfile | null
   suggestedFromFilters: boolean
@@ -73,28 +63,22 @@ export default function SetupWizard({
     }
   }, [entryPoint])
 
-  useEffect(() => {
-    headingRef.current?.focus()
-  }, [step])
+  useEffect(() => { headingRef.current?.focus() }, [step])
 
   const set = <K extends keyof WizardProfile>(key: K, value: WizardProfile[K]) =>
     setForm((f) => ({ ...f, [key]: value }))
-
   const toggle = (key: 'disciplines' | 'support_types' | 'languages', id: string) =>
     setForm((f) => {
       const have = f[key].includes(id)
       return { ...f, [key]: have ? f[key].filter((x) => x !== id) : [...f[key], id] }
     })
-
   const isOrg = form.applicant_type ? ORG_APPLICANT_TYPES.has(form.applicant_type) : false
 
   async function saveDraft(): Promise<boolean> {
-    setSaving(true)
-    setError('')
+    setSaving(true); setError('')
     try {
       const res = await fetch('/api/profile', {
-        method: 'POST',
-        headers: { 'content-type': 'application/json' },
+        method: 'POST', headers: { 'content-type': 'application/json' },
         body: JSON.stringify({ action: 'save-draft', ...form }),
       })
       if (!res.ok) throw new Error()
@@ -102,9 +86,7 @@ export default function SetupWizard({
     } catch {
       setError('We couldn’t save that just now. Your answers are still here — please try again.')
       return false
-    } finally {
-      setSaving(false)
-    }
+    } finally { setSaving(false) }
   }
 
   function stepValid(s: number): string | null {
@@ -119,33 +101,20 @@ export default function SetupWizard({
 
   async function onContinue() {
     const invalid = stepValid(step)
-    if (invalid) {
-      setError(invalid)
-      return
-    }
+    if (invalid) { setError(invalid); return }
     if (!(await saveDraft())) return
     track({ name: 'profile_step_completed', step })
     setStep((s) => s + 1)
   }
-
-  async function onFinishLater() {
-    await saveDraft()
-    router.push('/profile')
-  }
-
+  async function onFinishLater() { await saveDraft(); router.push('/profile') }
   async function onComplete() {
-    setSaving(true)
-    setError('')
+    setSaving(true); setError('')
     try {
       const res = await fetch('/api/profile', {
-        method: 'POST',
-        headers: { 'content-type': 'application/json' },
+        method: 'POST', headers: { 'content-type': 'application/json' },
         body: JSON.stringify({ action: 'complete', ...form }),
       })
-      if (!res.ok) {
-        const d = await res.json().catch(() => ({}))
-        throw new Error(d.error || 'Could not save your profile.')
-      }
+      if (!res.ok) { const d = await res.json().catch(() => ({})); throw new Error(d.error || 'Could not save your profile.') }
       track(alreadyCompleted ? { name: 'profile_updated' } : { name: 'profile_completed' })
       router.push(alreadyCompleted ? '/profile?updated=1' : '/profile/ready')
     } catch (e) {
@@ -154,192 +123,188 @@ export default function SetupWizard({
     }
   }
 
+  const pct = Math.round((step / 3) * 100)
+  const stepEyebrow = step === 1 ? 'Step 1 of 3 · About you'
+    : step === 2 ? 'Step 2 of 3 · Your work'
+    : step === 3 ? 'Step 3 of 3 · Funding' : 'Nearly done'
+  const stepHeading = step === 1 ? 'Tell us a little about you.'
+    : step === 2 ? 'What do you make?'
+    : step === 3 ? 'What are you looking for?' : 'Check your answers.'
+
   return (
-    <main className="mx-auto max-w-2xl px-5 py-12 sm:py-16">
-      <p className="text-[11px] font-bold uppercase tracking-[0.12em] text-[var(--sage-deep)]">
-        {step <= 3 ? `Step ${step} of 3` : 'Review'}
-      </p>
-      <h1
-        ref={headingRef}
-        tabIndex={-1}
-        className="mt-3 font-[family-name:var(--font-display)] text-[32px] leading-[1.1] outline-none sm:text-[44px]"
-      >
-        {step === 1 && 'About you'}
-        {step === 2 && 'Your creative work'}
-        {step === 3 && 'Funding preferences'}
-        {step === 4 && 'Check your answers'}
-      </h1>
-
-      {step === 1 && <PrivacyNotice className="mt-6" />}
-      {suggestedFromFilters && step <= 3 && (
-        <p className="mt-6 border-l-2 border-[var(--accent)] bg-[var(--blush)]/30 p-3 text-sm text-[var(--ink-2)]">
-          We’ve suggested a few answers from the filters you were using. Please check they’re right
-          before continuing — nothing is saved to your profile until you confirm.
-        </p>
-      )}
-
-      {/* progress bar */}
-      {step <= 3 && (
-        <div aria-hidden="true" className="mt-6 flex gap-1.5">
-          {[1, 2, 3].map((n) => (
-            <span key={n} className={`h-1 flex-1 ${n <= step ? 'bg-[var(--accent)]' : 'bg-[var(--line)]'}`} />
-          ))}
-        </div>
-      )}
-
-      <div className="mt-8">
-        {step === 1 && (
-          <div className="space-y-8">
-            <CountrySelect
-              label="Country of residence"
-              value={form.country_code}
-              onChange={(code) => set('country_code', code || null)}
-              required
-            />
-            <Fieldset legend="Who are you applying as?" hint="The capacity you usually seek funding in.">
-              {APPLICANT_TYPES.map((o) => (
-                <Radio
-                  key={o.id}
-                  name="applicant_type"
-                  option={o}
-                  checked={form.applicant_type === o.id}
-                  onChange={() => set('applicant_type', o.id)}
-                />
-              ))}
-            </Fieldset>
-            {isOrg && (
-              <div className="space-y-5 border-l-2 border-[var(--line)] pl-5">
-                <p className="text-sm text-[var(--ink-soft)]">
-                  Optional. These are self-reported details, not proof of authority to represent an organisation.
-                </p>
-                <div>
-                  <label htmlFor="org-name" className="block text-[11px] font-bold uppercase tracking-[0.12em] text-[var(--ink-2)]">
-                    Organisation name
-                  </label>
-                  <input
-                    id="org-name"
-                    value={form.organisation_name ?? ''}
-                    onChange={(e) => set('organisation_name', e.target.value || null)}
-                    className="control-h mt-1.5 w-full max-w-sm border-2 border-[var(--border-md)] bg-[var(--bg)] px-3 text-sm focus:border-[var(--ink)] focus:outline-none"
-                  />
-                </div>
-                <CountrySelect
-                  label="Organisation’s country of registration"
-                  value={form.organisation_country}
-                  onChange={(code) => set('organisation_country', code || null)}
-                />
+    <main className="mx-auto max-w-[860px] px-5 py-10 sm:py-14">
+      <div className="border border-[var(--ink)]">
+        <div className="flex flex-col gap-7 px-7 py-9 sm:px-14 sm:py-11">
+          {/* progress / eyebrow */}
+          {step <= 3 ? (
+            <div className="flex flex-col gap-3">
+              <div className="flex items-baseline justify-between">
+                <span className="mf-lbl">{stepEyebrow}</span>
+                <span className="text-[13px] font-bold tabular-nums" style={{ color: 'var(--graphite)' }}>{pct}%</span>
               </div>
-            )}
-          </div>
-        )}
-
-        {step === 2 && (
-          <div className="space-y-8">
-            <Fieldset legend="Which creative disciplines do you work in?" hint="Choose all that apply.">
-              <Chips options={DISCIPLINES} selected={form.disciplines} onToggle={(id) => toggle('disciplines', id)} />
-            </Fieldset>
-            <Fieldset legend="Where are you in your journey? (optional)">
-              <div className="flex flex-col gap-2">
-                {STAGES.map((o) => (
-                  <Radio key={o.id} name="stage" option={o} checked={form.stage === o.id} onChange={() => set('stage', o.id)} />
+              <div className="grid grid-cols-3 gap-2">
+                {[1, 2, 3].map((n) => (
+                  <span key={n} className="h-1.5" style={{ background: n <= step ? '#FF6A4D' : '#DCE3D5' }} />
                 ))}
               </div>
-            </Fieldset>
+            </div>
+          ) : (
+            <span className="mf-lbl">{stepEyebrow}</span>
+          )}
+
+          <h1 ref={headingRef} tabIndex={-1} className="mf-d text-[34px] outline-none sm:text-[40px]">{stepHeading}</h1>
+
+          {suggestedFromFilters && step <= 3 && (
+            <p className="p-3 text-[14px]" style={{ borderLeft: '3px solid #FF6A4D', background: 'rgba(255,201,184,.3)', color: 'var(--ink-2)' }}>
+              We’ve suggested a few answers from the filters you were using. Please check they’re right
+              before continuing — nothing is saved until you confirm.
+            </p>
+          )}
+
+          {/* STEP 1 */}
+          {step === 1 && (
+            <div className="flex flex-col gap-7">
+              <div className="flex flex-col gap-2">
+                <CountrySelect label="Country of residence" value={form.country_code} onChange={(c) => set('country_code', c || null)} required />
+                <span className="text-[13px]" style={{ color: 'var(--graphite)' }}>
+                  We use this to surface calls open where you live, including diaspora-eligible ones.
+                </span>
+              </div>
+              <div className="flex flex-col gap-2.5">
+                <span className="mf-lbl">You are applying as</span>
+                <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                  {APPLICANT_TYPES.map((o) => (
+                    <OptionBox key={o.id} option={o} selected={form.applicant_type === o.id} onSelect={() => set('applicant_type', o.id)} />
+                  ))}
+                </div>
+              </div>
+              {isOrg && (
+                <div className="flex flex-col gap-4 border-l-2 border-[var(--line)] pl-5">
+                  <p className="text-[13px]" style={{ color: 'var(--graphite)' }}>
+                    Optional. Self-reported details, not proof of authority to represent an organisation.
+                  </p>
+                  <div className="flex flex-col gap-2">
+                    <label htmlFor="org-name" className="mf-lbl">Organisation name</label>
+                    <input id="org-name" className="mf-fld max-w-sm" value={form.organisation_name ?? ''} onChange={(e) => set('organisation_name', e.target.value || null)} />
+                  </div>
+                  <CountrySelect label="Organisation’s country of registration" value={form.organisation_country} onChange={(c) => set('organisation_country', c || null)} />
+                </div>
+              )}
+              <PrivacyBox />
+            </div>
+          )}
+
+          {/* STEP 2 */}
+          {step === 2 && (
+            <div className="flex flex-col gap-7">
+              <Group legend="Which creative disciplines do you work in?" hint="Choose all that apply.">
+                <Chips options={DISCIPLINES} selected={form.disciplines} onToggle={(id) => toggle('disciplines', id)} />
+              </Group>
+              <Group legend="Where are you in your journey?" hint="Optional.">
+                <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                  {STAGES.map((o) => (
+                    <OptionBox key={o.id} option={o} selected={form.stage === o.id} onSelect={() => set('stage', o.id)} />
+                  ))}
+                </div>
+              </Group>
+            </div>
+          )}
+
+          {/* STEP 3 */}
+          {step === 3 && (
+            <div className="flex flex-col gap-7">
+              <Group legend="What kinds of funding are you looking for?" hint="Choose all that apply.">
+                <Chips options={SUPPORT_TYPES} selected={form.support_types} onToggle={(id) => toggle('support_types', id)} />
+              </Group>
+              <Group legend="Preferred application languages" hint="Optional. Stored for your reference; it won’t change your recommendations yet.">
+                <Chips options={LANGUAGES} selected={form.languages} onToggle={(id) => toggle('languages', id)} />
+              </Group>
+            </div>
+          )}
+
+          {/* STEP 4 — review */}
+          {step === 4 && <ReviewList form={form} onEdit={(s) => setStep(s)} />}
+
+          {error && (
+            <p role="alert" className="p-3 text-[14px]" style={{ border: '1.5px solid var(--accent-active)', background: 'rgba(255,201,184,.4)', color: 'var(--ink)' }}>{error}</p>
+          )}
+          <p aria-live="polite" className="sr-only">{saving ? 'Saving' : ''}</p>
+
+          {/* controls */}
+          <div className="flex flex-wrap items-center justify-between gap-4 border-t border-[var(--line)] pt-6">
+            {step > 1 ? (
+              <button type="button" onClick={() => setStep((s) => s - 1)} className="mf-btn-outline">Back</button>
+            ) : <span />}
+            <div className="flex items-center" style={{ gap: '1.1rem' }}>
+              <button type="button" onClick={onFinishLater} disabled={saving} className="text-[15px] font-bold underline underline-offset-4 disabled:opacity-60" style={{ color: 'var(--accent-deep)' }}>
+                Finish later
+              </button>
+              {step <= 3 ? (
+                <button type="button" onClick={onContinue} disabled={saving} className="mf-btn disabled:opacity-60">
+                  {saving ? 'Saving…' : 'Continue'}
+                </button>
+              ) : (
+                <button type="button" onClick={onComplete} disabled={saving} className="mf-btn disabled:opacity-60">
+                  {saving ? 'Saving…' : 'Save my profile'}
+                </button>
+              )}
+            </div>
           </div>
-        )}
-
-        {step === 3 && (
-          <div className="space-y-8">
-            <Fieldset legend="What kinds of funding are you looking for?" hint="Choose all that apply.">
-              <Chips options={SUPPORT_TYPES} selected={form.support_types} onToggle={(id) => toggle('support_types', id)} />
-            </Fieldset>
-            <Fieldset
-              legend="Preferred application languages (optional)"
-              hint="Stored for your reference. We don’t yet have reliable language data on opportunities, so this won’t change your recommendations."
-            >
-              <Chips options={LANGUAGES} selected={form.languages} onToggle={(id) => toggle('languages', id)} />
-            </Fieldset>
-          </div>
-        )}
-
-        {step === 4 && (
-          <ReviewList form={form} onEdit={(s) => setStep(s)} />
-        )}
+        </div>
       </div>
-
-      {error && (
-        <p role="alert" className="mt-6 border-2 border-[var(--terracotta)] bg-[var(--blush)]/40 p-3 text-sm text-[var(--ink)]">
-          {error}
-        </p>
-      )}
-      <p aria-live="polite" className="sr-only">
-        {saving ? 'Saving' : ''}
-      </p>
-
-      <div className="mt-10 flex flex-wrap items-center gap-3 border-t border-[var(--line)] pt-6">
-        {step > 1 && (
-          <button
-            type="button"
-            onClick={() => setStep((s) => s - 1)}
-            className="border-2 border-[var(--ink)] px-5 py-3 text-[13px] font-bold uppercase tracking-[0.06em] hover:border-[var(--accent)]"
-          >
-            ← Back
-          </button>
-        )}
-        {step <= 3 && (
-          <button
-            type="button"
-            onClick={onContinue}
-            disabled={saving}
-            className="bg-[var(--accent)] px-5 py-3 text-[13px] font-bold uppercase tracking-[0.06em] text-[#121412] transition-colors hover:bg-[var(--ink)] hover:text-[var(--bg)] disabled:opacity-60"
-          >
-            {saving ? 'Saving…' : 'Continue'}
-          </button>
-        )}
-        {step === 4 && (
-          <button
-            type="button"
-            onClick={onComplete}
-            disabled={saving}
-            className="bg-[var(--accent)] px-5 py-3 text-[13px] font-bold uppercase tracking-[0.06em] text-[#121412] transition-colors hover:bg-[var(--ink)] hover:text-[var(--bg)] disabled:opacity-60"
-          >
-            {saving ? 'Saving…' : 'Save my profile'}
-          </button>
-        )}
-        <button
-          type="button"
-          onClick={onFinishLater}
-          disabled={saving}
-          className="text-[13px] font-semibold text-[var(--terracotta)] underline underline-offset-4 hover:text-[var(--accent)] disabled:opacity-60"
-        >
-          Finish later
-        </button>
-      </div>
-
-      <p className="mt-6 text-xs text-[var(--ink-3)]">
+      <p className="mt-5 text-[13px]" style={{ color: 'var(--ink-soft)' }}>
         Your saved opportunities stay with your account whether or not you finish this.{' '}
-        <Link href="/saved" className="underline underline-offset-2">
-          View saved
-        </Link>
+        <Link href="/saved" className="underline underline-offset-2">View saved</Link>
       </p>
     </main>
   )
 }
 
-function Fieldset({ legend, hint, children }: { legend: string; hint?: string; children: React.ReactNode }) {
+function PrivacyBox() {
   return (
-    <fieldset>
-      <legend className="font-[family-name:var(--font-display)] text-lg leading-snug">{legend}</legend>
-      {hint && <p className="mt-1 text-sm text-[var(--ink-soft)]">{hint}</p>}
+    <div className="flex items-start gap-3 p-4" style={{ background: '#DCE3D5' }}>
+      <svg viewBox="0 0 100 100" width="18" height="18" aria-hidden="true" style={{ flex: 'none', marginTop: 2 }}>
+        <circle cx="50" cy="50" r="39" fill="none" stroke="#5F7359" strokeWidth="22" />
+        <circle cx="50" cy="50" r="28" fill="#5F7359" />
+      </svg>
+      <p className="text-[14px] leading-relaxed" style={{ color: '#121412' }}>
+        Your profile is private and only used to match you to opportunities. It is never shown to
+        funders, and it is not a funding application. You can edit or delete it anytime.
+      </p>
+    </div>
+  )
+}
+
+function Group({ legend, hint, children }: { legend: string; hint?: string; children: React.ReactNode }) {
+  return (
+    <fieldset className="border-0 p-0">
+      <legend className="mf-d p-0 text-[18px]" style={{ lineHeight: 1.15 }}>{legend}</legend>
+      {hint && <p className="mt-1 text-[14px]" style={{ color: 'var(--graphite)' }}>{hint}</p>}
       <div className="mt-3">{children}</div>
     </fieldset>
   )
 }
 
-function Radio({ name, option, checked, onChange }: { name: string; option: Option; checked: boolean; onChange: () => void }) {
+function OptionBox({ option, selected, onSelect }: { option: Option; selected: boolean; onSelect: () => void }) {
   return (
-    <label className={`flex cursor-pointer items-center gap-3 border-2 p-3 text-sm ${checked ? 'border-[var(--ink)] bg-[var(--sage-mist)]/50' : 'border-[var(--border-md)] hover:border-[var(--accent)]'}`}>
-      <input type="radio" name={name} checked={checked} onChange={onChange} className="h-4 w-4 accent-[var(--terracotta)]" />
+    <label
+      className="flex cursor-pointer items-center gap-3 px-4 py-3.5 text-[15px] font-semibold"
+      style={
+        selected
+          ? { border: '1.5px solid var(--ink)', background: 'var(--ink)', color: 'var(--bg)' }
+          : { border: '1.5px solid var(--ink)' }
+      }
+    >
+      <input type="radio" name={option.id + '-grp'} checked={selected} onChange={onSelect} className="sr-only" />
+      <span
+        aria-hidden="true"
+        className="flex-none"
+        style={
+          selected
+            ? { width: 16, height: 16, border: '2px solid var(--bg)', background: '#FF6A4D' }
+            : { width: 16, height: 16, border: '2px solid var(--ink)' }
+        }
+      />
       {option.label}
     </label>
   )
@@ -347,7 +312,7 @@ function Radio({ name, option, checked, onChange }: { name: string; option: Opti
 
 function Chips({ options, selected, onToggle }: { options: Option[]; selected: string[]; onToggle: (id: string) => void }) {
   return (
-    <div className="flex flex-wrap gap-2">
+    <div className="flex flex-wrap gap-2.5">
       {options.map((o) => {
         const on = selected.includes(o.id)
         return (
@@ -356,7 +321,8 @@ function Chips({ options, selected, onToggle }: { options: Option[]; selected: s
             type="button"
             aria-pressed={on}
             onClick={() => onToggle(o.id)}
-            className={`border-2 px-3 py-2 text-sm font-medium transition-colors ${on ? 'border-[var(--ink)] bg-[var(--ink)] text-[var(--bg)]' : 'border-[var(--border-md)] hover:border-[var(--accent)]'}`}
+            className="px-3.5 py-2.5 text-[14px] font-semibold"
+            style={on ? { border: '1.5px solid var(--ink)', background: 'var(--ink)', color: 'var(--bg)' } : { border: '1.5px solid var(--ink)' }}
           >
             {o.label}
           </button>
@@ -367,35 +333,34 @@ function Chips({ options, selected, onToggle }: { options: Option[]; selected: s
 }
 
 function ReviewList({ form, onEdit }: { form: WizardProfile; onEdit: (step: number) => void }) {
-  const na = <span className="text-[var(--ink-3)]">Not provided</span>
-  const names = (opts: Option[], ids: string[]) =>
-    ids.length ? ids.map((id) => labelFor(opts, id)).join(', ') : null
+  const na = <span className="italic" style={{ color: '#8FA487' }}>Not provided</span>
+  const names = (opts: Option[], ids: string[]) => (ids.length ? ids.map((id) => labelFor(opts, id)).join(', ') : null)
   const rows: { label: string; value: React.ReactNode; step: number }[] = [
-    { label: 'Country of residence', value: form.country_code ? COUNTRY_NAME_BY_CODE.get(form.country_code) : null, step: 1 },
+    { label: 'Country', value: form.country_code ? COUNTRY_NAME_BY_CODE.get(form.country_code) : null, step: 1 },
     { label: 'Applying as', value: form.applicant_type ? labelFor(APPLICANT_TYPES, form.applicant_type) : null, step: 1 },
     { label: 'Organisation', value: form.organisation_name, step: 1 },
-    { label: 'Organisation country', value: form.organisation_country ? COUNTRY_NAME_BY_CODE.get(form.organisation_country) : null, step: 1 },
     { label: 'Disciplines', value: names(DISCIPLINES, form.disciplines), step: 2 },
-    { label: 'Stage', value: form.stage ? labelFor(STAGES, form.stage) : null, step: 2 },
-    { label: 'Support types', value: names(SUPPORT_TYPES, form.support_types), step: 3 },
+    { label: 'Career stage', value: form.stage ? labelFor(STAGES, form.stage) : null, step: 2 },
+    { label: 'Support needed', value: names(SUPPORT_TYPES, form.support_types), step: 3 },
     { label: 'Languages', value: names(LANGUAGES, form.languages), step: 3 },
   ]
   return (
-    <dl className="divide-y divide-[var(--line)] border-y border-[var(--line)]">
-      {rows.map((r) => (
-        <div key={r.label} className="grid grid-cols-[1fr_auto] gap-x-4 py-4 sm:grid-cols-[12rem_1fr_auto]">
-          <dt className="text-[11px] font-bold uppercase tracking-[0.12em] text-[var(--ink-2)]">{r.label}</dt>
-          <dd className="text-[15px]">{r.value || na}</dd>
-          <button
-            type="button"
-            onClick={() => onEdit(r.step)}
-            className="justify-self-end text-xs font-semibold uppercase tracking-[0.12em] text-[var(--terracotta)] underline underline-offset-4 hover:text-[var(--accent)]"
-          >
-            Change
-            <span className="sr-only"> {r.label}</span>
-          </button>
-        </div>
-      ))}
-    </dl>
+    <div>
+      <p className="mb-5 text-[16px] leading-relaxed" style={{ color: 'var(--graphite)' }}>
+        Here is what we will use to find funding for you. Change anything that is not right. Blanks are
+        fine, they just mean fewer matches to start.
+      </p>
+      <div style={{ borderTop: '2px solid var(--ink)' }}>
+        {rows.map((r) => (
+          <div key={r.label} className="grid items-baseline gap-x-4 gap-y-1 py-[18px] sm:grid-cols-[200px_1fr_auto]" style={{ borderBottom: '1px solid #DCE3D5' }}>
+            <span className="mf-lbl">{r.label}</span>
+            <span className="text-[17px]">{r.value || na}</span>
+            <button type="button" onClick={() => onEdit(r.step)} className="justify-self-start text-[14px] font-bold underline underline-offset-2 sm:justify-self-end" style={{ color: 'var(--accent-deep)' }}>
+              Change<span className="sr-only"> {r.label}</span>
+            </button>
+          </div>
+        ))}
+      </div>
+    </div>
   )
 }

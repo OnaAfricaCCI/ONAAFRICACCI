@@ -3,10 +3,22 @@
 import { useAccount } from './AccountProvider'
 
 /**
- * Save / remove an opportunity. Signed-in users save immediately; signed-out
- * users get the sign-in dialog (and the save completes once after the magic
- * link). The button reflects the live saved state from AccountProvider.
+ * Save / remove an opportunity — the design's pennant control. Signed-in users
+ * save immediately; signed-out users get the sign-in dialog (and the save
+ * completes once after the magic link). Saved state is live from AccountProvider.
+ *
+ *  - 'card'  : a 34px pennant square (ink + coral when saved, outline when not)
+ *  - 'detail': a labelled pennant button
  */
+function Pennant({ filled }: { filled: boolean }) {
+  return (
+    <svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true"
+      fill={filled ? '#FF6A4D' : 'none'} stroke={filled ? 'none' : 'currentColor'} strokeWidth="2">
+      <path d="M6 3h12v18l-6-4-6 4z" strokeLinejoin="round" />
+    </svg>
+  )
+}
+
 export default function SaveButton({
   opportunityId,
   from,
@@ -18,29 +30,45 @@ export default function SaveButton({
 }) {
   const { isSaved, toggleSave } = useAccount()
   const saved = isSaved(opportunityId)
+  const onClick = (e: React.MouseEvent) => {
+    e.preventDefault()
+    e.stopPropagation()
+    void toggleSave(opportunityId, from === 'saved_page' ? 'saved_page' : from)
+  }
 
-  const base =
-    'inline-flex items-center gap-1.5 border-2 font-bold uppercase tracking-[0.06em] transition-colors'
-  const size = variant === 'detail' ? 'px-4 py-2 text-[13px]' : 'px-3 py-1.5 text-[11px]'
-  const tone = saved
-    ? 'border-[var(--sage-deep)] bg-[var(--sage-mist)] text-[var(--ink)]'
-    : 'border-[var(--ink)] hover:border-[var(--accent)] hover:bg-[var(--accent)] hover:text-[var(--bg)]'
+  if (variant === 'detail') {
+    return (
+      <button
+        type="button"
+        onClick={onClick}
+        aria-pressed={saved}
+        className="inline-flex items-center gap-2 px-[18px] py-[11px] text-[14px] font-bold"
+        style={
+          saved
+            ? { background: 'var(--ink)', color: 'var(--bg)', border: 'none' }
+            : { background: 'transparent', color: 'var(--ink)', border: '1.5px solid var(--ink)' }
+        }
+      >
+        <Pennant filled={saved} />
+        {saved ? 'Saved' : 'Save to shortlist'}
+      </button>
+    )
+  }
 
   return (
     <button
       type="button"
-      onClick={(e) => {
-        e.preventDefault()
-        e.stopPropagation()
-        void toggleSave(opportunityId, from === 'saved_page' ? 'saved_page' : from)
-      }}
+      onClick={onClick}
       aria-pressed={saved}
-      className={`${base} ${size} ${tone}`}
+      title={saved ? 'Saved' : 'Save'}
+      className="flex h-[34px] w-[34px] shrink-0 items-center justify-center"
+      style={
+        saved
+          ? { background: 'var(--ink)', color: 'var(--bg)', border: 'none' }
+          : { background: 'transparent', color: 'var(--ink)', border: '1.5px solid var(--ink)' }
+      }
     >
-      <svg aria-hidden="true" viewBox="0 0 20 20" width="14" height="14" fill={saved ? 'currentColor' : 'none'} stroke="currentColor" strokeWidth="2">
-        <path d="M5 3h10v14l-5-3-5 3V3z" strokeLinejoin="round" />
-      </svg>
-      {saved ? 'Saved' : 'Save'}
+      <Pennant filled={saved} />
     </button>
   )
 }

@@ -2,7 +2,6 @@
 
 import Link from 'next/link'
 import { useAccount } from '@/app/components/AccountProvider'
-import SaveButton from '@/app/components/SaveButton'
 
 export type SavedItem = {
   id: string
@@ -13,60 +12,57 @@ export type SavedItem = {
   cci_sector: string | null
   /** A short status label when the opportunity is no longer open, else null. */
   closedLabel: string | null
-  /** True when the opportunity row no longer exists (archived/removed). */
   missing?: boolean
 }
 
 export default function SavedList({ items }: { items: SavedItem[] }) {
-  const { isSaved } = useAccount()
-  // Reflect live un-saves: once removed it drops out of the list immediately.
+  const { isSaved, toggleSave } = useAccount()
   const visible = items.filter((i) => isSaved(i.id))
 
   if (visible.length === 0) {
     return (
       <div className="border-2 border-dashed border-[var(--line)] p-12 text-center">
-        <p className="font-[family-name:var(--font-display)] text-xl">Nothing saved yet.</p>
-        <p className="mt-2 text-sm text-[var(--ink-soft)]">
-          Use the Save button on any opportunity to keep it here.
-        </p>
-        <Link href="/grants" className="mt-5 inline-block border-2 border-[var(--ink)] px-4 py-2.5 text-[13px] font-bold uppercase tracking-[0.06em] hover:border-[var(--accent)]">
-          Browse opportunities
-        </Link>
+        <p className="mf-d text-[20px]">Nothing saved yet.</p>
+        <p className="mt-2 text-[14px]" style={{ color: 'var(--graphite)' }}>Use the Save pennant on any opportunity to keep it here.</p>
+        <Link href="/grants" className="mf-btn-outline mt-5">Browse opportunities</Link>
       </div>
     )
   }
 
   return (
-    <ul className="grid gap-px border border-[var(--ink)] bg-[var(--ink)]">
-      {visible.map((g) => {
-        const meta = [g.funder, [g.funding_type, g.cci_sector].filter(Boolean).join(' · ')].filter(Boolean).join('  ·  ')
+    <div style={{ borderTop: '1px solid #DCE3D5' }}>
+      {visible.map((g, i) => {
+        const meta = [g.funder, g.funding_type, g.cci_sector].filter(Boolean).join(' · ')
+        const n = String(i + 1).padStart(2, '0')
         return (
-          <li key={g.id} className="bg-[var(--bg)] p-4">
-            <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between sm:gap-6">
-              <div className="min-w-0">
-                {g.missing ? (
-                  <span className="font-[family-name:var(--font-display)] text-[17px] text-[var(--ink-soft)]">
-                    {g.name || 'This opportunity is no longer listed'}
-                  </span>
-                ) : (
-                  <Link href={`/grants/${g.slug ?? g.id}`} className="font-[family-name:var(--font-display)] text-[17px] leading-snug hover:text-[var(--accent)]">
-                    {g.name}
-                  </Link>
-                )}
-                {meta && <span className="mt-0.5 block text-[11px] font-semibold uppercase tracking-[0.12em] text-[var(--ink-soft)]">{meta}</span>}
-                {g.closedLabel && (
-                  <span className="mt-1 inline-block bg-[var(--line)] px-2 py-0.5 text-[10px] font-bold uppercase tracking-[0.12em] text-[var(--ink-2)]">
-                    {g.closedLabel}
-                  </span>
-                )}
-              </div>
-              <div className="shrink-0">
-                <SaveButton opportunityId={g.id} from="saved_page" />
-              </div>
+          <div
+            key={g.id}
+            className="grid items-center gap-x-4 gap-y-1 py-[18px] sm:grid-cols-[auto_1fr_auto_auto]"
+            style={{ borderBottom: '1px solid #DCE3D5' }}
+          >
+            <span className="mf-lbl tabular-nums" style={{ color: '#8FA487' }}>{n}</span>
+            <div className="min-w-0">
+              {g.missing ? (
+                <div className="text-[18px] font-bold" style={{ color: 'var(--ink-soft)' }}>{g.name || 'This opportunity is no longer listed'}</div>
+              ) : (
+                <Link href={`/grants/${g.slug ?? g.id}`} className="text-[18px] font-bold leading-tight hover:text-[var(--accent-deep)]">{g.name}</Link>
+              )}
+              {meta && <div className="text-[13px]" style={{ color: 'var(--graphite)' }}>{meta}</div>}
             </div>
-          </li>
+            <span className="mf-lbl" style={{ color: g.closedLabel ? 'var(--accent-deep)' : '#5F7359' }}>
+              {g.closedLabel ?? 'Open'}
+            </span>
+            <button
+              type="button"
+              onClick={() => void toggleSave(g.id, 'saved_page')}
+              className="justify-self-start text-[14px] font-bold underline underline-offset-2 sm:justify-self-end"
+              style={{ color: 'var(--accent-deep)' }}
+            >
+              Remove<span className="sr-only"> {g.name}</span>
+            </button>
+          </div>
         )
       })}
-    </ul>
+    </div>
   )
 }

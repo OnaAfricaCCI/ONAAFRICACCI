@@ -34,7 +34,8 @@ export default function DeleteProfileButton() {
       <button
         type="button"
         onClick={() => setConfirming(true)}
-        className="text-[13px] font-semibold text-[var(--terracotta)] underline underline-offset-4 hover:text-[var(--accent)]"
+        className="inline-block px-5 py-3 text-[15px] font-bold"
+        style={{ border: '1.5px solid var(--accent-deep)', color: 'var(--accent-deep)' }}
       >
         Delete my profile
       </button>

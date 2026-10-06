@@ -16,35 +16,32 @@ export type RecItem = {
 
 export default function RecommendationList({ items }: { items: RecItem[] }) {
   return (
-    <ul className="grid gap-px border border-[var(--ink)] bg-[var(--ink)]">
+    <div className="grid grid-cols-1 gap-5 lg:grid-cols-2">
       {items.map((g) => {
-        const meta = [g.funder, [g.funding_type, g.cci_sector].filter(Boolean).join(' · ')].filter(Boolean).join('  ·  ')
+        const kicker = [g.funding_type, g.cci_sector].filter(Boolean).join(' · ')
         return (
-          <li key={g.id} className="bg-[var(--bg)] p-5">
-            <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between sm:gap-6">
-              <div className="min-w-0">
-                <Link
-                  href={`/grants/${g.slug ?? g.id}`}
-                  onClick={() => track({ name: 'recommendation_opened' })}
-                  className="font-[family-name:var(--font-display)] text-[18px] leading-snug hover:text-[var(--accent)]"
-                >
-                  {g.name}
-                </Link>
-                {meta && <span className="mt-0.5 block text-[11px] font-semibold uppercase tracking-[0.12em] text-[var(--ink-soft)]">{meta}</span>}
-                {g.reasons.length > 0 && (
-                  <p className="mt-2 text-sm text-[var(--sage-deep)]">
-                    <span className="font-semibold">Relevant to your preferences.</span>{' '}
-                    {g.reasons.join(' ')}
-                  </p>
-                )}
-              </div>
-              <div className="shrink-0">
-                <SaveButton opportunityId={g.id} from="list" />
-              </div>
+          <div key={g.id} className="mf-card mf-card-hover flex flex-col gap-3 p-6">
+            <div className="flex items-start justify-between gap-3">
+              <span className="mf-lbl">{kicker || 'Opportunity'}</span>
+              <SaveButton opportunityId={g.id} from="list" />
             </div>
-          </li>
+            <Link
+              href={`/grants/${g.slug ?? g.id}`}
+              onClick={() => track({ name: 'recommendation_opened' })}
+              className="text-[20px] font-bold leading-tight hover:text-[var(--accent-deep)]"
+              style={{ fontWeight: 700 }}
+            >
+              {g.name}
+            </Link>
+            {g.funder && <div className="text-[14px]" style={{ color: 'var(--graphite)' }}>{g.funder}</div>}
+            {g.reasons.length > 0 && (
+              <div className="mt-auto p-3 text-[13px] leading-relaxed" style={{ background: 'var(--bg)', borderLeft: '3px solid #8FA487', color: 'var(--ink)' }}>
+                {g.reasons.join(' ')}
+              </div>
+            )}
+          </div>
         )
       })}
-    </ul>
+    </div>
   )
 }

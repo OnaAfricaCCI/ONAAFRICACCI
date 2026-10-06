@@ -8,34 +8,35 @@ export const metadata: Metadata = {
 
 export default function ProfileReadyPage() {
   return (
-    <main className="mx-auto max-w-2xl px-5 py-16 text-center sm:py-24">
-      <p className="text-[11px] font-bold uppercase tracking-[0.12em] text-[var(--sage-deep)]">All set</p>
-      <h1 className="mt-3 font-[family-name:var(--font-display)] text-[36px] leading-[1.1] sm:text-[52px]">
-        Your profile is ready.
-      </h1>
-      <p className="mx-auto mt-5 max-w-lg text-lg leading-relaxed text-[var(--ink-2)]">
-        We’ll use it to point you to funding that fits. It’s private, you can change it any time, and
-        creating it isn’t a funding application. If your email is set up with us, a confirmation is on its way.
-      </p>
-      <div className="mt-8 flex flex-wrap justify-center gap-3">
-        <Link
-          href="/recommendations"
-          className="bg-[var(--accent)] px-5 py-3 text-[13px] font-bold uppercase tracking-[0.06em] text-[#121412] transition-colors hover:bg-[var(--ink)] hover:text-[var(--bg)]"
-        >
-          Explore opportunities for me
-        </Link>
-        <Link
-          href="/saved"
-          className="border-2 border-[var(--ink)] px-5 py-3 text-[13px] font-bold uppercase tracking-[0.06em] transition-colors hover:border-[var(--accent)] hover:bg-[var(--accent)] hover:text-[var(--bg)]"
-        >
-          View my saved opportunities
-        </Link>
+    <main className="mx-auto max-w-[860px] px-5 py-10 sm:py-14">
+      <div className="relative overflow-hidden border border-[var(--ink)]" style={{ background: '#121412', color: '#F6F4EC' }}>
+        {/* aperture motif */}
+        <svg viewBox="0 0 520 520" aria-hidden="true" className="pointer-events-none absolute -right-28 -top-24 h-[360px] w-[360px] sm:h-[480px] sm:w-[480px]">
+          <circle cx="260" cy="260" r="195" fill="none" stroke="#5F7359" strokeWidth="86" />
+        </svg>
+        <div className="relative flex max-w-[560px] flex-col gap-6 px-7 py-12 sm:px-14 sm:py-[72px]">
+          <svg viewBox="0 0 100 100" width="56" height="56" aria-hidden="true">
+            <circle cx="50" cy="50" r="39" fill="none" stroke="#F6F4EC" strokeWidth="22" />
+            <circle cx="50" cy="50" r="28" fill="#FF6A4D" />
+          </svg>
+          <h1 className="mf-d text-[44px] sm:text-[60px]">Your profile is ready.</h1>
+          <p className="text-[17px] leading-relaxed sm:text-[19px]" style={{ color: '#DCE3D5' }}>
+            We will use it to surface opportunities that fit your work. It stays private, and you can
+            change or delete it whenever you like.
+          </p>
+          <div className="mt-1 flex flex-wrap gap-3.5">
+            <Link href="/recommendations" className="px-[22px] py-[14px] text-[15px] font-bold" style={{ background: '#FF6A4D', color: '#121412' }}>
+              Explore opportunities for me
+            </Link>
+            <Link href="/saved" className="px-[22px] py-[13px] text-[15px] font-bold" style={{ border: '1.5px solid #8FA487', color: '#F6F4EC' }}>
+              View my saved opportunities
+            </Link>
+          </div>
+          <p className="mt-1 text-[14px]">
+            <Link href="/profile" className="underline underline-offset-4" style={{ color: '#DCE3D5' }}>Review or edit my profile</Link>
+          </p>
+        </div>
       </div>
-      <p className="mt-6 text-sm text-[var(--ink-soft)]">
-        <Link href="/profile" className="underline underline-offset-4 hover:text-[var(--accent)]">
-          Review or edit my profile
-        </Link>
-      </p>
     </main>
   )
 }

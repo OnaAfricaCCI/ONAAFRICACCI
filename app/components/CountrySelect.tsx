@@ -31,7 +31,7 @@ export default function CountrySelect({
 
   return (
     <div>
-      <label htmlFor={inputId} className="block text-[11px] font-bold uppercase tracking-[0.12em] text-[var(--ink-2)]">
+      <label htmlFor={inputId} className="mf-lbl block">
         {label}
         {required && <span aria-hidden="true"> *</span>}
       </label>
@@ -48,7 +48,7 @@ export default function CountrySelect({
           const code = NAME_TO_CODE.get(next.trim().toLowerCase()) ?? ''
           onChange(code)
         }}
-        className="control-h mt-1.5 w-full max-w-sm border-2 border-[var(--border-md)] bg-[var(--bg)] px-3 text-sm focus:border-[var(--ink)] focus:outline-none"
+        className="mf-fld mt-2 max-w-sm"
       />
       <datalist id={listId}>
         {COUNTRIES_WORLD.map((c) => (
