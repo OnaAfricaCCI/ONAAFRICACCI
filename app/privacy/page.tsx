@@ -15,7 +15,7 @@ export const metadata: Metadata = {
  */
 const OPERATOR = 'Ona'
 const CONTACT = 'privacy@onafunds.com'
-const UPDATED = '22 September 2026'
+const UPDATED = '6 October 2026'
 
 const SECTIONS = [
   ['who', 'Who we are'],
@@ -97,10 +97,21 @@ export default function PrivacyPage() {
 
         <H2 id="collect">3. What we collect, and why</H2>
         <p className="mt-4">
-          We collect information in three situations, all of them your choice. We don&rsquo;t
-          collect anything else about you, and we never buy data about you from anyone.
+          We only collect information when you choose to give it, and we never buy data about
+          you from anyone. The situations are:
         </p>
         <dl className="mt-6">
+          <Row label="Your account and profile">
+            If you create an account, we store your <strong>email address</strong> so you can
+            sign in and so we can send you a confirmation. If you build a grant-seeker profile,
+            we store the <strong>preferences you enter</strong> (such as your country of
+            residence, the kind of creative work you do, and the funding you&rsquo;re looking for)
+            and the <strong>opportunities you save</strong>. We use these only to recommend
+            relevant funding and to show you your shortlist. Your profile is private, is visible
+            only to you, and is <strong>never shared with funders</strong>. Creating a profile is
+            not a funding application. You can edit or delete your profile, and delete your
+            account, at any time (section 10).
+          </Row>
           <Row label="Weekly digest">
             If you subscribe, we store your <strong>email address</strong> and any{' '}
             <strong>sector or country preferences</strong> you set. We use them to send you
@@ -125,9 +136,9 @@ export default function PrivacyPage() {
 
         <H2 id="basis">4. Our lawful basis</H2>
         <p className="mt-4">
-          For the digest, contact form and opportunity submissions, we process your
-          information because you asked us to. That is your <strong>consent</strong>, which you can
-          withdraw at any time. For analytics, we rely on our{' '}
+          For your account and profile, the digest, the contact form and opportunity
+          submissions, we process your information because you asked us to. That is your{' '}
+          <strong>consent</strong>, which you can withdraw at any time. For analytics, we rely on our{' '}
           <strong>legitimate interest</strong> in understanding and improving a free public
           service, which we&rsquo;ve balanced against your privacy by keeping it cookieless
           and non-identifying.
@@ -135,6 +146,11 @@ export default function PrivacyPage() {
 
         <H2 id="keep">5. How long we keep it</H2>
         <dl className="mt-6">
+          <Row label="Accounts and profiles">
+            For as long as you keep your account. You can delete your grant-seeker profile at
+            any time (which keeps your account and your saved opportunities), or ask us to
+            delete your account entirely (section 10).
+          </Row>
           <Row label="Digest subscribers">
             Until you unsubscribe. When you do, we stop sending immediately and mark your
             address inactive; you can ask us to delete it entirely (section 10).
@@ -157,7 +173,7 @@ export default function PrivacyPage() {
           instructions:
         </p>
         <dl className="mt-6">
-          <Row label="Supabase">Stores our database, including subscriber and message data. EU hosting.</Row>
+          <Row label="Supabase">Stores our database, including account, profile, subscriber and message data, and manages sign-in (authentication). EU hosting.</Row>
           <Row label="Vercel">Hosts and serves the website.</Row>
           <Row label="Resend">Delivers the emails we send you.</Row>
           <Row label="PostHog">Provides analytics. EU hosting, configured without cookies.</Row>
@@ -184,6 +200,7 @@ export default function PrivacyPage() {
         </p>
         <ul className="mt-3 list-disc space-y-1.5 pl-6">
           <li>Your light-or-dark mode choice, if you set one. Kept in your browser, never sent to us.</li>
+          <li>If you sign in, a secure session so you stay signed in on this device. It is needed to keep you logged in, not for tracking, and signing out removes it.</li>
           <li>Nothing else. Analytics runs in memory only and is discarded when you leave.</li>
         </ul>
         <p className="mt-4">
