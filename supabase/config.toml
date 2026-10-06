@@ -14,6 +14,36 @@
 
 project_id = "fperytyukppkkjjfkwgl"
 
+# ---------------------------------------------------------------------------
+# LOCAL DEVELOPMENT ONLY (the `supabase start` stack on your machine).
+#
+# These sections configure the LOCAL Supabase containers so the grant-seeker
+# accounts feature can be verified end to end: email magic-link auth with a
+# local mail sink (Inbucket), and the callback redirect allow-list.
+#
+# They do NOT affect the hosted project unless someone runs `supabase config
+# push` — DO NOT run that with these localhost values. Production Auth is
+# configured in the Supabase dashboard (Authentication → URL configuration),
+# not here. See docs/local-verification-runbook.md.
+# ---------------------------------------------------------------------------
+[auth]
+enabled = true
+site_url = "http://localhost:3000"
+# Allow the magic-link callback (with its ?next=…&save=… query) on both hosts.
+additional_redirect_urls = ["http://localhost:3000/**", "http://127.0.0.1:3000/**"]
+jwt_expiry = 3600
+
+[auth.email]
+enable_signup = true
+# Magic link / OTP sign-in. No separate signup confirmation step locally; the
+# link itself proves email ownership. Locally, auth emails go to Inbucket.
+enable_confirmations = false
+
+[inbucket]
+# Local mail sink for auth emails. Web UI at http://localhost:54324.
+enabled = true
+port = 54324
+
 [functions.check-links]
 verify_jwt = false
 

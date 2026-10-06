@@ -109,9 +109,10 @@ private, no profile answers, no tokens, no promo.
 - `npm run test:db` — DB/RLS integration suite **written** (owner isolation
   between two users, unauthenticated denial, duplicate-save prevention, draft
   resume, profile-delete-keeps-account-and-saved). **Skipped here** — needs a
-  Supabase instance (no Docker in this environment). Run with a local
-  `supabase start` or a disposable test project (never production) per the file
-  header.
+  Supabase instance (no Docker in this environment). **To run end-to-end
+  locally, see `docs/local-verification-runbook.md`:** `npm run verify:local`
+  (DB + RLS), `npm run dev:local` (auth + UI against local Supabase, magic-link
+  emails in Inbucket), `npm run email:preview` (confirmation email offline).
 - `npm run lint` — the **new feature files are clean**. Pre-existing advisory
   `react-hooks` lint errors remain on untouched files (`MobileMenu.tsx`) and on
   the earlier pagination files; not introduced by this feature.

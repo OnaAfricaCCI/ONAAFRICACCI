@@ -51,3 +51,7 @@ content-check-*.md
 
 # Transient enrichment/staging queues (DB is authoritative)
 /scripts/funder_enrichment_queue.json
+
+# Offline email preview artifacts
+confirmation-email.html
+confirmation-email.txt

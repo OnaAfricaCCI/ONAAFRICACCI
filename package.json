@@ -8,7 +8,10 @@
     "start": "next start",
     "lint": "eslint",
     "test": "node --import tsx --test tests/*.test.ts",
-    "test:db": "node --import tsx --test tests/integration/*.test.ts"
+    "test:db": "node --import tsx --test tests/integration/*.test.ts",
+    "email:preview": "node --import tsx scripts/preview-confirmation-email.ts",
+    "verify:local": "bash scripts/verify-local.sh",
+    "dev:local": "bash scripts/dev-local.sh"
   },
   "dependencies": {
     "@supabase/ssr": "^0.12.7",
