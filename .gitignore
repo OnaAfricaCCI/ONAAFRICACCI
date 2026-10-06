@@ -55,3 +55,6 @@ content-check-*.md
 # Offline email preview artifacts
 confirmation-email.html
 confirmation-email.txt
+
+# Cloud test-project keys (never commit)
+.env.test

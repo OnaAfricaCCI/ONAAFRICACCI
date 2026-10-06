@@ -11,7 +11,9 @@
     "test:db": "node --import tsx --test tests/integration/*.test.ts",
     "email:preview": "node --import tsx scripts/preview-confirmation-email.ts",
     "verify:local": "bash scripts/verify-local.sh",
-    "dev:local": "bash scripts/dev-local.sh"
+    "dev:local": "bash scripts/dev-local.sh",
+    "verify:cloud": "bash scripts/verify-cloud.sh",
+    "dev:cloud": "bash scripts/dev-cloud.sh"
   },
   "dependencies": {
     "@supabase/ssr": "^0.12.7",

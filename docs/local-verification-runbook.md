@@ -103,6 +103,49 @@ mode only delivers to the Resend account owner). Complete a profile once and
 check the row flips to `sent` with a `provider_message_id`. **Never send test
 mail to real users.**
 
+## Alternative: cloud test project (NO Docker)
+
+Best when the machine can't run Docker well (older/low-RAM Macs). Nothing heavy
+runs locally; a disposable Supabase project in the browser holds the test data.
+
+### One-time setup
+1. At **https://supabase.com** create a **new, empty project** — a throwaway,
+   NOT the real onafunds project. (Free tier is fine. Pick any region/password.)
+2. Open the project's **SQL Editor**, paste the whole of
+   **`scripts/cloud-test-setup.sql`**, and run it. (That creates a tiny
+   `opportunities` stub + one row, then the grant-seeker migration. The real
+   project already has opportunities, so there you'd run only the migration.)
+3. In the project, go to **Settings → API** and copy three values into a new
+   file named **`.env.test`** in the `cci-platform` folder (it is git-ignored):
+   ```
+   SUPABASE_URL=https://<your-ref>.supabase.co
+   SUPABASE_ANON_KEY=<anon public key>
+   SUPABASE_SERVICE_ROLE_KEY=<service_role secret key>
+   ```
+4. For the UI step, in the project go to **Authentication → URL Configuration**
+   and add **`http://localhost:3000/**`** to the Redirect URLs (and set Site URL
+   to `http://localhost:3000`).
+
+### Verify the DB + RLS
+```bash
+npm run verify:cloud
+```
+Runs the same owner-isolation / unauthenticated-denial / duplicate-save /
+draft-resume / delete-keeps-saved tests against the test project. (It refuses to
+run if the URL points at the real onafunds project.)
+
+### Verify auth + UI
+```bash
+npm run dev:cloud
+```
+Open http://localhost:3000 and follow the same click-through as §2 above. The
+difference: magic-link emails go to your **real inbox** (use your own email) —
+the free tier sends a few per hour. The Resend confirmation email behaves as in
+§3/§4 (unconfigured → recorded as failed, profile still saves).
+
+### When done
+Delete the throwaway Supabase project from its dashboard, and delete `.env.test`.
+
 ## Safety notes
 
 - **Never run `supabase config push`.** The `[auth]`/`[inbucket]` blocks in
