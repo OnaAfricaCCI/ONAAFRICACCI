@@ -1,7 +1,7 @@
 import type { Metadata } from 'next'
-import Link from 'next/link'
 import { createServerSupabase } from '@/lib/supabase/server'
 import SetupWizard, { type WizardProfile } from './SetupWizard'
+import AccountGate from '@/app/components/AccountGate'
 import { DISCIPLINES, disciplineMatchesSector, SUPPORT_TYPE_IDS } from '@/lib/profileTaxonomy'
 import { AFRICA_CODE_TO_SCOPE } from '@/lib/countries'
 
@@ -26,19 +26,15 @@ export default async function SetupPage({
 
   if (!user) {
     return (
-      <main className="mx-auto max-w-2xl px-5 py-16">
-        <h1 className="font-[family-name:var(--font-display)] text-[32px] leading-tight sm:text-[44px]">
-          Create your profile
-        </h1>
-        <p className="mt-4 text-lg text-[var(--ink-2)]">
-          You’ll need an account first. We’ll email you a secure sign-in link, then bring you straight back here.
+      <main className="mx-auto max-w-2xl px-5 py-12 sm:py-16">
+        <span className="mf-lbl">Find funding for me</span>
+        <h1 className="mf-d mt-3 text-[34px] sm:text-[44px]">Create your account</h1>
+        <p className="mt-4 text-[17px] leading-relaxed" style={{ color: 'var(--graphite)' }}>
+          Setting up takes about two minutes. First, create a free account with an email and password,
+          so your profile and saved opportunities are here whenever you come back. It happens right on
+          this page.
         </p>
-        <Link
-          href="/signin?next=/profile/setup"
-          className="mt-6 inline-block bg-[var(--accent)] px-5 py-3 text-[13px] font-bold uppercase tracking-[0.06em] text-[#121412] hover:bg-[var(--ink)] hover:text-[var(--bg)]"
-        >
-          Sign in to continue
-        </Link>
+        <AccountGate defaultMode="create" />
       </main>
     )
   }

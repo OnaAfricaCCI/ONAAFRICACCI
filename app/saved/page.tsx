@@ -6,6 +6,7 @@ import { closedState } from '@/lib/deadline'
 import SavedList, { type SavedItem } from './SavedList'
 import ProfileSetupCard from '@/app/components/ProfileSetupCard'
 import AccountTabs from '@/app/components/AccountTabs'
+import AccountGate from '@/app/components/AccountGate'
 
 export const dynamic = 'force-dynamic'
 
@@ -32,7 +33,7 @@ export default async function SavedPage() {
         <p className="mt-4 text-[17px]" style={{ color: 'var(--graphite)' }}>
           Sign in to see the opportunities you’ve saved. Your shortlist follows you across devices.
         </p>
-        <Link href="/signin?next=/saved" className="mf-btn mt-6">Sign in</Link>
+        <AccountGate defaultMode="signin" />
       </main>
     )
   }

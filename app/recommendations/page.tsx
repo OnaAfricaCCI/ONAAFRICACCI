@@ -5,6 +5,7 @@ import { supabaseAdmin } from '@/lib/supabase-admin'
 import { rankRecommendations, CHECK_REQUIREMENTS, type RecProfile } from '@/lib/recommend'
 import RecommendationList, { type RecItem } from './RecommendationList'
 import AccountTabs from '@/app/components/AccountTabs'
+import AccountGate from '@/app/components/AccountGate'
 
 export const dynamic = 'force-dynamic'
 
@@ -24,8 +25,8 @@ export default async function RecommendationsPage() {
       <main className="mx-auto max-w-3xl px-5 py-12 sm:py-16">
         <span className="mf-lbl">For you</span>
         <h1 className="mf-d mt-3 text-[34px] sm:text-[44px]">Opportunities for you</h1>
-        <p className="mt-4 text-[17px]" style={{ color: 'var(--graphite)' }}>Sign in and set up a profile so Ona can match opportunities to you.</p>
-        <Link href="/signin?next=/recommendations" className="mf-btn mt-6">Sign in</Link>
+        <p className="mt-4 text-[17px]" style={{ color: 'var(--graphite)' }}>Sign in, or create an account, and set up a profile so Ona can match opportunities to you.</p>
+        <AccountGate defaultMode="signin" />
       </main>
     )
   }

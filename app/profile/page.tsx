@@ -3,6 +3,7 @@ import Link from 'next/link'
 import { createServerSupabase } from '@/lib/supabase/server'
 import DeleteProfileButton from './DeleteProfileButton'
 import AccountTabs from '@/app/components/AccountTabs'
+import AccountGate from '@/app/components/AccountGate'
 import { COUNTRY_NAME_BY_CODE } from '@/lib/countries'
 import { APPLICANT_TYPES, DISCIPLINES, STAGES, SUPPORT_TYPES, LANGUAGES, labelFor, type Option } from '@/lib/profileTaxonomy'
 
@@ -28,8 +29,8 @@ export default async function ProfilePage({
     return (
       <main className="mx-auto max-w-2xl px-5 py-16">
         <h1 className="mf-d text-[34px] sm:text-[44px]">Your profile</h1>
-        <p className="mt-4 text-[17px]" style={{ color: 'var(--graphite)' }}>Sign in to view and manage your profile.</p>
-        <Link href="/signin?next=/profile" className="mf-btn mt-6">Sign in</Link>
+        <p className="mt-4 text-[17px]" style={{ color: 'var(--graphite)' }}>Sign in, or create an account, to view and manage your profile.</p>
+        <AccountGate defaultMode="signin" />
       </main>
     )
   }
