@@ -6,6 +6,8 @@ import BackToTop from "./components/BackToTop";
 import NavMemory from "./components/NavMemory";
 import NavLinks from "./components/NavLinks";
 import MobileMenu from "./components/MobileMenu";
+import AccountProvider from "./components/AccountProvider";
+import AccountMenu from "./components/AccountMenu";
 import { Logo, LogoSymbol } from "./components/Logo";
 import SocialLinks from "./components/SocialLinks";
 import ThemeToggle, { THEME_INIT_SCRIPT } from "./components/ThemeToggle";
@@ -108,6 +110,7 @@ export default function RootLayout({
         {/* The nav sits on ink whatever the theme: the lockup is designed to be
             reversed out of a dark surface, and it keeps the ivory page below it
             clean for the motif. */}
+        <AccountProvider>
         <header className="sticky top-0 z-30 bg-[#121412] text-[#f6f4ec]">
           <div className="mx-auto flex h-14 max-w-6xl items-center justify-between gap-x-6 px-5 sm:h-16">
             <Link href="/" aria-label="Ona Funds, home" className="blink-open shrink-0">
@@ -115,6 +118,7 @@ export default function RootLayout({
             </Link>
             <div className="flex items-center gap-2 sm:gap-4">
               <NavLinks />
+              <AccountMenu />
               <Link
                 href="/#digest"
                 className="hidden bg-[var(--accent)] px-4 py-2.5 text-[13px] font-bold text-[#121412] transition-colors hover:bg-[#f6f4ec] lg:inline-block"
@@ -164,6 +168,7 @@ export default function RootLayout({
             </div>
           </div>
         </footer>
+        </AccountProvider>
 
         <BackToTop />
         <NavMemory />

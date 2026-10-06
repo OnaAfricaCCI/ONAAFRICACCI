@@ -8,6 +8,8 @@ import { track } from '@/lib/analytics'
 import { slugify } from '@/lib/slug'
 import { daysLeft } from '@/lib/deadline'
 import { FindStrip } from '@/app/components/Motif'
+import SaveButton from '@/app/components/SaveButton'
+import { useAccount } from '@/app/components/AccountProvider'
 import {
   SCOPE_GROUP_LABELS,
   SCOPE_OPTIONS,
@@ -131,6 +133,7 @@ export default function GrantsExplorer({
 }) {
   const router = useRouter()
   const pathname = usePathname()
+  const { user } = useAccount()
 
   // The server has already searched, filtered, sorted and paginated; `results`
   // is this page. The controls below navigate (changing the URL) to ask the
@@ -380,6 +383,29 @@ export default function GrantsExplorer({
         </div>
       </section>
 
+      {/* Get more relevant opportunities — a quiet invitation (entry point C).
+          If filters are set we carry them to setup as suggested answers; the
+          wizard asks the user to confirm them. Hidden once signed in. */}
+      {!user && (
+        <div className="mt-5 flex flex-col gap-2 border-l-2 border-[var(--sage)] bg-[var(--sage-mist)]/30 px-4 py-3 text-sm sm:flex-row sm:items-center sm:justify-between">
+          <span className="text-[var(--ink-2)]">Want Ona to match funding to your work?</span>
+          <Link
+            href={(() => {
+              const p = new URLSearchParams()
+              if (sector !== 'all') p.set('sector', sector)
+              if (fundingType !== 'all') p.set('type', fundingType)
+              if (country !== 'all') p.set('place', country)
+              const qs = p.toString()
+              return `/profile/setup${qs ? `?${qs}` : ''}`
+            })()}
+            onClick={() => track({ name: 'profile_invite_click', entry_point: 'grants_filters' })}
+            className="shrink-0 font-semibold text-[var(--terracotta)] underline underline-offset-4 hover:text-[var(--accent)]"
+          >
+            Get more relevant opportunities →
+          </Link>
+        </div>
+      )}
+
       {/* Results */}
       <section className="py-8">
         {results.length === 0 && (
@@ -550,6 +576,9 @@ export default function GrantsExplorer({
                         Learn more →
                       </Link>
                     )}
+                    <div className="sm:self-end">
+                      <SaveButton opportunityId={o.id} from="list" variant="card" />
+                    </div>
                     {/*
                       Show our working.
 

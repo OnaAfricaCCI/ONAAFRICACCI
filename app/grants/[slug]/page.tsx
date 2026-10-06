@@ -10,6 +10,7 @@ import { SITE_URL, OG_IMAGE } from '@/lib/site'
 import TrackedLink from '@/app/components/TrackedLink'
 import BackLink from '@/app/components/BackLink'
 import GrantList, { type GrantListItem } from '@/app/components/GrantList'
+import SaveButton from '@/app/components/SaveButton'
 
 export const dynamic = 'force-dynamic'
 
@@ -362,6 +363,14 @@ export default async function GrantPage({ params }: { params: Promise<{ slug: st
           </TrackedLink>
         </div>
       )}
+
+      {/* Save to a private shortlist (signed-out users get the sign-in dialog). */}
+      <div className="mt-4">
+        <SaveButton opportunityId={g.id} from="detail" variant="detail" />
+      </div>
+      <p className="mt-2 text-xs text-[var(--ink-3)]">
+        Saving keeps this on your shortlist. It isn’t a funding application.
+      </p>
 
       {/* About the funder — the funder's own words, with a link to their full profile. */}
       {funder?.description && (
