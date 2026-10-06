@@ -157,6 +157,29 @@ export default function AccountProvider({ children }: { children: React.ReactNod
     [user, savedIds, openSignIn],
   )
 
+  // Called by the dialog after a successful email+password sign-in / sign-up.
+  // The session cookies are now set, so we complete any pending save here —
+  // no page round-trip, the person stays where they were.
+  const onAuthed = useCallback(async (pendingId?: string | null) => {
+    setDialog({ open: false })
+    await new Promise((r) => setTimeout(r, 150)) // let the session cookies flush
+    if (pendingId) {
+      try {
+        await fetch('/api/saved', {
+          method: 'POST',
+          headers: { 'content-type': 'application/json' },
+          body: JSON.stringify({ opportunity_id: pendingId }),
+        })
+        setSavedIds((prev) => new Set(prev).add(pendingId))
+        track({ name: 'opportunity_saved', from: 'pending' })
+      } catch {
+        /* the savedIds refetch on sign-in will recover it */
+      }
+    }
+    setToast(pendingId ? 'Saved to your shortlist.' : 'You’re signed in.')
+    setTimeout(() => setToast(null), 4000)
+  }, [])
+
   const value: AccountValue = {
     user,
     ready,
@@ -174,6 +197,7 @@ export default function AccountProvider({ children }: { children: React.ReactNod
           heading={dialog.heading}
           body={dialog.body}
           onClose={() => setDialog({ open: false })}
+          onAuthed={onAuthed}
         />
       )}
       {toast && (

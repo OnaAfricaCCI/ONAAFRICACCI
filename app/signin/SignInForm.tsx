@@ -1,85 +1,98 @@
 'use client'
 
 import { useState } from 'react'
+import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { createBrowserSupabase } from '@/lib/supabase/browser'
 import { safeNext } from '@/lib/returnUrl'
 
 const EMAIL_RE = /^[^@\s]+@[^@\s]+\.[^@\s]+$/
+const MIN_PW = 8
 
 export default function SignInForm({ next, hadError }: { next: string; hadError: string | null }) {
+  const router = useRouter()
+  const [mode, setMode] = useState<'signin' | 'create'>('signin')
   const [email, setEmail] = useState('')
-  const [state, setState] = useState<'idle' | 'sending' | 'sent' | 'error'>('idle')
+  const [password, setPassword] = useState('')
+  const [busy, setBusy] = useState(false)
   const [message, setMessage] = useState(
-    hadError === 'expired'
-      ? 'That link had expired. Enter your email to get a fresh one.'
-      : hadError === 'link'
-        ? 'That link was invalid. Enter your email to get a new one.'
-        : '',
+    hadError === 'expired' ? 'That link had expired. Sign in with your email and password below.' : '',
   )
+  const [notice, setNotice] = useState('')
 
   async function submit(e: React.FormEvent) {
     e.preventDefault()
     const value = email.trim().toLowerCase()
-    if (!EMAIL_RE.test(value)) {
-      setState('error')
-      setMessage('Please enter a valid email address.')
-      return
-    }
-    setState('sending')
-    setMessage('')
+    setMessage(''); setNotice('')
+    if (!EMAIL_RE.test(value)) { setMessage('Please enter a valid email address.'); return }
+    if (password.length < MIN_PW) { setMessage(`Your password needs at least ${MIN_PW} characters.`); return }
+    setBusy(true)
     try {
-      const cb = new URL('/auth/callback', window.location.origin)
-      cb.searchParams.set('next', safeNext(next, '/profile'))
       const supabase = createBrowserSupabase()
-      const { error } = await supabase.auth.signInWithOtp({ email: value, options: { emailRedirectTo: cb.toString() } })
-      if (error) throw error
-      setState('sent')
+      if (mode === 'create') {
+        const { data, error } = await supabase.auth.signUp({ email: value, password })
+        if (error) {
+          if (/already registered|already exists|already been/i.test(error.message)) {
+            setMode('signin'); setNotice('That email already has an account. Enter your password to sign in.')
+          } else { setMessage(error.message) }
+          setBusy(false); return
+        }
+        if (!data.session) { setNotice('Almost there — check your email to confirm your address, then sign in.'); setBusy(false); return }
+      } else {
+        const { data, error } = await supabase.auth.signInWithPassword({ email: value, password })
+        if (error || !data.session) { setMessage('That email and password don’t match. Try again, or create an account.'); setBusy(false); return }
+      }
+      router.push(safeNext(next, '/profile'))
+      router.refresh()
     } catch {
-      setState('error')
-      setMessage('Could not send the link just now. Please try again.')
+      setMessage('Something went wrong. Please try again.'); setBusy(false)
     }
   }
 
-  if (state === 'sent') {
-    return (
-      <div className="mt-8 max-w-md p-6" style={{ border: '1px solid var(--ink)' }}>
-        <p className="text-[15px] leading-relaxed">
-          Check your inbox. We’ve emailed a secure sign-in link to{' '}
-          <strong className="break-all">{email.trim().toLowerCase()}</strong>. Open it on this device to finish.
-        </p>
-      </div>
-    )
+  async function forgot() {
+    const value = email.trim().toLowerCase()
+    if (!EMAIL_RE.test(value)) { setMessage('Enter your email first, then tap “Forgot password”.'); return }
+    try {
+      const supabase = createBrowserSupabase()
+      await supabase.auth.resetPasswordForEmail(value, { redirectTo: `${window.location.origin}/auth/reset` })
+      setMessage(''); setNotice('If that email has an account, we’ve sent a link to reset your password.')
+    } catch { setMessage('Could not send the reset email just now.') }
   }
 
   return (
     <form onSubmit={submit} className="mt-8 max-w-sm">
-      <label htmlFor="email" className="mf-lbl block">Email</label>
-      <input
-        id="email"
-        type="email"
-        inputMode="email"
-        autoComplete="email"
-        required
-        value={email}
-        onChange={(e) => setEmail(e.target.value)}
-        aria-invalid={state === 'error'}
-        aria-describedby={message ? 'email-msg' : undefined}
-        placeholder="you@email.com"
-        className="mf-fld mt-2"
-      />
-      {message && (
-        <p id="email-msg" role={state === 'error' ? 'alert' : undefined} className="mt-2 text-[14px]" style={{ color: 'var(--accent-active)' }}>
-          {message}
-        </p>
-      )}
+      <div className="flex flex-col gap-1.5">
+        <label htmlFor="email" className="mf-lbl">Email</label>
+        <input id="email" type="email" inputMode="email" autoComplete="email" required
+          value={email} onChange={(e) => setEmail(e.target.value)} placeholder="you@email.com" className="mf-fld" />
+      </div>
+      <div className="mt-4 flex flex-col gap-1.5">
+        <label htmlFor="password" className="mf-lbl">Password</label>
+        <input id="password" type="password" autoComplete={mode === 'create' ? 'new-password' : 'current-password'} required
+          value={password} onChange={(e) => setPassword(e.target.value)}
+          placeholder={mode === 'create' ? 'At least 8 characters' : 'Your password'} className="mf-fld" />
+      </div>
+
+      {notice && <p role="status" className="mt-3 text-[14px]" style={{ color: 'var(--sage-deep)' }}>{notice}</p>}
+      {message && <p role="alert" className="mt-3 text-[14px]" style={{ color: 'var(--accent-active)' }}>{message}</p>}
+
       <div className="mt-5">
-        <button type="submit" disabled={state === 'sending'} className="mf-btn-ink w-full disabled:opacity-60">
-          {state === 'sending' ? 'Sending…' : 'Email me a sign-in link'}
+        <button type="submit" disabled={busy} className="mf-btn-ink w-full disabled:opacity-60">
+          {busy ? 'Just a moment…' : mode === 'create' ? 'Create account' : 'Sign in'}
         </button>
       </div>
+
+      <div className="mt-4 flex items-center justify-between text-[14px]" style={{ color: 'var(--graphite)' }}>
+        {mode === 'signin' ? (
+          <button type="button" onClick={() => { setMode('create'); setMessage(''); setNotice('') }} className="font-bold underline underline-offset-2">New here? Create an account</button>
+        ) : (
+          <button type="button" onClick={() => { setMode('signin'); setMessage(''); setNotice('') }} className="font-bold underline underline-offset-2">Already have an account? Sign in</button>
+        )}
+        {mode === 'signin' && <button type="button" onClick={forgot} className="underline underline-offset-2">Forgot password?</button>}
+      </div>
+
       <p className="mt-5 text-[13px] leading-relaxed" style={{ color: 'var(--graphite)' }}>
-        New or returning, the same link works. No password needed. Signing in is not a funding application. See our{' '}
+        We will not add you to any mailing list. Signing in is not a funding application. See our{' '}
         <Link href="/privacy" className="underline underline-offset-2">privacy policy</Link>.
       </p>
     </form>

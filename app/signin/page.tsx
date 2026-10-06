@@ -24,7 +24,7 @@ export default async function SignInPage({
       <h1 className="mf-d mt-3 text-[38px] sm:text-[52px]">Sign in to Ona Funds.</h1>
       <p className="mt-6 max-w-xl text-[18px] leading-relaxed" style={{ color: 'var(--graphite)' }}>
         An account lets you save opportunities and build an optional profile for more relevant results.
-        We’ll email you a secure link, so there’s no password to remember.
+        Create one with an email and password, or sign in below.
       </p>
       <SignInForm next={next} hadError={error} />
     </main>
