@@ -157,6 +157,9 @@ export default function RootLayout({
                 <Link href="/privacy" className="transition-colors hover:text-[var(--accent)]">
                   Privacy
                 </Link>
+                <Link href="/terms" className="transition-colors hover:text-[var(--accent)]">
+                  Terms
+                </Link>
               </div>
             </div>
 

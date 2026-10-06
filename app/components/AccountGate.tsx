@@ -86,7 +86,9 @@ export default function AccountGate({
 
       <p className="mt-5 text-[13px] leading-relaxed" style={{ color: 'var(--graphite)' }}>
         Your profile is private and never shared with funders. Creating an account is not a funding
-        application. See our <Link href="/privacy" className="underline underline-offset-2">privacy policy</Link>.
+        application. By continuing you agree to our{' '}
+        <Link href="/terms" className="underline underline-offset-2">Terms</Link> and{' '}
+        <Link href="/privacy" className="underline underline-offset-2">Privacy Policy</Link>.
       </p>
     </form>
   )
