@@ -13,7 +13,7 @@ const UPDATED = '6 October 2026'
 /*
  * Two details below are placeholders until confirmed by David / legal, matching
  * the Privacy Policy:
- *   OPERATOR identity — the legal name/entity that runs Ona (the Terms
+ *   OPERATOR identity — the legal name/entity that runs Ona Funds (the Terms
  *     deliberately say only "operated from Nairobi, Kenya"; confirm before any
  *     dispute or contract relies on it).
  *   CONTACT addresses — hello@onafunds.com and privacy@onafunds.com must exist
@@ -32,81 +32,81 @@ const INTRO: string[] = [
 const SECTIONS: Section[] = [
   {
     id: 'about', title: '1. About Ona Funds', blocks: [
-      { p: 'Ona Funds (“Ona”, “we”, “us” or “our”) is a funding-discovery platform focused on opportunities relevant to Africa’s cultural and creative industries, including African creatives and organisations on the continent and in the diaspora.' },
+      { p: 'Ona Funds (“we”, “us” or “our”) is a funding-discovery platform focused on opportunities relevant to Africa’s cultural and creative industries, including African creatives and organisations on the continent and in the diaspora.' },
       { p: 'We collect, organise, summarise and make searchable information about grants, prizes, residencies, fellowships, investment opportunities and other forms of support. We also provide information about organisations that fund or support creative work.' },
-      { p: 'Ona is operated from Nairobi, Kenya. You can contact us at hello@onafunds.com.' },
+      { p: 'Ona Funds is operated from Nairobi, Kenya. You can contact us at hello@onafunds.com.' },
     ],
   },
   {
-    id: 'what', title: '2. What Ona does, and what it does not', blocks: [
-      { p: 'Ona is an information and discovery service. Unless we expressly state otherwise in relation to a particular service, Ona:' },
+    id: 'what', title: '2. What Ona Funds does, and what it does not', blocks: [
+      { p: 'Ona Funds is an information and discovery service. Unless we expressly state otherwise in relation to a particular service, Ona Funds:' },
       { ul: [
         'is not a funder, grant-maker or investment provider;',
         'does not administer the funding opportunities listed on the Service;',
         'does not accept funding applications on behalf of the organisations listed;',
         'does not decide who is eligible for, shortlisted for or awarded funding;',
-        'does not act as an agent, representative, partner or intermediary of a listed funder merely because that funder or its opportunity appears on Ona;',
+        'does not act as an agent, representative, partner or intermediary of a listed funder merely because that funder or its opportunity appears on Ona Funds;',
         'does not guarantee that any user will qualify for, obtain or receive funding; and',
         'does not provide legal, financial, tax, investment or professional advice.',
       ] },
-      { p: 'Where Ona identifies, recommends, ranks, filters or otherwise surfaces opportunities that may be relevant to you, this is intended to help you discover opportunities. It is not a determination that you are eligible and is not a recommendation by the funder.' },
-      { p: 'Creating an Ona profile, saving an opportunity or receiving a match or recommendation from Ona does not constitute an application for funding. Applications must be made through the process specified by the relevant funder or opportunity provider.' },
+      { p: 'Where Ona Funds identifies, recommends, ranks, filters or otherwise surfaces opportunities that may be relevant to you, this is intended to help you discover opportunities. It is not a determination that you are eligible and is not a recommendation by the funder.' },
+      { p: 'Creating an Ona Funds profile, saving an opportunity or receiving a match or recommendation from Ona Funds does not constitute an application for funding. Applications must be made through the process specified by the relevant funder or opportunity provider.' },
     ],
   },
   {
     id: 'information', title: '3. Our funding information', blocks: [
-      { p: 'We take the quality of the information on Ona seriously. We review opportunities using sources we consider reasonably reliable, including funder websites, official programme pages and other publicly available sources. We may record when a source or link was last checked.' },
-      { p: 'However, funding information changes. Funders may change, extend or withdraw deadlines, eligibility requirements, award amounts, programme rules, geographic restrictions, application procedures or entire opportunities without notifying us. Information on Ona may therefore occasionally be incomplete, outdated, incorrectly interpreted or affected by an error despite our efforts to keep it accurate.' },
-      { p: 'A “last checked”, “last verified”, “link checked” or similar date means that Ona checked the relevant information or source around that date. It does not guarantee that the information remains unchanged after that date.' },
-      { p: 'Before spending money, preparing an application, travelling, entering into commitments or relying on an opportunity, you should always check the original funder’s current rules and official application page. Where information on Ona differs from information published by the funder, the funder’s current official information takes precedence.' },
+      { p: 'We take the quality of the information on Ona Funds seriously. We review opportunities using sources we consider reasonably reliable, including funder websites, official programme pages and other publicly available sources. We may record when a source or link was last checked.' },
+      { p: 'However, funding information changes. Funders may change, extend or withdraw deadlines, eligibility requirements, award amounts, programme rules, geographic restrictions, application procedures or entire opportunities without notifying us. Information on Ona Funds may therefore occasionally be incomplete, outdated, incorrectly interpreted or affected by an error despite our efforts to keep it accurate.' },
+      { p: 'A “last checked”, “last verified”, “link checked” or similar date means that Ona Funds checked the relevant information or source around that date. It does not guarantee that the information remains unchanged after that date.' },
+      { p: 'Before spending money, preparing an application, travelling, entering into commitments or relying on an opportunity, you should always check the original funder’s current rules and official application page. Where information on Ona Funds differs from information published by the funder, the funder’s current official information takes precedence.' },
       { p: 'If you notice information that appears incorrect or outdated, please tell us at hello@onafunds.com.' },
     ],
   },
   {
     id: 'deadlines', title: '4. Deadlines', blocks: [
-      { p: 'Deadline information deserves particular care. Dates displayed on Ona are provided for discovery and planning purposes. Unless expressly stated otherwise, a deadline displayed by Ona should not be treated as a guarantee that applications will be accepted until that time.' },
+      { p: 'Deadline information deserves particular care. Dates displayed on Ona Funds are provided for discovery and planning purposes. Unless expressly stated otherwise, a deadline displayed by Ona Funds should not be treated as a guarantee that applications will be accepted until that time.' },
       { p: 'Deadlines may be subject to time zones, submission-system cut-offs, early closure, extensions, quotas or other conditions determined by the funder. You are responsible for confirming the applicable deadline directly with the funder and submitting your application in sufficient time.' },
-      { p: 'Ona is not responsible for a missed application, lost opportunity or other loss arising from reliance on a deadline displayed on the Service where the underlying funder’s information or circumstances have changed.' },
+      { p: 'Ona Funds is not responsible for a missed application, lost opportunity or other loss arising from reliance on a deadline displayed on the Service where the underlying funder’s information or circumstances have changed.' },
     ],
   },
   {
     id: 'eligibility', title: '5. Eligibility information', blocks: [
-      { p: 'Ona may summarise who an opportunity appears to be open to, including by country, region, discipline, organisation type, career stage or other criteria. These summaries are intended to make opportunities easier to discover. They are not definitive eligibility assessments.' },
+      { p: 'Ona Funds may summarise who an opportunity appears to be open to, including by country, region, discipline, organisation type, career stage or other criteria. These summaries are intended to make opportunities easier to discover. They are not definitive eligibility assessments.' },
       { p: 'Funders may apply detailed conditions that cannot reasonably be captured in a short listing, including nationality, residence, registration status, project location, partnership, language, age, experience, financial, organisational or other requirements. You are responsible for reviewing the funder’s complete eligibility rules before applying.' },
     ],
   },
   {
     id: 'matches', title: '6. Personalised funding matches', blocks: [
-      { p: 'Ona may allow you to provide information about yourself, your organisation or your work so that we can surface opportunities that appear relevant to you. Our matching tools may use information such as your location, sector, discipline, career stage, organisation type, funding interests and other profile information.' },
-      { p: 'A match means only that information available to Ona suggests there may be some correspondence between your profile and an opportunity. A match does not mean:' },
+      { p: 'Ona Funds may allow you to provide information about yourself, your organisation or your work so that we can surface opportunities that appear relevant to you. Our matching tools may use information such as your location, sector, discipline, career stage, organisation type, funding interests and other profile information.' },
+      { p: 'A match means only that information available to Ona Funds suggests there may be some correspondence between your profile and an opportunity. A match does not mean:' },
       { ul: [
         'that you satisfy every eligibility criterion;',
-        'that Ona has assessed your application;',
+        'that Ona Funds has assessed your application;',
         'that the funder has reviewed or approved your profile;',
         'that the funder knows you have been matched;',
         'that you are likely to receive funding; or',
         'that applying is necessarily appropriate for your circumstances.',
       ] },
-      { p: 'Always review the funder’s complete criteria yourself. Unless we expressly tell you otherwise, your Ona profile is not shared with funders merely because you have been matched with, viewed or saved their opportunity. Our handling of personal information is explained in our Privacy Policy.' },
+      { p: 'Always review the funder’s complete criteria yourself. Unless we expressly tell you otherwise, your Ona Funds profile is not shared with funders merely because you have been matched with, viewed or saved their opportunity. Our handling of personal information is explained in our Privacy Policy.' },
     ],
   },
   {
     id: 'accounts', title: '7. Accounts', blocks: [
-      { p: 'Some features may require an Ona account. You must provide information that is accurate and reasonably current and must not impersonate another person or organisation.' },
+      { p: 'Some features may require an Ona Funds account. You must provide information that is accurate and reasonably current and must not impersonate another person or organisation.' },
       { p: 'You are responsible for maintaining the security of your account and for activity occurring through it. If you believe someone has accessed your account without permission, contact us promptly.' },
       { p: 'We may suspend or restrict an account where we reasonably believe it is being used fraudulently, unlawfully, abusively, in breach of these Terms or in a manner that threatens the Service or other users. You may request deletion of your account in accordance with the options provided through the Service or by contacting us.' },
     ],
   },
   {
     id: 'saved', title: '8. Saved opportunities, alerts and emails', blocks: [
-      { p: 'Ona may allow you to save opportunities and receive reminders, recommendations, deadline alerts, newsletters or other communications. These features are intended as conveniences, not as guaranteed notification services.' },
-      { p: 'Email delivery and automated notifications can be delayed, blocked, misclassified, interrupted or otherwise fail for reasons outside our control. You remain responsible for monitoring opportunities and deadlines that matter to you. You should not rely exclusively on an Ona email, alert or reminder to meet an application deadline.' },
+      { p: 'Ona Funds may allow you to save opportunities and receive reminders, recommendations, deadline alerts, newsletters or other communications. These features are intended as conveniences, not as guaranteed notification services.' },
+      { p: 'Email delivery and automated notifications can be delayed, blocked, misclassified, interrupted or otherwise fail for reasons outside our control. You remain responsible for monitoring opportunities and deadlines that matter to you. You should not rely exclusively on an Ona Funds email, alert or reminder to meet an application deadline.' },
       { p: 'Where a communication is optional, you may unsubscribe using the mechanism provided in that communication.' },
     ],
   },
   {
     id: 'submit', title: '9. Submitting an opportunity', blocks: [
-      { p: 'Funders, organisations and other users may submit opportunities for possible inclusion on Ona. By submitting an opportunity, you confirm that:' },
+      { p: 'Funders, organisations and other users may submit opportunities for possible inclusion on Ona Funds. By submitting an opportunity, you confirm that:' },
       { ol: [
         'the information you provide is accurate to the best of your knowledge;',
         'you have authority to provide it;',
@@ -115,59 +115,59 @@ const SECTIONS: Section[] = [
         'the opportunity does not unlawfully discriminate, deceive, exploit or defraud applicants; and',
         'our publication of the information in accordance with these Terms will not knowingly violate another person’s rights.',
       ] },
-      { p: 'Submission does not guarantee publication. Ona may verify, edit, summarise, categorise, decline, remove or update a submitted opportunity at our discretion in order to maintain the quality and usefulness of the database. Where appropriate, we may contact the submitter or organisation to verify information.' },
-      { p: 'If you submit information that is intended to be publicly displayed as part of an opportunity, you grant Ona a worldwide, non-exclusive, royalty-free licence to host, reproduce, adapt, summarise, format and display that information for the purpose of operating and promoting the Service. You retain ownership of any rights you otherwise hold in your submission.' },
+      { p: 'Submission does not guarantee publication. Ona Funds may verify, edit, summarise, categorise, decline, remove or update a submitted opportunity at our discretion in order to maintain the quality and usefulness of the database. Where appropriate, we may contact the submitter or organisation to verify information.' },
+      { p: 'If you submit information that is intended to be publicly displayed as part of an opportunity, you grant Ona Funds a worldwide, non-exclusive, royalty-free licence to host, reproduce, adapt, summarise, format and display that information for the purpose of operating and promoting the Service. You retain ownership of any rights you otherwise hold in your submission.' },
     ],
   },
   {
     id: 'funders', title: '10. Funders and organisation profiles', blocks: [
-      { p: 'Ona contains information about third-party funders, foundations, companies, public institutions, cultural organisations and other entities. Unless expressly stated otherwise, inclusion of an organisation on Ona does not mean that the organisation:' },
+      { p: 'Ona Funds contains information about third-party funders, foundations, companies, public institutions, cultural organisations and other entities. Unless expressly stated otherwise, inclusion of an organisation on Ona Funds does not mean that the organisation:' },
       { ul: [
-        'sponsors Ona;',
-        'endorses Ona;',
-        'is affiliated with Ona;',
-        'has approved its Ona profile; or',
-        'has authorised Ona to act on its behalf.',
+        'sponsors Ona Funds;',
+        'endorses Ona Funds;',
+        'is affiliated with Ona Funds;',
+        'has approved its Ona Funds profile; or',
+        'has authorised Ona Funds to act on its behalf.',
       ] },
-      { p: 'Similarly, Ona’s inclusion of an organisation or opportunity does not constitute an endorsement by Ona of that organisation, its conduct or its programme.' },
-      { p: 'Names, logos and trade marks belonging to third parties remain the property of their respective owners. Their use for identification or informational purposes does not imply affiliation or endorsement. If you represent an organisation listed on Ona and believe information about it is inaccurate, please contact hello@onafunds.com.' },
+      { p: 'Similarly, Ona Funds’ inclusion of an organisation or opportunity does not constitute an endorsement by Ona Funds of that organisation, its conduct or its programme.' },
+      { p: 'Names, logos and trade marks belonging to third parties remain the property of their respective owners. Their use for identification or informational purposes does not imply affiliation or endorsement. If you represent an organisation listed on Ona Funds and believe information about it is inaccurate, please contact hello@onafunds.com.' },
     ],
   },
   {
     id: 'thirdparty', title: '11. Third-party websites and applications', blocks: [
-      { p: 'Ona links to funder websites, application portals and other third-party services. Those websites are not controlled by Ona. When you leave Ona, the third party’s terms, privacy practices, security arrangements and application rules apply.' },
-      { p: 'We are not responsible for the availability, security, content, conduct or practices of third-party websites or for any transaction, communication, application or relationship between you and a third party. A link from Ona does not itself constitute an endorsement.' },
+      { p: 'Ona Funds links to funder websites, application portals and other third-party services. Those websites are not controlled by Ona Funds. When you leave Ona Funds, the third party’s terms, privacy practices, security arrangements and application rules apply.' },
+      { p: 'We are not responsible for the availability, security, content, conduct or practices of third-party websites or for any transaction, communication, application or relationship between you and a third party. A link from Ona Funds does not itself constitute an endorsement.' },
       { p: 'You should take reasonable care before providing personal information, documents, payment details or other sensitive information to any external website.' },
     ],
   },
   {
     id: 'fraud', title: '12. Fraud and suspicious opportunities', blocks: [
       { p: 'We aim to list legitimate funding opportunities, but no database can eliminate every risk of fraud, impersonation or malicious third-party activity.' },
-      { p: 'Be cautious if anyone claiming to represent a funder asks you to make an unusual payment, disclose passwords, provide unnecessary financial credentials, transfer money to a personal account or communicate through suspicious channels. Ona will never guarantee that paying a fee will result in you receiving a grant.' },
-      { p: 'If you encounter a suspicious opportunity or communication associated with something listed on Ona, please report it to hello@onafunds.com. We may investigate, flag, suspend or remove a listing where we reasonably believe there is a risk to users.' },
+      { p: 'Be cautious if anyone claiming to represent a funder asks you to make an unusual payment, disclose passwords, provide unnecessary financial credentials, transfer money to a personal account or communicate through suspicious channels. Ona Funds will never guarantee that paying a fee will result in you receiving a grant.' },
+      { p: 'If you encounter a suspicious opportunity or communication associated with something listed on Ona Funds, please report it to hello@onafunds.com. We may investigate, flag, suspend or remove a listing where we reasonably believe there is a risk to users.' },
     ],
   },
   {
     id: 'ip', title: '13. Intellectual property', blocks: [
-      { p: 'The Ona name, brand, design, interface, software, original written material, database structure, categorisation system, selection and arrangement of information, and other original elements of the Service are owned by or licensed to Ona and are protected by applicable intellectual-property laws. Underlying factual information about third-party opportunities remains subject to any rights that may apply to its original source.' },
-      { p: 'You may use Ona for your own personal or internal organisational funding research. You may share links to individual Ona pages and make reasonable quotations or references to Ona in accordance with applicable law.' },
+      { p: 'The Ona Funds name, brand, design, interface, software, original written material, database structure, categorisation system, selection and arrangement of information, and other original elements of the Service are owned by or licensed to Ona Funds and are protected by applicable intellectual-property laws. Underlying factual information about third-party opportunities remains subject to any rights that may apply to its original source.' },
+      { p: 'You may use Ona Funds for your own personal or internal organisational funding research. You may share links to individual Ona Funds pages and make reasonable quotations or references to Ona Funds in accordance with applicable law.' },
       { p: 'You may not, without our prior written permission:' },
       { ul: [
-        'reproduce or republish substantial portions of the Ona database;',
-        'systematically copy, scrape, crawl, harvest or extract Ona content;',
-        'use automated means to build or populate a competing or substantially similar funding database from Ona;',
-        'sell, license, sublicense or commercially redistribute Ona’s database or substantial parts of it;',
+        'reproduce or republish substantial portions of the Ona Funds database;',
+        'systematically copy, scrape, crawl, harvest or extract Ona Funds content;',
+        'use automated means to build or populate a competing or substantially similar funding database from Ona Funds;',
+        'sell, license, sublicense or commercially redistribute Ona Funds’ database or substantial parts of it;',
         'remove copyright, trade mark or other proprietary notices;',
-        'falsely represent Ona content as your own;',
+        'falsely represent Ona Funds content as your own;',
         'circumvent technical measures designed to protect the Service; or',
-        'use Ona’s content to train, develop or populate a commercial dataset, model, search product or competing service through systematic extraction, except where applicable law gives you a right that cannot lawfully be restricted.',
+        'use Ona Funds’ content to train, develop or populate a commercial dataset, model, search product or competing service through systematic extraction, except where applicable law gives you a right that cannot lawfully be restricted.',
       ] },
-      { p: 'Nothing in these Terms prevents ordinary search-engine indexing or lawful uses that cannot be restricted under applicable law. If you would like to license, syndicate, research with or otherwise make substantial use of Ona data, contact hello@onafunds.com.' },
+      { p: 'Nothing in these Terms prevents ordinary search-engine indexing or lawful uses that cannot be restricted under applicable law. If you would like to license, syndicate, research with or otherwise make substantial use of Ona Funds data, contact hello@onafunds.com.' },
     ],
   },
   {
     id: 'acceptable', title: '14. Acceptable use', blocks: [
-      { p: 'You must not use Ona:' },
+      { p: 'You must not use Ona Funds:' },
       { ul: [
         'unlawfully or fraudulently;',
         'to impersonate another person or organisation;',
@@ -179,7 +179,7 @@ const SECTIONS: Section[] = [
         'to circumvent access controls or rate limits;',
         'to harvest personal information about users;',
         'to send spam or unsolicited commercial communications;',
-        'to mislead people into believing you represent Ona or a listed funder; or',
+        'to mislead people into believing you represent Ona Funds or a listed funder; or',
         'in a manner that infringes the intellectual-property, privacy or other legal rights of another person.',
       ] },
       { p: 'We may take reasonable technical and legal measures to prevent misuse.' },
@@ -188,18 +188,18 @@ const SECTIONS: Section[] = [
   {
     id: 'privacy', title: '15. Privacy', blocks: [
       { p: 'Your privacy is important to us. Our Privacy Policy explains what personal information we collect, why we collect it, how it is used, the service providers involved and the rights available to you.' },
-      { p: 'The Privacy Policy forms part of the framework governing your use of Ona, but where privacy or data-protection law gives you rights that cannot be waived by contract, those rights remain unaffected by these Terms.' },
+      { p: 'The Privacy Policy forms part of the framework governing your use of Ona Funds, but where privacy or data-protection law gives you rights that cannot be waived by contract, those rights remain unaffected by these Terms.' },
     ],
   },
   {
     id: 'availability', title: '16. Availability and changes to the Service', blocks: [
-      { p: 'We want Ona to be useful and available, but we do not promise uninterrupted or error-free operation. We may add, change, suspend or discontinue features where reasonably necessary to improve, maintain, secure or develop the Service.' },
+      { p: 'We want Ona Funds to be useful and available, but we do not promise uninterrupted or error-free operation. We may add, change, suspend or discontinue features where reasonably necessary to improve, maintain, secure or develop the Service.' },
       { p: 'We may also remove or archive listings where opportunities close, information becomes unreliable or maintaining the listing is no longer appropriate. Where a material change significantly affects registered users, we will take reasonable steps to communicate it where appropriate.' },
     ],
   },
   {
     id: 'nofunding', title: '17. No guarantee of funding', blocks: [
-      { p: 'Finding an opportunity through Ona does not guarantee funding. Funding decisions are made by third parties according to their own criteria, processes and discretion. Ona has no control over whether a funder:' },
+      { p: 'Finding an opportunity through Ona Funds does not guarantee funding. Funding decisions are made by third parties according to their own criteria, processes and discretion. Ona Funds has no control over whether a funder:' },
       { ul: [
         'accepts your application;',
         'considers you eligible;',
@@ -213,14 +213,14 @@ const SECTIONS: Section[] = [
   },
   {
     id: 'disclaimer', title: '18. Disclaimer', blocks: [
-      { p: 'We provide Ona with the aim of making funding information easier to discover and understand. To the extent permitted by applicable law, the Service and its content are provided on an “as available” basis.' },
-      { p: 'We do not warrant that every listing will at all times be complete, current or error-free, or that every potentially relevant funding opportunity will appear on Ona. Nothing in these Terms excludes any warranty, right or remedy that applicable law does not permit us to exclude.' },
+      { p: 'We provide Ona Funds with the aim of making funding information easier to discover and understand. To the extent permitted by applicable law, the Service and its content are provided on an “as available” basis.' },
+      { p: 'We do not warrant that every listing will at all times be complete, current or error-free, or that every potentially relevant funding opportunity will appear on Ona Funds. Nothing in these Terms excludes any warranty, right or remedy that applicable law does not permit us to exclude.' },
     ],
   },
   {
     id: 'liability', title: '19. Limitation of liability', blocks: [
       { p: 'Nothing in these Terms excludes or limits liability where doing so would be unlawful, including liability that cannot lawfully be excluded under applicable consumer-protection law.' },
-      { p: 'Subject to that qualification, Ona will not be liable for indirect, incidental, special or consequential loss arising from your use of, or inability to use, the Service, including loss arising from:' },
+      { p: 'Subject to that qualification, Ona Funds will not be liable for indirect, incidental, special or consequential loss arising from your use of, or inability to use, the Service, including loss arising from:' },
       { ul: [
         'an unsuccessful funding application;',
         'a missed or changed deadline;',
@@ -232,19 +232,19 @@ const SECTIONS: Section[] = [
         'interruption of the Service or an alert; or',
         'your dealings with an external website.',
       ] },
-      { p: 'You remain responsible for independently checking information that is material to an application, financial decision, contractual commitment or other significant decision. Nothing in this section is intended to excuse Ona from responsibility for its own fraud, wilful misconduct or any liability that applicable law says cannot be excluded or limited.' },
+      { p: 'You remain responsible for independently checking information that is material to an application, financial decision, contractual commitment or other significant decision. Nothing in this section is intended to excuse Ona Funds from responsibility for its own fraud, wilful misconduct or any liability that applicable law says cannot be excluded or limited.' },
     ],
   },
   {
     id: 'indemnity', title: '20. Indemnity for misuse', blocks: [
-      { p: 'If you use Ona on behalf of a business, organisation or other legal entity, or submit opportunities in a professional capacity, you agree, to the extent permitted by law, to indemnify Ona against third-party claims, losses and reasonable costs arising directly from:' },
+      { p: 'If you use Ona Funds on behalf of a business, organisation or other legal entity, or submit opportunities in a professional capacity, you agree, to the extent permitted by law, to indemnify Ona Funds against third-party claims, losses and reasonable costs arising directly from:' },
       { ul: [
         'information you submitted that you knew was materially false or unlawful;',
         'your infringement of another person’s intellectual-property or other legal rights;',
         'your fraudulent or unlawful use of the Service; or',
         'a material breach of these Terms.',
       ] },
-      { p: 'This provision does not apply to the extent a claim was caused by Ona’s own unlawful conduct.' },
+      { p: 'This provision does not apply to the extent a claim was caused by Ona Funds’ own unlawful conduct.' },
     ],
   },
   {
@@ -259,13 +259,13 @@ const SECTIONS: Section[] = [
         'infringement of another person’s rights; or',
         'a legal or regulatory requirement.',
       ] },
-      { p: 'Where reasonably practicable, we may provide notice or an opportunity to address the issue. You may stop using Ona at any time.' },
+      { p: 'Where reasonably practicable, we may provide notice or an opportunity to address the issue. You may stop using Ona Funds at any time.' },
       { p: 'Provisions which by their nature should continue after termination, including intellectual-property, liability and governing-law provisions, will survive.' },
     ],
   },
   {
     id: 'changes', title: '22. Changes to these Terms', blocks: [
-      { p: 'Ona will evolve, and these Terms may need to evolve with it. We may update these Terms to reflect new features, changes in law, security requirements or changes to how the Service operates.' },
+      { p: 'Ona Funds will evolve, and these Terms may need to evolve with it. We may update these Terms to reflect new features, changes in law, security requirements or changes to how the Service operates.' },
       { p: 'The current version and its effective date will be published on this page. If a change materially affects registered users’ rights or obligations, we will take reasonable steps to provide notice before or when the change takes effect.' },
       { p: 'Continued use of the Service after an updated version becomes effective constitutes acceptance of the revised Terms to the extent permitted by applicable law.' },
     ],
@@ -279,8 +279,8 @@ const SECTIONS: Section[] = [
   {
     id: 'general', title: '24. General provisions', blocks: [
       { p: 'If any provision of these Terms is found to be unlawful or unenforceable, the remaining provisions will continue to apply to the fullest extent permitted by law. Our failure to enforce a provision immediately does not waive our right to enforce it later.' },
-      { p: 'You may not transfer your rights under these Terms to another person without our consent. We may transfer our rights and obligations in connection with a restructuring, incorporation, sale, merger or transfer of the Ona service, provided this does not unlawfully reduce your rights.' },
-      { p: 'These Terms, together with the Privacy Policy and any additional terms expressly applicable to a particular Ona service, constitute the agreement governing your use of the Service.' },
+      { p: 'You may not transfer your rights under these Terms to another person without our consent. We may transfer our rights and obligations in connection with a restructuring, incorporation, sale, merger or transfer of the Ona Funds service, provided this does not unlawfully reduce your rights.' },
+      { p: 'These Terms, together with the Privacy Policy and any additional terms expressly applicable to a particular Ona Funds service, constitute the agreement governing your use of the Service.' },
     ],
   },
   {
@@ -313,7 +313,7 @@ export default function TermsPage() {
       </h1>
       <p className="mt-6 text-lg leading-relaxed text-[var(--ink-2)]">
         Welcome to Ona Funds. These Terms set out what the Service is, what it does and does not do, and
-        how you may use it. In short: Ona helps you discover funding, but it is not the funder, and you
+        how you may use it. In short: Ona Funds helps you discover funding, but it is not the funder, and you
         should always confirm the details with the funder before you apply.
       </p>
       <p className="mt-3 text-sm text-[var(--ink-3)]">Last updated {UPDATED}</p>

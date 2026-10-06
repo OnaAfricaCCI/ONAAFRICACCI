@@ -3,17 +3,17 @@ import type { Metadata } from 'next'
 
 export const metadata: Metadata = {
   title: 'Privacy Policy',
-  description: 'How Ona collects, uses, stores and protects personal information, and the rights you have over it.',
+  description: 'How Ona Funds collects, uses, stores and protects personal information, and the rights you have over it.',
   alternates: { canonical: '/privacy' },
 }
 
 /*
  * Two details below are placeholders until confirmed by David:
- *   OPERATOR  — the legal name that runs Ona (a person or a registered entity)
+ *   OPERATOR  — the legal name that runs Ona Funds (a person or a registered entity)
  *   CONTACT   — the email address for privacy requests
  * Everything else describes what the site actually does.
  */
-const OPERATOR = 'Ona'
+const OPERATOR = 'Ona Funds'
 const CONTACT = 'privacy@onafunds.com'
 const UPDATED = '6 October 2026'
 
@@ -59,7 +59,7 @@ export default function PrivacyPage() {
         Your information, plainly.
       </h1>
       <p className="mt-6 text-lg leading-relaxed text-[var(--ink-2)]">
-        Ona is a public information site. You can read everything on it without telling
+        Ona Funds is a public information site. You can read everything on it without telling
         us who you are. This policy explains the small amount of personal information we
         collect when you choose to give it, what we do with it, and the control you have.
       </p>
@@ -82,15 +82,15 @@ export default function PrivacyPage() {
       <div className="text-[17px] leading-relaxed text-[var(--ink-2)]">
         <H2 id="who">1. Who we are</H2>
         <p className="mt-4">
-          Ona is a public record of funding open to Africa&rsquo;s cultural and creative
+          Ona Funds is a public record of funding open to Africa&rsquo;s cultural and creative
           industries, at onafunds.com. It is operated by {OPERATOR}, who is responsible
           for the personal information described here (the &ldquo;data controller&rdquo;).
-          Ona is run from Nairobi, Kenya.
+          Ona Funds is run from Nairobi, Kenya.
         </p>
 
         <H2 id="scope">2. What this policy covers</H2>
         <p className="mt-4">
-          This policy covers the Ona website and the emails we send. It does not cover the
+          This policy covers the Ona Funds website and the emails we send. It does not cover the
           websites of funders and other organisations we link to, which have their own
           policies.
         </p>
@@ -235,7 +235,7 @@ export default function PrivacyPage() {
 
         <H2 id="children">11. Children</H2>
         <p className="mt-4">
-          Ona is intended for adults. We don&rsquo;t knowingly collect information from anyone
+          Ona Funds is intended for adults. We don&rsquo;t knowingly collect information from anyone
           under 18. If you believe a child has given us information, contact us and we&rsquo;ll
           delete it.
         </p>
