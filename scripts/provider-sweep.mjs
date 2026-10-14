@@ -68,7 +68,8 @@ async function firecrawl(url) {
     if (res.status === 429) { await sleep(5000 * (attempt + 1)); continue }
     if (!res.ok) throw new Error(`firecrawl ${res.status}`)
     const d = await res.json()
-    return d?.data?.json?.opportunities ?? []
+    const extracted = d?.data?.json ?? d?.data?.extract ?? {}
+    return Array.isArray(extracted.opportunities) ? extracted.opportunities : []
   }
   throw new Error('firecrawl rate-limited')
 }
