@@ -3,6 +3,7 @@
 import Link from 'next/link'
 import { useAccount } from '@/app/components/AccountProvider'
 import { daysLeft } from '@/lib/deadline'
+import StatusBadge from '@/app/components/StatusBadge'
 
 export type SavedItem = {
   id: string
@@ -11,23 +12,31 @@ export type SavedItem = {
   funder: string | null
   funding_type: string | null
   cci_sector: string | null
+  amount: string | null
   deadline: string | null
   deadline_type: string | null
+  application_status: string | null
+  programme_frequency: string | null
+  frequency_detail: string | null
+  next_open_date: string | null
   /** A short status label when the opportunity is no longer open, else null. */
   closedLabel: string | null
   missing?: boolean
 }
 
-/** A short deadline / status line for a saved row. */
-function deadlineSnippet(i: SavedItem): { text: string; urgent: boolean } {
+/**
+ * The deadline line for a saved row. The status badge already carries the
+ * status words, so this focuses on the concrete DATE and the countdown when a
+ * close date is near — the thing a shortlist is for. Returns null when there is
+ * no specific date to add.
+ */
+function deadlineLine(i: SavedItem): { text: string; urgent: boolean } | null {
   if (i.missing) return { text: 'No longer listed', urgent: true }
-  if (i.closedLabel) return { text: i.closedLabel, urgent: true }
-  if (i.deadline_type === 'rolling') return { text: 'Rolling deadline', urgent: false }
-  if (!i.deadline) return { text: i.deadline_type === 'recurring' ? 'Recurring' : 'Timing varies', urgent: false }
+  if (!i.deadline) return null
   const d = new Date(i.deadline)
-  if (isNaN(d.getTime())) return { text: 'Open', urgent: false }
+  if (isNaN(d.getTime())) return null
   const dl = daysLeft(i.deadline)
-  if (i.deadline_type === 'recurring' && (dl ?? 0) < 0) return { text: 'Recurring', urgent: false }
+  if (dl !== null && dl < 0) return null // past date — the badge conveys closed/awaiting
   const date = d.toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })
   if (dl !== null && dl >= 0 && dl <= 30) {
     return { text: `Closes ${date} · ${dl === 0 ? 'today' : `${dl}d left`}`, urgent: true }
@@ -54,7 +63,7 @@ export default function SavedList({ items }: { items: SavedItem[] }) {
       {visible.map((g, i) => {
         const meta = [g.funder, g.funding_type, g.cci_sector].filter(Boolean).join(' · ')
         const n = String(i + 1).padStart(2, '0')
-        const dl = deadlineSnippet(g)
+        const dl = deadlineLine(g)
         const href = `/grants/${g.slug ?? g.id}`
         return (
           <div
@@ -71,8 +80,24 @@ export default function SavedList({ items }: { items: SavedItem[] }) {
                   <Link href={href} className="cursor-pointer text-[18px] font-bold leading-tight hover:text-[var(--accent-deep)]">{g.name}</Link>
                 )}
                 {meta && <div className="mt-0.5 text-[13px]" style={{ color: 'var(--graphite)' }}>{meta}</div>}
-                <div className="mt-1 text-[12px] font-bold uppercase tracking-[0.1em]" style={{ color: dl.urgent ? 'var(--accent-deep)' : '#5F7359' }}>
-                  {dl.text}
+
+                {/* Same descriptors as the cards: status badge + cadence. */}
+                {!g.missing && (
+                  <div className="mt-2">
+                    <StatusBadge opportunity={g} frequency={g.programme_frequency} frequencyDetail={g.frequency_detail} size="sm" />
+                  </div>
+                )}
+
+                {/* Award + the deadline, with days-left when it's close. */}
+                <div className="mt-2 flex flex-wrap items-baseline gap-x-5 gap-y-1">
+                  {g.amount && (
+                    <span className="text-[13px] font-semibold" style={{ color: 'var(--forest)' }}>{g.amount}</span>
+                  )}
+                  {dl && (
+                    <span className="text-[12px] font-bold uppercase tracking-[0.1em]" style={{ color: dl.urgent ? 'var(--accent-deep)' : '#5F7359' }}>
+                      {dl.text}
+                    </span>
+                  )}
                 </div>
               </div>
             </div>

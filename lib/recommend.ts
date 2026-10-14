@@ -36,6 +36,12 @@ export type RecProfile = {
   country_code: string | null
   disciplines: string[]
   support_types: string[]
+  /**
+   * The exclusive "I'm open to different kinds of opportunities" answer. When
+   * true it BROADENS matching — any funding type counts — and never narrows or
+   * excludes. A preference only, exactly as the brief requires.
+   */
+  open_to_all?: boolean
 }
 
 export type RecOpportunity = {
@@ -107,14 +113,18 @@ export function scoreOpportunity(profile: RecProfile, opp: RecOpportunity): RecR
     supportMatchesFundingType(s, opp.funding_type),
   )
 
-  // A positive match needs both a creative-interest match and a funding-type
-  // match. Anything less stays out of "relevant to your preferences".
-  if (matchedDisciplines.length === 0 || !matchedSupport) return none
+  // A positive match needs a creative-interest match and, unless the user is
+  // open to any kind of funding, a funding-type match. "Open to anything"
+  // broadens — it never narrows — so it stands in for the support match.
+  if (matchedDisciplines.length === 0) return none
+  if (!matchedSupport && !profile.open_to_all) return none
 
   const discLabels = matchedDisciplines
     .map((d) => DISCIPLINE_BY_ID.get(d)?.label.toLowerCase() ?? d)
     .slice(0, 2)
-  const supportNoun = SUPPORT_NOUN[matchedSupport] ?? `${matchedSupport} funding`
+  const supportNoun = matchedSupport
+    ? SUPPORT_NOUN[matchedSupport] ?? `${matchedSupport} funding`
+    : 'the kinds of funding you’re open to'
 
   const reasons = [`Matches your interest in ${joinWords(discLabels)} and ${supportNoun}.`]
   if (location.note) reasons.push(`${location.note}.`)

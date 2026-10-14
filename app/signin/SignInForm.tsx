@@ -20,6 +20,7 @@ export default function SignInForm({ next, hadError }: { next: string; hadError:
     hadError === 'expired' ? 'That link had expired. Sign in with your email and password below.' : '',
   )
   const [notice, setNotice] = useState('')
+  const [showPw, setShowPw] = useState(false)
 
   async function submit(e: React.FormEvent) {
     e.preventDefault()
@@ -55,8 +56,13 @@ export default function SignInForm({ next, hadError }: { next: string; hadError:
           value={email} onChange={(e) => setEmail(e.target.value)} placeholder="you@email.com" className="mf-fld" />
       </div>
       <div className="mt-4 flex flex-col gap-1.5">
-        <label htmlFor="password" className="mf-lbl">Password</label>
-        <input id="password" type="password" autoComplete={mode === 'create' ? 'new-password' : 'current-password'} required
+        <div className="flex items-baseline justify-between">
+          <label htmlFor="password" className="mf-lbl">Password</label>
+          <button type="button" onClick={() => setShowPw((v) => !v)}
+            className="text-[13px] font-bold underline underline-offset-2" style={{ color: 'var(--accent-deep)' }}
+            aria-pressed={showPw}>{showPw ? 'Hide password' : 'Show password'}</button>
+        </div>
+        <input id="password" type={showPw ? 'text' : 'password'} autoComplete={mode === 'create' ? 'new-password' : 'current-password'} required
           value={password} onChange={(e) => setPassword(e.target.value)}
           placeholder={mode === 'create' ? 'At least 8 characters' : 'Your password'} className="mf-fld" />
       </div>

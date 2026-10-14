@@ -408,6 +408,24 @@ a:hover {
 .mf-fld::placeholder { color: var(--graphite); opacity: 0.7; }
 .mf-fld:focus { outline: 2px solid var(--accent); outline-offset: 1px; }
 
+/* Profile question options — mapped from the My Funding build handoff (.opt/.mk/.odesc).
+   Strong outlined control, restrained coral: hover lifts a 4px coral shadow,
+   selected fills ink with a coral marker. Theme-aware via the brand tokens. */
+.mf-opt {
+  display: flex; align-items: flex-start; gap: 12px;
+  border: 1.5px solid var(--ink); background: var(--bg); color: var(--ink);
+  padding: 13px 16px; font-size: 15px; font-weight: 600; cursor: pointer;
+  text-align: left; width: 100%;
+}
+.mf-opt:hover { box-shadow: 4px 4px 0 var(--accent); }
+.mf-opt[data-sel="true"] { background: var(--ink); color: var(--bg); }
+.mf-opt:has(input:focus-visible) { outline: 2px solid var(--accent); outline-offset: 2px; }
+.mf-mk { width: 16px; height: 16px; flex: none; box-sizing: border-box; border: 2px solid var(--ink); margin-top: 2px; }
+.mf-mk[data-round="true"] { border-radius: 50%; }
+.mf-opt[data-sel="true"] .mf-mk { border-color: var(--bg); background: var(--accent); }
+.mf-odesc { display: block; margin-top: 3px; font-size: 13px; font-weight: 400; line-height: 1.45; color: var(--graphite); }
+.mf-opt[data-sel="true"] .mf-odesc { color: var(--sage); }
+
 .mf-card {
   background: var(--paper);
   border: 1px solid var(--ink);

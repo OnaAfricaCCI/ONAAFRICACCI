@@ -49,12 +49,13 @@ export default async function SavedPage() {
   if (ids.length) {
     const { data: opps } = await supabaseAdmin
       .from('opportunities')
-      .select('id,name,slug,funder,funding_type,cci_sector,deadline,deadline_type')
+      .select('id,name,slug,funder,funding_type,cci_sector,amount,deadline,deadline_type,application_status,programme_frequency,frequency_detail,next_open_date')
       .in('id', ids)
     const byId = new Map((opps ?? []).map((o) => [o.id as string, o]))
+    const nulls = { amount: null, application_status: null, programme_frequency: null, frequency_detail: null, next_open_date: null }
     items = ids.map((id) => {
       const o = byId.get(id)
-      if (!o) return { id, name: '', slug: null, funder: null, funding_type: null, cci_sector: null, deadline: null, deadline_type: null, closedLabel: 'No longer listed', missing: true }
+      if (!o) return { id, name: '', slug: null, funder: null, funding_type: null, cci_sector: null, deadline: null, deadline_type: null, ...nulls, closedLabel: 'No longer listed', missing: true }
       const state = closedState(o.deadline as string | null, o.deadline_type as string | null)
       return {
         id,
@@ -63,8 +64,13 @@ export default async function SavedPage() {
         funder: (o.funder as string | null) ?? null,
         funding_type: (o.funding_type as string | null) ?? null,
         cci_sector: (o.cci_sector as string | null) ?? null,
+        amount: (o.amount as string | null) ?? null,
         deadline: (o.deadline as string | null) ?? null,
         deadline_type: (o.deadline_type as string | null) ?? null,
+        application_status: (o.application_status as string | null) ?? null,
+        programme_frequency: (o.programme_frequency as string | null) ?? null,
+        frequency_detail: (o.frequency_detail as string | null) ?? null,
+        next_open_date: (o.next_open_date as string | null) ?? null,
         closedLabel: CLOSED_LABEL[state] ?? null,
       }
     })

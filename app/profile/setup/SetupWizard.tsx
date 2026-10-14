@@ -7,37 +7,52 @@ import { track } from '@/lib/analytics'
 import CountrySelect from '@/app/components/CountrySelect'
 import { COUNTRY_NAME_BY_CODE } from '@/lib/countries'
 import {
-  APPLICANT_TYPES,
-  ORG_APPLICANT_TYPES,
-  DISCIPLINES,
-  STAGES,
-  SUPPORT_TYPES,
-  LANGUAGES,
-  labelFor,
-  type Option,
+  APPLICANT_TYPES, CAREER_STAGE_APPLICANT_TYPES,
+  DISCIPLINES, STAGES, SUPPORT_TYPES,
+  labelFor, type Option,
 } from '@/lib/profileTaxonomy'
+import { ChoiceOption, QuestionProgress, SelectCount, PrivacyNote, Conditional } from '@/app/components/ProfileControls'
 
 export type WizardProfile = {
   country_code: string | null
   applicant_type: string | null
   organisation_name: string | null
-  organisation_country: string | null
   disciplines: string[]
+  disciplines_other: string | null
   stage: string | null
   support_types: string[]
-  languages: string[]
+  open_to_all: boolean
 }
 
 const EMPTY: WizardProfile = {
-  country_code: null, applicant_type: null, organisation_name: null, organisation_country: null,
-  disciplines: [], stage: null, support_types: [], languages: [],
+  country_code: null, applicant_type: null, organisation_name: null,
+  disciplines: [], disciplines_other: null, stage: null, support_types: [], open_to_all: false,
 }
 
-function resumeStep(p: WizardProfile): number {
-  if (!p.country_code || !p.applicant_type) return 1
-  if (p.disciplines.length === 0) return 2
-  if (p.support_types.length === 0) return 3
-  return 4
+/** Applicant types for which an optional organisation/collective name is asked (Q2). */
+const NAME_TYPES = new Set(['collective', 'nonprofit', 'business'])
+
+type StepKey = 'intro' | 'based' | 'type' | 'areas' | 'stage' | 'interests' | 'review'
+
+/**
+ * The ordered flow for the current applicant type. The career-stage question is
+ * for individuals only — but until a type is chosen we assume it's present, so
+ * the counter reads "of 5" from the start (the common path) and only drops to
+ * "of 4" if a non-individual type is picked, rather than jumping up to 5.
+ */
+function flowFor(p: WizardProfile): StepKey[] {
+  const includeStage = p.applicant_type === null || CAREER_STAGE_APPLICANT_TYPES.has(p.applicant_type)
+  return ['intro', 'based', 'type', 'areas', ...(includeStage ? (['stage'] as StepKey[]) : []), 'interests', 'review']
+}
+/** The question steps only (for "Question N of M"). */
+const questionsOf = (flow: StepKey[]): StepKey[] => flow.filter((s) => s !== 'intro' && s !== 'review')
+
+function resumeStep(p: WizardProfile): StepKey {
+  if (!p.country_code) return 'based'
+  if (!p.applicant_type) return 'type'
+  if (p.disciplines.length === 0 && !p.disciplines_other) return 'areas'
+  if (p.support_types.length === 0 && !p.open_to_all) return 'interests'
+  return 'review'
 }
 
 export default function SetupWizard({
@@ -50,36 +65,45 @@ export default function SetupWizard({
 }) {
   const router = useRouter()
   const [form, setForm] = useState<WizardProfile>(initial ?? EMPTY)
-  const [step, setStep] = useState<number>(initial ? resumeStep(initial) : 1)
+  const [stepKey, setStepKey] = useState<StepKey>(initial ? resumeStep(initial) : 'intro')
+  const [anotherOpen, setAnotherOpen] = useState<boolean>(!!initial?.disciplines_other)
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState('')
   const headingRef = useRef<HTMLHeadingElement>(null)
   const startedRef = useRef(false)
 
   useEffect(() => {
-    if (!startedRef.current) {
-      startedRef.current = true
-      track({ name: 'profile_setup_started', entry_point: entryPoint })
-    }
+    if (!startedRef.current) { startedRef.current = true; track({ name: 'profile_setup_started', entry_point: entryPoint }) }
   }, [entryPoint])
+  useEffect(() => { headingRef.current?.focus() }, [stepKey])
 
-  useEffect(() => { headingRef.current?.focus() }, [step])
+  const flow = flowFor(form)
+  const questions = questionsOf(flow)
+  const qIndex = questions.indexOf(stepKey) // -1 for intro/review
+  const set = <K extends keyof WizardProfile>(key: K, value: WizardProfile[K]) => setForm((f) => ({ ...f, [key]: value }))
+  const toggleDiscipline = (id: string) =>
+    setForm((f) => ({ ...f, disciplines: f.disciplines.includes(id) ? f.disciplines.filter((x) => x !== id) : [...f.disciplines, id] }))
+  const toggleSupport = (id: string) =>
+    setForm((f) => ({ ...f, open_to_all: false, support_types: f.support_types.includes(id) ? f.support_types.filter((x) => x !== id) : [...f.support_types, id] }))
+  const isIndividual = form.applicant_type ? CAREER_STAGE_APPLICANT_TYPES.has(form.applicant_type) : false
 
-  const set = <K extends keyof WizardProfile>(key: K, value: WizardProfile[K]) =>
-    setForm((f) => ({ ...f, [key]: value }))
-  const toggle = (key: 'disciplines' | 'support_types' | 'languages', id: string) =>
-    setForm((f) => {
-      const have = f[key].includes(id)
-      return { ...f, [key]: have ? f[key].filter((x) => x !== id) : [...f[key], id] }
-    })
-  const isOrg = form.applicant_type ? ORG_APPLICANT_TYPES.has(form.applicant_type) : false
+  const payload = () => ({
+    country_code: form.country_code,
+    applicant_type: form.applicant_type,
+    organisation_name: NAME_TYPES.has(form.applicant_type ?? '') ? form.organisation_name : null,
+    disciplines: form.disciplines,
+    disciplines_other: anotherOpen ? form.disciplines_other : null,
+    stage: isIndividual ? form.stage : null,
+    support_types: form.open_to_all ? [] : form.support_types,
+    open_to_all: form.open_to_all,
+  })
 
   async function saveDraft(): Promise<boolean> {
     setSaving(true); setError('')
     try {
       const res = await fetch('/api/profile', {
         method: 'POST', headers: { 'content-type': 'application/json' },
-        body: JSON.stringify({ action: 'save-draft', ...form }),
+        body: JSON.stringify({ action: 'save-draft', ...payload() }),
       })
       if (!res.ok) throw new Error()
       return true
@@ -89,22 +113,26 @@ export default function SetupWizard({
     } finally { setSaving(false) }
   }
 
-  function stepValid(s: number): string | null {
-    if (s === 1) {
-      if (!form.country_code) return 'Please choose your country of residence.'
-      if (!form.applicant_type) return 'Please choose who you’re applying as.'
+  function stepValid(s: StepKey): string | null {
+    if (s === 'based' && !form.country_code) return 'Please choose where you’re currently based.'
+    if (s === 'type' && !form.applicant_type) return 'Please choose who would usually apply.'
+    if (s === 'areas') {
+      if (anotherOpen && !(form.disciplines_other ?? '').trim()) return 'Please describe your “Another area”, or unselect it.'
+      if (form.disciplines.length === 0 && !(form.disciplines_other ?? '').trim()) return 'Please choose at least one area.'
     }
-    if (s === 2 && form.disciplines.length === 0) return 'Please choose at least one discipline.'
-    if (s === 3 && form.support_types.length === 0) return 'Please choose at least one support type.'
+    if (s === 'interests' && form.support_types.length === 0 && !form.open_to_all) return 'Please choose at least one kind of opportunity.'
     return null
   }
 
+  function goNext() { setStepKey(flow[Math.min(flow.indexOf(stepKey) + 1, flow.length - 1)]) }
+  function goBack() { setStepKey(flow[Math.max(flow.indexOf(stepKey) - 1, 0)]) }
+
   async function onContinue() {
-    const invalid = stepValid(step)
+    const invalid = stepValid(stepKey)
     if (invalid) { setError(invalid); return }
-    if (!(await saveDraft())) return
-    track({ name: 'profile_step_completed', step })
-    setStep((s) => s + 1)
+    if (stepKey !== 'intro' && !(await saveDraft())) return
+    if (qIndex >= 0) track({ name: 'profile_step_completed', step: qIndex + 1 })
+    goNext()
   }
   async function onFinishLater() { await saveDraft(); router.push('/profile') }
   async function onComplete() {
@@ -112,7 +140,7 @@ export default function SetupWizard({
     try {
       const res = await fetch('/api/profile', {
         method: 'POST', headers: { 'content-type': 'application/json' },
-        body: JSON.stringify({ action: 'complete', ...form }),
+        body: JSON.stringify({ action: 'complete', ...payload() }),
       })
       if (!res.ok) { const d = await res.json().catch(() => ({})); throw new Error(d.error || 'Could not save your profile.') }
       track(alreadyCompleted ? { name: 'profile_updated' } : { name: 'profile_completed' })
@@ -123,133 +151,151 @@ export default function SetupWizard({
     }
   }
 
-  const pct = Math.round((step / 3) * 100)
-  const stepEyebrow = step === 1 ? 'Step 1 of 3 · About you'
-    : step === 2 ? 'Step 2 of 3 · Your work'
-    : step === 3 ? 'Step 3 of 3 · Funding' : 'Nearly done'
-  const stepHeading = step === 1 ? 'Tell us a little about you.'
-    : step === 2 ? 'What do you make?'
-    : step === 3 ? 'What are you looking for?' : 'Check your answers.'
-
   return (
     <main className="mx-auto max-w-[860px] px-5 py-10 sm:py-14">
       <div className="border border-[var(--ink)]">
         <div className="flex flex-col gap-7 px-7 py-9 sm:px-14 sm:py-11">
-          {/* progress / eyebrow */}
-          {step <= 3 ? (
-            <div className="flex flex-col gap-3">
-              <div className="flex items-baseline justify-between">
-                <span className="mf-lbl">{stepEyebrow}</span>
-                <span className="text-[13px] font-bold tabular-nums" style={{ color: 'var(--graphite)' }}>{pct}%</span>
+
+          {/* ---- INTRO ---- */}
+          {stepKey === 'intro' && (
+            <>
+              <span className="mf-lbl">Set up your profile</span>
+              <h1 ref={headingRef} tabIndex={-1} className="mf-d text-[34px] outline-none sm:text-[44px]">Tell us about your work.</h1>
+              <p className="max-w-xl text-[17px] leading-relaxed" style={{ color: 'var(--graphite)' }}>
+                A few quick questions to help us suggest relevant opportunities. You can update your answers anytime.
+              </p>
+              <PrivacyNote>
+                Your profile is private and never shown to funders. It is not a funding application, and answering never affects your eligibility.
+              </PrivacyNote>
+              <div className="flex flex-wrap items-center justify-between gap-4 border-t border-[var(--line)] pt-6">
+                <Link href="/grants" className="text-[15px] font-bold underline underline-offset-4" style={{ color: 'var(--accent-deep)' }}>Skip for now</Link>
+                <button type="button" onClick={() => setStepKey('based')} className="mf-btn">Start</button>
               </div>
-              <div className="grid grid-cols-3 gap-2">
-                {[1, 2, 3].map((n) => (
-                  <span key={n} className="h-1.5" style={{ background: n <= step ? '#FF6A4D' : '#DCE3D5' }} />
-                ))}
-              </div>
-            </div>
-          ) : (
-            <span className="mf-lbl">{stepEyebrow}</span>
+            </>
           )}
 
-          <h1 ref={headingRef} tabIndex={-1} className="mf-d text-[34px] outline-none sm:text-[40px]">{stepHeading}</h1>
+          {/* ---- QUESTION HEADER (progress) ---- */}
+          {qIndex >= 0 && (
+            <QuestionProgress index={qIndex + 1} total={questions.length} optional={stepKey === 'stage'} />
+          )}
 
-          {suggestedFromFilters && step <= 3 && (
-            <p className="p-3 text-[14px]" style={{ borderLeft: '3px solid #FF6A4D', background: 'rgba(255,201,184,.3)', color: 'var(--ink-2)' }}>
-              We’ve suggested a few answers from the filters you were using. Please check they’re right
-              before continuing — nothing is saved until you confirm.
+          {suggestedFromFilters && qIndex >= 0 && (
+            <p className="p-3 text-[14px]" style={{ borderLeft: '3px solid var(--accent)', background: 'var(--sage-mist)', color: 'var(--ink)' }}>
+              We’ve suggested a few answers from the filters you were using. Please check they’re right before continuing — nothing is saved until you confirm.
             </p>
           )}
 
-          {/* STEP 1 */}
-          {step === 1 && (
-            <div className="flex flex-col gap-7">
+          {/* ---- Q1 · BASED IN ---- */}
+          {stepKey === 'based' && (
+            <>
+              <h1 ref={headingRef} tabIndex={-1} className="mf-d text-[30px] outline-none sm:text-[36px]">Where are you currently based?</h1>
               <div className="flex flex-col gap-2">
-                <CountrySelect label="Country of residence" value={form.country_code} onChange={(c) => set('country_code', c || null)} required />
-                <span className="text-[13px]" style={{ color: 'var(--graphite)' }}>
-                  We use this to surface calls open where you live, including diaspora-eligible ones.
-                </span>
+                <CountrySelect label="Country" value={form.country_code} onChange={(c) => set('country_code', c || null)} required />
+                <p className="text-[13px]" style={{ color: 'var(--graphite)' }}>
+                  Where you live now. We keep this separate from citizenship and registration country, which we may ask about later.
+                </p>
               </div>
-              <div className="flex flex-col gap-2.5">
-                <span className="mf-lbl">You are applying as</span>
-                <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-                  {APPLICANT_TYPES.map((o) => (
-                    <OptionBox key={o.id} option={o} selected={form.applicant_type === o.id} onSelect={() => set('applicant_type', o.id)} />
-                  ))}
-                </div>
+            </>
+          )}
+
+          {/* ---- Q2 · APPLICANT TYPE ---- */}
+          {stepKey === 'type' && (
+            <>
+              <h1 ref={headingRef} tabIndex={-1} className="mf-d text-[30px] outline-none sm:text-[36px]">Who would usually apply for these opportunities?</h1>
+              <p className="text-[14px]" style={{ color: 'var(--graphite)' }}>Choose the best fit for now.</p>
+              <div className="flex flex-col gap-3">
+                {APPLICANT_TYPES.map((o) => (
+                  <ChoiceOption key={o.id} name="applicant-type" label={o.label} selected={form.applicant_type === o.id} onChange={() => set('applicant_type', o.id)} />
+                ))}
               </div>
-              {isOrg && (
-                <div className="flex flex-col gap-4 border-l-2 border-[var(--line)] pl-5">
-                  <p className="text-[13px]" style={{ color: 'var(--graphite)' }}>
-                    Optional. Self-reported details, not proof of authority to represent an organisation.
-                  </p>
-                  <div className="flex flex-col gap-2">
-                    <label htmlFor="org-name" className="mf-lbl">Organisation name</label>
-                    <input id="org-name" className="mf-fld max-w-sm" value={form.organisation_name ?? ''} onChange={(e) => set('organisation_name', e.target.value || null)} />
-                  </div>
-                  <CountrySelect label="Organisation’s country of registration" value={form.organisation_country} onChange={(c) => set('organisation_country', c || null)} />
-                </div>
+              {NAME_TYPES.has(form.applicant_type ?? '') && (
+                <Conditional>
+                  <label htmlFor="org-name" className="mf-lbl">What is its name? <span style={{ color: 'var(--sage)', fontWeight: 700 }}>· Optional</span></label>
+                  <input id="org-name" className="mf-fld" placeholder="Organisation, business or collective name"
+                    value={form.organisation_name ?? ''} onChange={(e) => set('organisation_name', e.target.value || null)} />
+                </Conditional>
               )}
-              <PrivacyBox />
-            </div>
+            </>
           )}
 
-          {/* STEP 2 */}
-          {step === 2 && (
-            <div className="flex flex-col gap-7">
-              <Group legend="Which creative disciplines do you work in?" hint="Choose all that apply.">
-                <Chips options={DISCIPLINES} selected={form.disciplines} onToggle={(id) => toggle('disciplines', id)} />
-              </Group>
-              <Group legend="Where are you in your journey?" hint="Optional.">
-                <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-                  {STAGES.map((o) => (
-                    <OptionBox key={o.id} option={o} selected={form.stage === o.id} onSelect={() => set('stage', o.id)} />
-                  ))}
-                </div>
-              </Group>
-            </div>
+          {/* ---- Q3 · CREATIVE AREAS ---- */}
+          {stepKey === 'areas' && (
+            <>
+              <div className="flex flex-wrap items-end justify-between gap-4">
+                <h1 ref={headingRef} tabIndex={-1} className="mf-d text-[30px] outline-none sm:text-[36px]">Which creative or cultural areas do you work in?</h1>
+                <SelectCount selected={form.disciplines.length + (anotherOpen ? 1 : 0)} />
+              </div>
+              <p className="text-[14px]" style={{ color: 'var(--graphite)' }}>Select all that apply.</p>
+              <div className="grid grid-cols-1 gap-2.5 sm:grid-cols-2">
+                {DISCIPLINES.map((o) => (
+                  <ChoiceOption key={o.id} multi label={o.label} selected={form.disciplines.includes(o.id)} onChange={() => toggleDiscipline(o.id)} />
+                ))}
+                <ChoiceOption multi label="Another area" selected={anotherOpen}
+                  onChange={() => { const next = !anotherOpen; setAnotherOpen(next); if (!next) set('disciplines_other', null) }} />
+              </div>
+              {anotherOpen && (
+                <Conditional>
+                  <label htmlFor="another-area" className="mf-lbl">Another area — please specify</label>
+                  <input id="another-area" className="mf-fld" placeholder="Tell us the area in your own words"
+                    value={form.disciplines_other ?? ''} onChange={(e) => set('disciplines_other', e.target.value || null)} />
+                </Conditional>
+              )}
+            </>
           )}
 
-          {/* STEP 3 */}
-          {step === 3 && (
-            <div className="flex flex-col gap-7">
-              <Group legend="What kinds of funding are you looking for?" hint="Choose all that apply.">
-                <Chips options={SUPPORT_TYPES} selected={form.support_types} onToggle={(id) => toggle('support_types', id)} />
-              </Group>
-              <Group legend="Preferred application languages" hint="Optional. Stored for your reference; it won’t change your recommendations yet.">
-                <Chips options={LANGUAGES} selected={form.languages} onToggle={(id) => toggle('languages', id)} />
-              </Group>
-            </div>
+          {/* ---- Q4 · CAREER STAGE (individuals only, optional) ---- */}
+          {stepKey === 'stage' && (
+            <>
+              <h1 ref={headingRef} tabIndex={-1} className="mf-d text-[30px] outline-none sm:text-[36px]">Which best describes where you are in your creative work?</h1>
+              <p className="text-[14px]" style={{ color: 'var(--graphite)' }}>Choose one. This helps us understand your needs; it does not determine your eligibility.</p>
+              <div className="flex flex-col gap-3">
+                {STAGES.map((o) => (
+                  <ChoiceOption key={o.id} name="stage" label={o.label} selected={form.stage === o.id} onChange={() => set('stage', o.id)} />
+                ))}
+              </div>
+            </>
           )}
 
-          {/* STEP 4 — review */}
-          {step === 4 && <ReviewList form={form} onEdit={(s) => setStep(s)} />}
+          {/* ---- Q5 · OPPORTUNITY INTERESTS ---- */}
+          {stepKey === 'interests' && (
+            <>
+              <h1 ref={headingRef} tabIndex={-1} className="mf-d text-[30px] outline-none sm:text-[36px]">What kinds of opportunities would you like to see?</h1>
+              <p className="text-[14px]" style={{ color: 'var(--graphite)' }}>Select all that interest you.</p>
+              <div className="flex flex-col gap-2.5">
+                {SUPPORT_TYPES.map((o) => (
+                  <ChoiceOption key={o.id} multi label={o.label} desc={o.desc} selected={form.support_types.includes(o.id)} onChange={() => toggleSupport(o.id)} />
+                ))}
+                <ChoiceOption multi label="I’m open to different kinds of opportunities."
+                  selected={form.open_to_all}
+                  onChange={() => setForm((f) => ({ ...f, open_to_all: !f.open_to_all, support_types: [] }))} />
+              </div>
+            </>
+          )}
+
+          {/* ---- REVIEW ---- */}
+          {stepKey === 'review' && <ReviewList form={form} anotherOpen={anotherOpen} isIndividual={isIndividual} onEdit={(s) => setStepKey(s)} />}
 
           {error && (
-            <p role="alert" className="p-3 text-[14px]" style={{ border: '1.5px solid var(--accent-active)', background: 'rgba(255,201,184,.4)', color: 'var(--ink)' }}>{error}</p>
+            <p role="alert" className="p-3 text-[14px]" style={{ border: '1.5px solid var(--accent-deep)', background: 'var(--sage-mist)', color: 'var(--ink)' }}>{error}</p>
           )}
           <p aria-live="polite" className="sr-only">{saving ? 'Saving' : ''}</p>
 
-          {/* controls */}
-          <div className="flex flex-wrap items-center justify-between gap-4 border-t border-[var(--line)] pt-6">
-            {step > 1 ? (
-              <button type="button" onClick={() => setStep((s) => s - 1)} className="mf-btn-outline">Back</button>
-            ) : <span />}
-            <div className="flex items-center" style={{ gap: '1.1rem' }}>
-              <button type="button" onClick={onFinishLater} disabled={saving} className="text-[15px] font-bold underline underline-offset-4 disabled:opacity-60" style={{ color: 'var(--accent-deep)' }}>
-                Finish later
-              </button>
-              {step <= 3 ? (
-                <button type="button" onClick={onContinue} disabled={saving} className="mf-btn disabled:opacity-60">
-                  {saving ? 'Saving…' : 'Continue'}
+          {/* ---- CONTROLS (not on intro) ---- */}
+          {stepKey !== 'intro' && (
+            <div className="flex flex-wrap items-center justify-between gap-4 border-t border-[var(--line)] pt-6">
+              <button type="button" onClick={goBack} className="mf-btn-outline">Back</button>
+              <div className="flex items-center" style={{ gap: '1.1rem' }}>
+                <button type="button" onClick={stepKey === 'stage' ? goNext : onFinishLater} disabled={saving} className="text-[15px] font-bold underline underline-offset-4 disabled:opacity-60" style={{ color: 'var(--accent-deep)' }}>
+                  {stepKey === 'stage' ? 'Skip' : 'Finish later'}
                 </button>
-              ) : (
-                <button type="button" onClick={onComplete} disabled={saving} className="mf-btn disabled:opacity-60">
-                  {saving ? 'Saving…' : 'Save my profile'}
-                </button>
-              )}
+                {stepKey === 'review' ? (
+                  <button type="button" onClick={onComplete} disabled={saving} className="mf-btn disabled:opacity-60">{saving ? 'Saving…' : 'Save my profile'}</button>
+                ) : (
+                  <button type="button" onClick={onContinue} disabled={saving} className="mf-btn disabled:opacity-60">{saving ? 'Saving…' : 'Continue'}</button>
+                )}
+              </div>
             </div>
-          </div>
+          )}
         </div>
       </div>
       <p className="mt-5 text-[13px]" style={{ color: 'var(--ink-soft)' }}>
@@ -260,106 +306,51 @@ export default function SetupWizard({
   )
 }
 
-function PrivacyBox() {
-  return (
-    <div className="flex items-start gap-3 p-4" style={{ background: '#DCE3D5' }}>
-      <svg viewBox="0 0 100 100" width="18" height="18" aria-hidden="true" style={{ flex: 'none', marginTop: 2 }}>
-        <circle cx="50" cy="50" r="39" fill="none" stroke="#5F7359" strokeWidth="22" />
-        <circle cx="50" cy="50" r="28" fill="#5F7359" />
-      </svg>
-      <p className="text-[14px] leading-relaxed" style={{ color: '#121412' }}>
-        Your profile is private and only used to match you to opportunities. It is never shown to
-        funders, and it is not a funding application. You can edit or delete it anytime.
-      </p>
-    </div>
-  )
-}
+function ReviewList({ form, anotherOpen, isIndividual, onEdit }: { form: WizardProfile; anotherOpen: boolean; isIndividual: boolean; onEdit: (step: StepKey) => void }) {
+  const na = <span className="italic" style={{ color: 'var(--sage)' }}>Not provided</span>
+  const names = (opts: Option[], ids: string[]) => (ids.length ? ids.map((id) => labelFor(opts, id)).join('; ') : '')
 
-function Group({ legend, hint, children }: { legend: string; hint?: string; children: React.ReactNode }) {
-  return (
-    <fieldset className="border-0 p-0">
-      <legend className="mf-d p-0 text-[18px]" style={{ lineHeight: 1.15 }}>{legend}</legend>
-      {hint && <p className="mt-1 text-[14px]" style={{ color: 'var(--graphite)' }}>{hint}</p>}
-      <div className="mt-3">{children}</div>
-    </fieldset>
-  )
-}
+  const areas = [names(DISCIPLINES, form.disciplines), anotherOpen && form.disciplines_other ? `Another: ${form.disciplines_other}` : '']
+    .filter(Boolean).join('; ')
+  const applyingAs = form.applicant_type
+    ? [labelFor(APPLICANT_TYPES, form.applicant_type), NAME_TYPES.has(form.applicant_type) ? form.organisation_name : null].filter(Boolean).join(' · ')
+    : ''
+  const interests = form.open_to_all ? 'Open to different kinds of opportunities' : names(SUPPORT_TYPES, form.support_types)
 
-function OptionBox({ option, selected, onSelect }: { option: Option; selected: boolean; onSelect: () => void }) {
-  return (
-    <label
-      className="flex cursor-pointer items-center gap-3 px-4 py-3.5 text-[15px] font-semibold"
-      style={
-        selected
-          ? { border: '1.5px solid var(--ink)', background: 'var(--ink)', color: 'var(--bg)' }
-          : { border: '1.5px solid var(--ink)' }
-      }
-    >
-      <input type="radio" name={option.id + '-grp'} checked={selected} onChange={onSelect} className="sr-only" />
-      <span
-        aria-hidden="true"
-        className="flex-none"
-        style={
-          selected
-            ? { width: 16, height: 16, border: '2px solid var(--bg)', background: '#FF6A4D' }
-            : { width: 16, height: 16, border: '2px solid var(--ink)' }
-        }
-      />
-      {option.label}
-    </label>
-  )
-}
-
-function Chips({ options, selected, onToggle }: { options: Option[]; selected: string[]; onToggle: (id: string) => void }) {
-  return (
-    <div className="flex flex-wrap gap-2.5">
-      {options.map((o) => {
-        const on = selected.includes(o.id)
-        return (
-          <button
-            key={o.id}
-            type="button"
-            aria-pressed={on}
-            onClick={() => onToggle(o.id)}
-            className="px-3.5 py-2.5 text-[14px] font-semibold"
-            style={on ? { border: '1.5px solid var(--ink)', background: 'var(--ink)', color: 'var(--bg)' } : { border: '1.5px solid var(--ink)' }}
-          >
-            {o.label}
-          </button>
-        )
-      })}
-    </div>
-  )
-}
-
-function ReviewList({ form, onEdit }: { form: WizardProfile; onEdit: (step: number) => void }) {
-  const na = <span className="italic" style={{ color: '#8FA487' }}>Not provided</span>
-  const names = (opts: Option[], ids: string[]) => (ids.length ? ids.map((id) => labelFor(opts, id)).join(', ') : null)
-  const rows: { label: string; value: React.ReactNode; step: number }[] = [
-    { label: 'Country', value: form.country_code ? COUNTRY_NAME_BY_CODE.get(form.country_code) : null, step: 1 },
-    { label: 'Applying as', value: form.applicant_type ? labelFor(APPLICANT_TYPES, form.applicant_type) : null, step: 1 },
-    { label: 'Organisation', value: form.organisation_name, step: 1 },
-    { label: 'Disciplines', value: names(DISCIPLINES, form.disciplines), step: 2 },
-    { label: 'Career stage', value: form.stage ? labelFor(STAGES, form.stage) : null, step: 2 },
-    { label: 'Support needed', value: names(SUPPORT_TYPES, form.support_types), step: 3 },
-    { label: 'Languages', value: names(LANGUAGES, form.languages), step: 3 },
+  const rows: { label: string; value: React.ReactNode; step?: StepKey }[] = [
+    { label: 'Based in', value: form.country_code ? COUNTRY_NAME_BY_CODE.get(form.country_code) : null, step: 'based' },
+    { label: 'Applying as', value: applyingAs || null, step: 'type' },
+    { label: 'Creative areas', value: areas || null, step: 'areas' },
+    isIndividual
+      ? { label: 'Career stage', value: form.stage ? labelFor(STAGES, form.stage) : null, step: 'stage' }
+      : { label: 'Career stage', value: <span className="italic" style={{ color: 'var(--sage)' }}>Not shown for {applyingAs.split(' · ')[0].toLowerCase() || 'this applicant type'}</span> },
+    { label: 'Opportunity interests', value: interests || null, step: 'interests' },
   ]
+
   return (
     <div>
-      <p className="mb-5 text-[16px] leading-relaxed" style={{ color: 'var(--graphite)' }}>
-        Here is what we will use to find funding for you. Change anything that is not right. Blanks are
-        fine, they just mean fewer matches to start.
+      <span className="mf-lbl">Nearly done</span>
+      <h1 className="mf-d mt-3 text-[32px] sm:text-[40px]">Check your answers.</h1>
+      <p className="mb-5 mt-3 text-[16px] leading-relaxed" style={{ color: 'var(--graphite)' }}>
+        Here is what we will use to suggest opportunities for you. Change anything that is not right. Blanks are fine — they just mean fewer matches to start.
       </p>
       <div style={{ borderTop: '2px solid var(--ink)' }}>
         {rows.map((r) => (
-          <div key={r.label} className="grid items-baseline gap-x-4 gap-y-1 py-[18px] sm:grid-cols-[200px_1fr_auto]" style={{ borderBottom: '1px solid #DCE3D5' }}>
+          <div key={r.label} className="grid items-baseline gap-x-4 gap-y-1 py-[18px] sm:grid-cols-[200px_1fr_auto]" style={{ borderBottom: '1px solid var(--sage-mist)' }}>
             <span className="mf-lbl">{r.label}</span>
             <span className="text-[17px]">{r.value || na}</span>
-            <button type="button" onClick={() => onEdit(r.step)} className="justify-self-start text-[14px] font-bold underline underline-offset-2 sm:justify-self-end" style={{ color: 'var(--accent-deep)' }}>
-              Change<span className="sr-only"> {r.label}</span>
-            </button>
+            {r.step ? (
+              <button type="button" onClick={() => onEdit(r.step!)} className="justify-self-start text-[14px] font-bold underline underline-offset-2 sm:justify-self-end" style={{ color: 'var(--accent-deep)' }}>
+                Change<span className="sr-only"> {r.label}</span>
+              </button>
+            ) : <span />}
           </div>
         ))}
+      </div>
+      <div className="mt-6">
+        <PrivacyNote>
+          Saving your profile is not a funding application and does not guarantee eligibility. Your profile stays private and is never shown to funders.
+        </PrivacyNote>
       </div>
     </div>
   )

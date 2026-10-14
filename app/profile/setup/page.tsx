@@ -64,22 +64,22 @@ export default async function SetupPage({
       country_code: existing.country_code,
       applicant_type: existing.applicant_type,
       organisation_name: existing.organisation_name,
-      organisation_country: existing.organisation_country,
       disciplines: existing.disciplines ?? [],
+      disciplines_other: existing.disciplines_other ?? null,
       stage: existing.stage,
       support_types: existing.support_types ?? [],
-      languages: existing.languages ?? [],
+      open_to_all: existing.open_to_all ?? false,
     }
   } else if (hasSuggestions) {
     initial = {
       country_code: suggestedCountry,
       applicant_type: null,
       organisation_name: null,
-      organisation_country: null,
       disciplines: suggestedDisciplines,
+      disciplines_other: null,
       stage: null,
       support_types: suggestedSupport,
-      languages: [],
+      open_to_all: false,
     }
   }
 

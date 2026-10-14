@@ -22,8 +22,9 @@ export const dynamic = 'force-dynamic'
  * tables, and this page never hands those internal columns to the browser.
  */
 const COLUMNS =
-  'id,name,funder,deadline,amount,eligible_countries,cci_sector,funding_type,' +
-  'deadline_type,application_link,description,created_at,link_state,link_checked_at,' +
+  'id,name,funder,deadline,amount,application_fee,eligible_countries,cci_sector,funding_type,' +
+  'deadline_type,application_status,programme_frequency,frequency_detail,next_open_date,' +
+  'application_link,description,created_at,link_state,link_checked_at,' +
   'eligible_who,eligible_conditions,eligibility_reviewed,slug'
 
 const PAGE_SIZE = 24

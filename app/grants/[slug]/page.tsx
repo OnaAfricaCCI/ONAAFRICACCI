@@ -5,12 +5,14 @@ import { supabase } from '@/lib/supabase'
 import { isPublishableGrant } from '@/lib/quality'
 import { eligibilityLabels } from '@/lib/eligibility'
 import { slugify } from '@/lib/slug'
-import { daysLeft, isOpenListing, isClosed } from '@/lib/deadline'
+import { daysLeft, isOpenListing } from '@/lib/deadline'
 import { SITE_URL, OG_IMAGE } from '@/lib/site'
 import TrackedLink from '@/app/components/TrackedLink'
 import BackLink from '@/app/components/BackLink'
 import GrantList, { type GrantListItem } from '@/app/components/GrantList'
 import SaveButton from '@/app/components/SaveButton'
+import StatusBadge, { statusSupporting } from '@/app/components/StatusBadge'
+import { deriveStatus, verificationLines } from '@/lib/opportunityStatus'
 
 export const dynamic = 'force-dynamic'
 
@@ -33,7 +35,8 @@ export const dynamic = 'force-dynamic'
  */
 
 const COLUMNS =
-  'id,name,funder,funder_id,institution_id,amount,deadline,deadline_type,cci_sector,funding_type,' +
+  'id,name,funder,funder_id,institution_id,amount,application_fee,deadline,deadline_type,cci_sector,funding_type,' +
+  'application_status,programme_frequency,frequency_detail,next_open_date,status_verified_at,' +
   'eligible_countries,eligible_who,eligible_conditions,eligibility_reviewed,' +
   'application_link,description,link_state,link_checked_at'
 
@@ -44,8 +47,14 @@ type Grant = {
   funder_id: string | null
   institution_id: string | null
   amount: string | null
+  application_fee: string | null
   deadline: string | null
   deadline_type: string | null
+  application_status: string | null
+  programme_frequency: string | null
+  frequency_detail: string | null
+  next_open_date: string | null
+  status_verified_at: string | null
   cci_sector: string | null
   funding_type: string | null
   eligible_countries: string[] | null
@@ -211,7 +220,11 @@ export default async function GrantPage({ params }: { params: Promise<{ slug: st
 
   const dl = daysLeft(g.deadline)
   // Only one-time calls close on their date; recurring/rolling never do.
-  const closed = isClosed(g.deadline, g.deadline_type)
+  const verifyLines = verificationLines({
+    statusLabel: deriveStatus(g, new Date().toISOString().slice(0, 10)).label,
+    statusVerifiedAt: g.status_verified_at,
+    linkCheckedAt: g.link_checked_at,
+  })
   const urgent = dl !== null && dl >= 0 && dl <= 30
   const dead = g.link_state === 'dead'
 
@@ -285,11 +298,13 @@ export default async function GrantPage({ params }: { params: Promise<{ slug: st
         </p>
       )}
 
-      {closed && (
-        <p className="mt-6 border-2 border-[var(--line)] bg-[var(--surface)] p-4 text-sm font-semibold">
-          This call has closed. It is kept for reference; check the funder&rsquo;s page for the next round.
-        </p>
-      )}
+      {/* Evidence-based status + plain-language supporting text. */}
+      <div className="mt-6">
+        <StatusBadge opportunity={g} frequency={g.programme_frequency} frequencyDetail={g.frequency_detail} />
+        {statusSupporting(g) && (
+          <p className="mt-3 max-w-xl text-[15px] leading-relaxed text-[var(--ink-2)]">{statusSupporting(g)}</p>
+        )}
+      </div>
 
       {/* Facts */}
       <dl className="mt-8 grid gap-px border border-[var(--ink)] bg-[var(--ink)] sm:grid-cols-2">
@@ -317,6 +332,27 @@ export default async function GrantPage({ params }: { params: Promise<{ slug: st
             </dd>
           </div>
         )}
+        {g.application_fee && (() => {
+          // Policy: fee-based calls are allowed, but the fee is always flagged.
+          // A real charge is drawn in coral so it can't be missed; a confirmed
+          // "Free" is shown calmly so applicants know there's no cost.
+          const free = /^(free|no fee|none|n\/a)$/i.test(g.application_fee.trim())
+          return (
+            <div className="bg-[var(--bg)] p-5">
+              <dt className="text-[10px] font-bold uppercase tracking-[0.2em] text-[var(--ink-soft)]">
+                Application fee
+              </dt>
+              <dd className={`mt-1 font-[family-name:var(--font-display)] text-xl leading-snug ${free ? 'text-[var(--forest)]' : 'text-[var(--accent-deep)]'}`}>
+                {free ? 'Free' : g.application_fee}
+                {!free && (
+                  <span className="ml-2 align-middle text-[11px] font-bold uppercase tracking-[0.12em] text-[var(--accent-deep)]">
+                    to apply
+                  </span>
+                )}
+              </dd>
+            </div>
+          )
+        })()}
         {openTo.length > 0 && (
           <div className="bg-[var(--bg)] p-5 sm:col-span-2">
             <dt className="text-[10px] font-bold uppercase tracking-[0.2em] text-[var(--ink-soft)]">Open to</dt>
@@ -418,12 +454,24 @@ export default async function GrantPage({ params }: { params: Promise<{ slug: st
         </section>
       )}
 
-      {verified && (
-        <p className="mt-12 border-t border-[var(--line)] pt-6 text-xs text-[var(--ink-3)]">
-          Ona checks every listing. This one&rsquo;s link was last verified on {verified}. Amounts,
-          deadlines and eligibility are the funder&rsquo;s own; always confirm on their page before applying.
+      {/* What Ona checked, and when. The status and the automated link check are
+          kept as separate statements, so a working link never implies an open window. */}
+      <div className="mt-12 border-t border-[var(--line)] pt-6 text-xs text-[var(--ink-3)]">
+        <dl className="flex flex-col gap-1">
+          {verifyLines.map((line) => {
+            const [k, ...rest] = line.split(': ')
+            return (
+              <div key={line} className="flex flex-wrap gap-x-2">
+                <dt className="font-bold uppercase tracking-[0.1em] text-[var(--ink-soft)]">{k}:</dt>
+                <dd>{rest.join(': ')}</dd>
+              </div>
+            )
+          })}
+        </dl>
+        <p className="mt-3">
+          Amounts, deadlines and eligibility are the funder&rsquo;s own; always confirm on their page before applying.
         </p>
-      )}
+      </div>
     </main>
   )
 }

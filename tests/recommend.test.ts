@@ -20,7 +20,7 @@ const opp = (over: Partial<Parameters<typeof scoreOpportunity>[1]>) => ({
 test('positive match explains discipline + support, never says "eligible"', () => {
   const r = scoreOpportunity(kenyanFashionGrantSeeker, opp({ scopes: ['kenya', 'africa'] }))
   assert.equal(r.relevant, true)
-  assert.match(r.reasons[0], /Matches your interest in fashion and grant funding\./)
+  assert.match(r.reasons[0], /Matches your interest in fashion and textiles and grant funding\./)
   // Specific-country match is named.
   assert.ok(r.reasons.some((x) => /Open to applicants in Kenya/.test(x)))
   // Never claims eligibility.

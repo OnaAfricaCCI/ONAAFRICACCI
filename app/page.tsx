@@ -5,7 +5,7 @@ import { Aperture, TheFind } from '@/app/components/Motif'
 import { supabase } from '@/lib/supabase'
 import { daysUntil, deadlineLabel } from '@/lib/amount'
 import { slugify } from '@/lib/slug'
-import { isOpenListing } from '@/lib/deadline'
+import { deriveStatus, isOpenNow } from '@/lib/opportunityStatus'
 
 export const dynamic = 'force-dynamic'
 
@@ -16,6 +16,8 @@ type Row = {
   amount: string | null
   deadline: string | null
   deadline_type: string | null
+  application_status: string | null
+  next_open_date: string | null
   cci_sector: string | null
   funding_type: string | null
   eligible_countries: string[] | null
@@ -58,7 +60,7 @@ async function featured(): Promise<FeaturedGrant[]> {
   const { data, error } = await supabase
     .from('opportunities')
     .select(
-      'id,name,funder,amount,deadline,deadline_type,cci_sector,funding_type,eligible_countries,application_link,link_checked_at,featured,slug',
+      'id,name,funder,amount,deadline,deadline_type,application_status,next_open_date,cci_sector,funding_type,eligible_countries,application_link,link_checked_at,featured,slug',
     )
     .eq('link_ok', true)
     .not('description', 'is', null)
@@ -76,10 +78,12 @@ async function featured(): Promise<FeaturedGrant[]> {
   }
 
   const rows = data as Row[]
-  // Only still-open listings on the homepage: recurring/rolling stay even with a
-  // past date; a one-time call that has closed drops out.
+  // Only listings confirmed OPEN now reach the homepage. "Worth a look" must mean
+  // "you can apply", so the evidence-based status is the gate, with the decay
+  // rules applied so a passed deadline can never slip through.
+  const today = new Date().toISOString().slice(0, 10)
   const linked = rows.filter(
-    (r) => (r.application_link ?? '').trim() !== '' && isOpenListing(r.deadline, r.deadline_type),
+    (r) => (r.application_link ?? '').trim() !== '' && isOpenNow(deriveStatus(r, today)),
   )
 
   // Curated first. Six of the featured pool, reshuffled each visit.
@@ -172,7 +176,7 @@ export default async function Home() {
       <FeaturedCarousel grants={grants} />
 
       {/* ---- My Funding teaser: "Funding that fits you." ---- */}
-      <section className="mx-auto max-w-6xl px-5 py-16 sm:py-20">
+      <section className="mx-auto max-w-6xl px-5 pb-16 pt-2 sm:pb-20 sm:pt-4">
         <div className="grid overflow-hidden border-2 border-[var(--ink)] lg:grid-cols-[1.1fr_0.9fr]">
           <div className="flex flex-col gap-5 px-7 py-12 sm:px-12 sm:py-14">
             <p className="label text-[var(--sage-deep)]">Find funding for me</p>

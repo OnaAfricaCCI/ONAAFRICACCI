@@ -28,6 +28,7 @@ export default function AccountGate({
   const [busy, setBusy] = useState(false)
   const [message, setMessage] = useState('')
   const [notice, setNotice] = useState('')
+  const [showPw, setShowPw] = useState(false)
 
   async function submit(e: React.FormEvent) {
     e.preventDefault()
@@ -62,8 +63,15 @@ export default function AccountGate({
           value={email} onChange={(e) => setEmail(e.target.value)} placeholder="you@email.com" className="mf-fld" />
       </div>
       <div className="mt-4 flex flex-col gap-1.5">
-        <label htmlFor="ag-pw" className="mf-lbl">Password</label>
-        <input id="ag-pw" type="password" autoComplete={mode === 'create' ? 'new-password' : 'current-password'} required
+        <div className="flex items-baseline justify-between">
+          <label htmlFor="ag-pw" className="mf-lbl">Password</label>
+          <button type="button" onClick={() => setShowPw((v) => !v)}
+            className="text-[13px] font-bold underline underline-offset-2" style={{ color: 'var(--accent-deep)' }}
+            aria-pressed={showPw}>
+            {showPw ? 'Hide password' : 'Show password'}
+          </button>
+        </div>
+        <input id="ag-pw" type={showPw ? 'text' : 'password'} autoComplete={mode === 'create' ? 'new-password' : 'current-password'} required
           value={password} onChange={(e) => setPassword(e.target.value)}
           placeholder={mode === 'create' ? 'Choose a password (8+ characters)' : 'Your password'} className="mf-fld" />
       </div>

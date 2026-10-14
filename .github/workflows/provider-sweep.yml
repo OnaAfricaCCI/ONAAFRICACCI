@@ -1,0 +1,42 @@
+name: Provider sweep (new opportunities)
+
+# Twice a month — the 1st and 15th at 08:00 UTC (11:00 Africa/Nairobi).
+# Also runnable on demand from the Actions tab (workflow_dispatch).
+on:
+  schedule:
+    - cron: '0 8 1,15 * *'
+  workflow_dispatch:
+    inputs:
+      limit:
+        description: 'Cap number of providers (blank = all). Use for a quick test.'
+        required: false
+        default: ''
+      dry_run:
+        description: 'Dry run (no DB writes, no email)?'
+        type: boolean
+        required: false
+        default: false
+
+concurrency:
+  group: provider-sweep
+  cancel-in-progress: false
+
+jobs:
+  sweep:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - name: Run provider sweep
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+          FIRECRAWL_API_KEY: ${{ secrets.FIRECRAWL_API_KEY }}
+          RESEND_API_KEY: ${{ secrets.RESEND_API_KEY }}
+          SWEEP_DIGEST_TO: ${{ secrets.SWEEP_DIGEST_TO }}
+          SWEEP_LIMIT: ${{ github.event.inputs.limit }}
+          SWEEP_DRY: ${{ github.event.inputs.dry_run == 'true' && '1' || '' }}
+        run: node scripts/provider-sweep.mjs

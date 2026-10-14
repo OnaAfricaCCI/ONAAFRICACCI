@@ -9,6 +9,7 @@ import { slugify } from '@/lib/slug'
 import { daysLeft } from '@/lib/deadline'
 import { FindStrip } from '@/app/components/Motif'
 import SaveButton from '@/app/components/SaveButton'
+import StatusBadge, { StatusKey } from '@/app/components/StatusBadge'
 import { useAccount } from '@/app/components/AccountProvider'
 import {
   SCOPE_GROUP_LABELS,
@@ -30,6 +31,11 @@ type Opportunity = {
   funder: string | null
   deadline: string | null
   amount: string | null
+  application_fee: string | null
+  application_status: string | null
+  programme_frequency: string | null
+  frequency_detail: string | null
+  next_open_date: string | null
   eligible_countries: string[]
   cci_sector: string | null
   funding_type: string | null
@@ -226,9 +232,9 @@ export default function GrantsExplorer({
           Funding for Africa&rsquo;s creative and cultural industries.
         </h1>
         <p className="mt-5 max-w-xl text-base leading-relaxed text-[var(--ink-soft)]">
-          Grants, prizes, residencies and fellowships from across the continent. We
-          check each one and keep it current, so your time goes into making the work,
-          not chasing the money.
+          Explore funding programmes and current calls from across the continent. Each
+          listing shows whether applications are open, announced, closed or awaiting
+          confirmation, so your time goes into making the work, not chasing the money.
         </p>
         {/* The Find as a band. A rule with a single ring on it reads as a
             slider and invites dragging, so the divider is a field of rings
@@ -406,6 +412,11 @@ export default function GrantsExplorer({
         </div>
       )}
 
+      {/* A short key so the status labels read clearly. */}
+      <div className="mt-6">
+        <StatusKey />
+      </div>
+
       {/* Results */}
       <section className="py-8">
         {results.length === 0 && (
@@ -456,6 +467,10 @@ export default function GrantsExplorer({
                           <span className="text-[var(--ink-soft)]">{o.funding_type}</span>
                         </>
                       )}
+                    </div>
+
+                    <div className="mt-2.5">
+                      <StatusBadge opportunity={o} frequency={o.programme_frequency} frequencyDetail={o.frequency_detail} size="sm" />
                     </div>
 
                     <h2 className="mt-2 font-[family-name:var(--font-display)] text-2xl font-semibold leading-snug sm:text-3xl">
@@ -544,6 +559,22 @@ export default function GrantsExplorer({
                         )}
                       </div>
                     )}
+                    {/* Fee policy: always flag the fee. A charge is called out in
+                        coral before anyone clicks through; a confirmed "Free" is
+                        noted quietly. */}
+                    {o.application_fee && (() => {
+                      const free = /^(free|no fee|none|n\/a)$/i.test(o.application_fee!.trim())
+                      return (
+                        <div>
+                          <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-[var(--ink-soft)]">
+                            Application fee
+                          </p>
+                          <p className={`font-[family-name:var(--font-display)] text-lg font-semibold ${free ? 'text-[var(--ink-soft)]' : 'text-[var(--accent-deep)]'}`}>
+                            {free ? 'Free' : o.application_fee}
+                          </p>
+                        </div>
+                      )
+                    })()}
                     {/*
                       The site's promise is "we check each one". When the daily
                       link check found the funder's page unreachable, say so

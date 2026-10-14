@@ -19,6 +19,7 @@ export default function ResetPage() {
   const [busy, setBusy] = useState(false)
   const [message, setMessage] = useState('')
   const [done, setDone] = useState(false)
+  const [showPw, setShowPw] = useState(false)
 
   useEffect(() => {
     const supabase = createBrowserSupabase()
@@ -63,8 +64,13 @@ export default function ResetPage() {
         <p className="mt-6 text-[16px]" style={{ color: 'var(--sage-deep)' }}>Password updated. Taking you to your profile…</p>
       ) : ready ? (
         <form onSubmit={submit} className="mt-8 max-w-sm">
-          <label htmlFor="new-pw" className="mf-lbl block">New password</label>
-          <input id="new-pw" type="password" autoComplete="new-password" required value={password}
+          <div className="flex items-baseline justify-between">
+            <label htmlFor="new-pw" className="mf-lbl block">New password</label>
+            <button type="button" onClick={() => setShowPw((v) => !v)}
+              className="text-[13px] font-bold underline underline-offset-2" style={{ color: 'var(--accent-deep)' }}
+              aria-pressed={showPw}>{showPw ? 'Hide password' : 'Show password'}</button>
+          </div>
+          <input id="new-pw" type={showPw ? 'text' : 'password'} autoComplete="new-password" required value={password}
             onChange={(e) => setPassword(e.target.value)} placeholder="At least 8 characters" className="mf-fld mt-2" />
           {message && <p role="alert" className="mt-3 text-[14px]" style={{ color: 'var(--accent-active)' }}>{message}</p>}
           <button type="submit" disabled={busy} className="mf-btn-ink mt-5 w-full disabled:opacity-60">
