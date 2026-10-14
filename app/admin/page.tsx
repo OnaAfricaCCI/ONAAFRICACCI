@@ -4,6 +4,7 @@ import { createServerSupabase } from '@/lib/supabase/server'
 import { supabaseAdmin } from '@/lib/supabase-admin'
 import { isAdminEmail } from '@/lib/admin'
 import { getPostHogMetrics } from '@/lib/posthog'
+import { DISCIPLINES, labelFor } from '@/lib/profileTaxonomy'
 import AdminTabs from './AdminTabs'
 
 export const dynamic = 'force-dynamic'
@@ -108,6 +109,11 @@ export default async function AdminPage() {
   const isTestAccount = (email: string | undefined) => !email || /@(example\.com|onatest\.invalid)$/i.test(email)
   const noProfile = authUsers.filter((u) => !profileUserIds.has(u.id) && !isAdminEmail(u.email ?? null) && !isTestAccount(u.email))
 
+  // Which sectors grant-seekers want, from the disciplines they pick in profiles.
+  const sectorCounts: Record<string, number> = {}
+  for (const p of completed) for (const d of ((p.disciplines as string[]) ?? [])) sectorCounts[d] = (sectorCounts[d] ?? 0) + 1
+  const profileSectors = Object.entries(sectorCounts).sort((a, b) => b[1] - a[1]).map(([id, n]) => [labelFor(DISCIPLINES, id), String(n)])
+
   // ---- Database tab: reconcile providers (funders) with grants (opportunities)
   // Grants link to funders by NAME only (funder_id is unset), so match on name.
   const grantsByFunder = new Map<string, Row[]>()
@@ -147,12 +153,23 @@ export default async function AdminPage() {
             <p className="mb-3 text-[12px]" style={{ color: 'var(--graphite)' }}>Change shown is vs the previous 30 days.</p>
             <div className="mb-4 grid grid-cols-2 gap-3 sm:grid-cols-4">
               <Tile label="Visitors" value={ph.visitors30 ?? '—'} sub={<DeltaLine pct={ph.visitorsDeltaPct} />} />
+              <Tile label="Visitors / day (avg)" value={ph.visitors30 != null ? Math.round(ph.visitors30 / 30) : '—'} />
               <Tile label="Page views" value={ph.pageviews30 ?? '—'} sub={<DeltaLine pct={ph.pageviewsDeltaPct} />} />
-              {ph.events.slice(0, 2).map((e) => <Tile key={e.event} label={prettyEvent(e.event)} value={e.count} sub={<DeltaLine pct={e.deltaPct} />} />)}
+              <Tile label="Views / day (avg)" value={ph.pageviews30 != null ? Math.round(ph.pageviews30 / 30) : '—'} />
             </div>
             <div className="grid gap-5 sm:grid-cols-2">
               <MiniTable head={['Top pages', 'Views']} rows={ph.topPages.map((p) => [p.path, String(p.count)])} />
               <MiniTable head={['Key action', 'Count', 'vs prior 30d']} rows={ph.events.map((e) => [prettyEvent(e.event), String(e.count), deltaText(e.deltaPct)])} />
+            </div>
+            <div className="mt-5 grid gap-5 sm:grid-cols-2">
+              <div>
+                <span className="mf-lbl">Most-clicked grants · Apply clicks</span>
+                <div className="mt-2"><MiniTable head={['Grant', 'Funder', 'Clicks']} rows={ph.topGrants.map((g) => [g.grant, g.funder, String(g.clicks)])} /></div>
+              </div>
+              <div>
+                <span className="mf-lbl">Most-clicked funders · all clicks</span>
+                <div className="mt-2"><MiniTable head={['Funder', 'Clicks']} rows={ph.topFunders.map((f) => [f.funder, String(f.clicks)])} /></div>
+              </div>
             </div>
           </>
         ) : (
@@ -162,6 +179,21 @@ export default async function AdminPage() {
               : 'PostHog not connected yet.'}
           </div>
         )}
+      </Section>
+
+      <Section title="Popular sectors with grant seekers" note="what they want vs what they browse">
+        <div className="grid gap-5 sm:grid-cols-2">
+          <div>
+            <span className="mf-lbl">Chosen in profiles</span>
+            <p className="mt-1 text-[12px]" style={{ color: 'var(--graphite)' }}>The creative areas grant-seekers pick when building a profile.</p>
+            <div className="mt-2"><MiniTable head={['Sector', 'Grant seekers']} rows={profileSectors} /></div>
+          </div>
+          <div>
+            <span className="mf-lbl">Browsed / filtered on the site</span>
+            <p className="mt-1 text-[12px]" style={{ color: 'var(--graphite)' }}>Sectors visitors filter grants by (last 90 days).</p>
+            <div className="mt-2"><MiniTable head={['Sector', 'Times']} rows={ph.configured && ph.ok ? ph.sectorFilters.map((s) => [s.sector, String(s.count)]) : []} /></div>
+          </div>
+        </div>
       </Section>
 
       <Section title="Digest subscribers" note={`${activeSubs} active`}>

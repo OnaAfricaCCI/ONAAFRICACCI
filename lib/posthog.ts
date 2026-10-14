@@ -25,6 +25,9 @@ export type PostHogMetrics =
       pageviewsDeltaPct: number | null
       topPages: { path: string; count: number }[]
       events: { event: string; count: number; deltaPct: number | null }[]
+      topGrants: { grant: string; funder: string; clicks: number }[]
+      topFunders: { funder: string; clicks: number }[]
+      sectorFilters: { sector: string; count: number }[]
     }
 
 /** % change of current vs previous; null when there's no baseline to compare to. */
@@ -71,11 +74,17 @@ export async function getPostHogMetrics(): Promise<PostHogMetrics> {
   const PREV = `timestamp > now() - interval 60 day and timestamp <= now() - interval 30 day`
   const WINDOW = `timestamp > now() - interval 60 day`
 
-  const [pv, vis, top, evs] = await Promise.all([
+  const [pv, vis, top, evs, grants, fundersClicks, sectors] = await Promise.all([
     hogql(`select countIf(${CUR}) as cur, countIf(${PREV}) as prev from events where event = '$pageview' and ${WINDOW}`),
     hogql(`select uniqIf(person_id, ${CUR}) as cur, uniqIf(person_id, ${PREV}) as prev from events where event = '$pageview' and ${WINDOW}`),
     hogql(`select properties.$pathname as path, count() as c from events where event = '$pageview' and ${CUR} group by path order by c desc limit 8`),
     hogql(`select event, countIf(${CUR}) as cur, countIf(${PREV}) as prev from events where event in (${TRACKED_EVENTS.map((e) => `'${e}'`).join(',')}) and ${WINDOW} group by event order by cur desc`),
+    // most-clicked grants (Apply clicks), with their funder
+    hogql(`select properties.grant as g, properties.funder as f, count() as c from events where event = 'grant_apply_click' and ${CUR} group by g, f order by c desc limit 12`),
+    // most-clicked funders (apply + card + profile views)
+    hogql(`select properties.funder as f, count() as c from events where event in ('grant_apply_click','grant_card_click','funder_profile_view') and properties.funder is not null and ${CUR} group by f order by c desc limit 12`),
+    // sectors people browse for (filter/search), 90-day window since these are sparser
+    hogql(`select properties.value as s, count() as c from events where event = 'grant_filter' and properties.filter = 'sector' and timestamp > now() - interval 90 day group by s order by c desc limit 12`),
   ])
 
   const pair = (rows: unknown[][] | null): { cur: number | null; delta: number | null } => {
@@ -97,5 +106,8 @@ export async function getPostHogMetrics(): Promise<PostHogMetrics> {
     visitorsDeltaPct: visP.delta,
     topPages: (top ?? []).map((r) => ({ path: String(r[0] ?? '—'), count: Number(r[1] ?? 0) })),
     events: (evs ?? []).map((r) => ({ event: String(r[0] ?? ''), count: Number(r[1] ?? 0), deltaPct: deltaPct(Number(r[1] ?? 0), Number(r[2] ?? 0)) })),
+    topGrants: (grants ?? []).map((r) => ({ grant: String(r[0] ?? '—'), funder: String(r[1] ?? '—'), clicks: Number(r[2] ?? 0) })),
+    topFunders: (fundersClicks ?? []).map((r) => ({ funder: String(r[0] ?? '—'), clicks: Number(r[1] ?? 0) })),
+    sectorFilters: (sectors ?? []).map((r) => ({ sector: String(r[0] ?? '—'), count: Number(r[1] ?? 0) })),
   }
 }
