@@ -85,8 +85,13 @@ async function mapLimit(items, limit, fn) {
 
 ;(async () => {
   const today = new Date().toISOString().slice(0, 10)
-  let funders = await sb('funders?select=id,name,grants_page_url&grants_page_url=not.is.null&order=name')
-  funders = funders.filter((f) => String(f.grants_page_url).startsWith('http'))
+  // Prefer the specific grants page; fall back to the provider's main website
+  // when no grants page is recorded, so no provider is silently skipped.
+  const httpOrNull = (u) => (u && String(u).startsWith('http') ? String(u) : null)
+  let funders = await sb('funders?select=id,name,grants_page_url,website&order=name')
+  funders = funders
+    .map((f) => ({ ...f, crawl_url: httpOrNull(f.grants_page_url) || httpOrNull(f.website) }))
+    .filter((f) => f.crawl_url)
   if (LIMIT) funders = funders.slice(0, LIMIT)
 
   // What we already know, to diff against: existing opportunity names, and
@@ -109,7 +114,7 @@ async function mapLimit(items, limit, fn) {
 
   await mapLimit(funders, CONCURRENCY, async (f) => {
     try {
-      const opps = await firecrawl(f.grants_page_url)
+      const opps = await firecrawl(f.crawl_url)
       scanned++
       if (!DRY) await sb(`funders?id=eq.${f.id}`, { method: 'PATCH', body: JSON.stringify({ last_verified: today }) }).catch(() => {})
       for (const o of opps) {
@@ -117,7 +122,7 @@ async function mapLimit(items, limit, fn) {
         const n = norm(o.title)
         if (queuedNorms.has(n)) continue
         queuedNorms.add(n)
-        newFinds.push({ provider: f.name, title: o.title, url: o.apply_or_info_url || f.grants_page_url, deadline: o.status_or_deadline || '', summary: o.one_line_summary || '' })
+        newFinds.push({ provider: f.name, title: o.title, url: o.apply_or_info_url || f.crawl_url, deadline: o.status_or_deadline || '', summary: o.one_line_summary || '' })
       }
     } catch (e) {
       failures.push({ provider: f.name, url: f.grants_page_url, error: String(e.message || e) })
