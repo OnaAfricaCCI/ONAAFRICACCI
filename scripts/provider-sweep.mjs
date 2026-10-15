@@ -133,6 +133,9 @@ async function mapLimit(items, limit, fn) {
   if (!DRY && newFinds.length) {
     const rows = newFinds.map((x) => ({
       name: x.title, organization: x.provider, link: x.url, deadline: x.deadline || null,
+      // contact_email is NOT NULL on this table (human submissions always carry one);
+      // sweep finds have no submitter, so use a sentinel so the insert is accepted.
+      contact_email: 'sweep@onafunds.com',
       notes: `Auto-discovered by sweep ${today} from ${x.provider}. ${x.summary}`.slice(0, 1000),
       status: 'sweep',
     }))
